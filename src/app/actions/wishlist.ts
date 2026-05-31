@@ -98,7 +98,10 @@ export async function getWishlistKeys(): Promise<{ success: boolean; data: strin
       where: { profileId: profile.id },
       select: { mediaId: true, mediaType: true },
     });
-    return { success: true, data: items.map((i) => `${i.mediaType}:${i.mediaId}`) };
+    return {
+      success: true,
+      data: items.map((i: { mediaId: string; mediaType: string }) => `${i.mediaType}:${i.mediaId}`),
+    };
   } catch (error) {
     console.error("Failed to load wishlist keys:", error);
     return { success: false, data: [] };
