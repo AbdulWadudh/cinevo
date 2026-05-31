@@ -1,4 +1,5 @@
 import React from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Star, ArrowLeft, Film } from "lucide-react";
 import { tmdb } from "@/lib/tmdb";
@@ -17,6 +18,15 @@ import SeasonList from "@/components/watch/SeasonList";
 interface PageProps {
   params: Promise<{ type: string; id: string }>;
   searchParams: Promise<{ season?: string; episode?: string; t?: string; source?: string; sandbox?: string }>;
+}
+
+// Sets the browser tab title to "{Title} - Cinevo" (getDetails is cached).
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { type, id } = await params;
+  const mediaType: "movie" | "tv" = type === "tv" ? "tv" : "movie";
+  const details = await tmdb.getDetails(id, mediaType);
+  const title = details?.title || details?.name;
+  return { title: title ? `${title} - Cinevo` : "Cinevo" };
 }
 
 export default async function WatchPage({ params, searchParams }: PageProps) {
