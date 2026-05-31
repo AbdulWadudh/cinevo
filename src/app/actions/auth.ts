@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { getSiteURL } from "@/lib/site-url";
 
 export interface AuthState {
   error?: string;
@@ -34,12 +35,12 @@ export async function signUpWithPassword(_prev: AuthState, formData: FormData): 
   const password = String(formData.get("password") || "");
   if (password.length < 6) return { error: "Password must be at least 6 characters." };
 
-  const origin = (await headers()).get("origin");
+  const siteUrl = getSiteURL((await headers()).get("origin"));
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: `${origin}/auth/callback?next=/` },
+    options: { emailRedirectTo: `${siteUrl}/auth/callback?next=/` },
   });
   if (error) return { error: error.message };
 
@@ -56,11 +57,11 @@ export async function signUpWithPassword(_prev: AuthState, formData: FormData): 
 /** Begin Google OAuth — redirects to Google's consent screen. */
 export async function signInWithGoogle(formData: FormData): Promise<void> {
   const next = String(formData.get("redirect") || "/");
-  const origin = (await headers()).get("origin");
+  const siteUrl = getSiteURL((await headers()).get("origin"));
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
-    options: { redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}` },
+    options: { redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(next)}` },
   });
   if (error) redirect(`/login?error=${encodeURIComponent(error.message)}`);
   if (data.url) redirect(data.url);

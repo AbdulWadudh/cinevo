@@ -62,6 +62,10 @@ DIRECT_URL=postgresql://user:password@host:5432/dbname
 # Supabase Auth — used by the browser/server clients (src/lib/supabase/*)
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_or_publishable_key
+
+# Public site URL — REQUIRED in production so OAuth/email redirects don't fall
+# back to localhost (omit locally to use the request origin).
+NEXT_PUBLIC_SITE_URL=https://cinevo.k79.space
 ```
 
 > **Google OAuth:** enable the Google provider in **Supabase → Authentication → Providers**, and add `https://your-project.supabase.co/auth/v1/callback` as an authorized redirect URI in your Google Cloud OAuth client. For local dev, add `http://localhost:3000/auth/callback` to **Authentication → URL Configuration → Redirect URLs**.
