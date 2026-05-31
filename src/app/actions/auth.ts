@@ -35,7 +35,7 @@ export async function signUpWithPassword(_prev: AuthState, formData: FormData): 
   const password = String(formData.get("password") || "");
   if (password.length < 6) return { error: "Password must be at least 6 characters." };
 
-  const siteUrl = getSiteURL((await headers()).get("origin"));
+  const siteUrl = getSiteURL(await headers());
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -57,7 +57,7 @@ export async function signUpWithPassword(_prev: AuthState, formData: FormData): 
 /** Begin Google OAuth — redirects to Google's consent screen. */
 export async function signInWithGoogle(formData: FormData): Promise<void> {
   const next = String(formData.get("redirect") || "/");
-  const siteUrl = getSiteURL((await headers()).get("origin"));
+  const siteUrl = getSiteURL(await headers());
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",

@@ -5,13 +5,13 @@ import { getSiteURL } from "@/lib/site-url";
 
 /** OAuth + email-confirmation callback: exchanges the code for a session. */
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/";
 
-  // Behind a proxy, request.url's origin can be the internal host — prefer the
-  // configured public site URL so we don't bounce the user to localhost.
-  const base = getSiteURL(origin);
+  // Behind a proxy, request.url's origin can be the internal host — resolve the
+  // public site URL from env/forwarded headers so we don't bounce to localhost.
+  const base = getSiteURL(request.headers);
 
   if (code) {
     const supabase = await createClient();
