@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dune: Part Two — Cinevo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: '#08080f',
+            'bg-elevated': '#0e0e18',
+            surface: '#141422',
+            'surface-hover': '#1c1c30',
+            fg: '#eeeef4',
+            'fg-secondary': '#b0b0c4',
+            muted: '#6e6e88',
+            border: '#1e1e32',
+            accent: '#e53e4f',
+            'accent-hover': '#f04d5e',
+            gold: '#f59e0b',
+            blue: '#3b82f6',
+            green: '#22c55e',
+          },
+          fontFamily: {
+            display: ['"Plus Jakarta Sans"', '-apple-system', 'system-ui', 'sans-serif'],
+            body: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'system-ui', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { scrollbar-width: none; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .anim-fade { opacity: 0; animation: fadeInUp 0.5s 0.2s forwards; }
+    @keyframes playPulse {
+      0%, 100% { box-shadow: 0 8px 40px rgba(229,62,79,0.25), 0 0 0 0 rgba(229,62,79,0.3); }
+      50% { box-shadow: 0 8px 40px rgba(229,62,79,0.25), 0 0 0 16px rgba(229,62,79,0); }
+    }
+    @keyframes progressAnim { to { width: 100%; } }
+    .player-playing .player-overlay { display: none; }
+    .player-playing .progress-fill-anim { animation: progressAnim 120s linear forwards; }
+
+    /* Drag carousel */
+    .drag-carousel {
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .drag-carousel.dragging {
+      cursor: grabbing;
+      scroll-snap-type: none !important;
+      scroll-behavior: auto !important;
+    }
+    .drag-carousel.dragging * {
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="bg-bg text-fg font-body overflow-x-hidden">
+
+  <!-- Nav -->
+  <nav class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 md:px-12 py-4 bg-bg/[0.92] backdrop-blur-xl border-b border-white/[0.04]">
+    <div class="flex items-center gap-6">
+      <a href="index.html" class="font-display text-2xl font-extrabold tracking-wider text-accent uppercase">Cinevo</a>
+      <a href="landing-page.html" class="inline-flex items-center gap-1.5 text-[13px] text-fg-secondary px-3 py-1.5 rounded-md hover:bg-white/[0.08] hover:text-fg transition-all">
+        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        Back to Browse
+      </a>
+    </div>
+  </nav>
+
+  <!-- Video Player -->
+  <section class="pt-[72px]">
+    <div id="player" class="relative w-full aspect-video max-h-[70vh] bg-black overflow-hidden group">
+      <img src="https://picsum.photos/seed/dune-wide-desert/1920/1080" alt="Dune: Part Two" class="w-full h-full object-cover brightness-[0.6] group-hover:brightness-[0.45] transition-all duration-400">
+      <div class="player-overlay absolute inset-0 grid place-items-center">
+        <button id="playBtn" aria-label="Play" class="w-20 h-20 bg-accent rounded-full grid place-items-center shadow-[0_8px_40px_rgba(229,62,79,0.25)] hover:scale-110 transition-transform" style="animation: playPulse 2.5s ease-in-out infinite;">
+          <svg class="w-7 h-7 fill-white ml-1" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+      </div>
+      <div class="absolute bottom-0 left-0 right-0 px-6 py-4 flex items-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style="background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);">
+        <button id="playPause" aria-label="Play/Pause" class="w-8 h-8 grid place-items-center rounded hover:bg-white/[0.12] transition-colors">
+          <svg id="ppIcon" class="w-[18px] h-[18px] fill-white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <span id="timeLabel" class="text-xs text-white/70 font-mono whitespace-nowrap tabular-nums">0:00</span>
+        <div id="progressTrack" class="flex-1 h-1 bg-white/20 rounded cursor-pointer relative group/prog">
+          <div id="progressFill" class="progress-fill-anim h-full bg-accent rounded transition-[width] duration-150" style="width:0%"></div>
+        </div>
+        <span class="text-xs text-white/70 font-mono whitespace-nowrap">2:46:00</span>
+        <button aria-label="Volume" class="w-8 h-8 grid place-items-center rounded hover:bg-white/[0.12] transition-colors">
+          <svg class="w-[18px] h-[18px] fill-white" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+        </button>
+        <button aria-label="Subtitles" class="w-8 h-8 grid place-items-center rounded hover:bg-white/[0.12] transition-colors">
+          <svg class="w-[18px] h-[18px] fill-white" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM6 10h2v2H6v-2zm0 4h8v2H6v-2zm10 0h2v2h-2v-2zm-6-4h8v2h-8v-2z"/></svg>
+        </button>
+        <button aria-label="Fullscreen" class="w-8 h-8 grid place-items-center rounded hover:bg-white/[0.12] transition-colors">
+          <svg class="w-[18px] h-[18px] fill-white" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Movie Info -->
+  <div class="anim-fade px-4 sm:px-6 md:px-12 pt-8 max-w-[1200px] grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 lg:gap-12">
+    <div>
+      <h1 class="font-display text-[clamp(24px,4vw,42px)] font-extrabold leading-tight tracking-tight mb-3">Dune: Part Two</h1>
+      <div class="flex items-center gap-2.5 flex-wrap mb-4">
+        <span class="bg-gold text-black text-xs font-bold px-2.5 py-[3px] rounded">&#9733; 8.6</span>
+        <span class="text-xs font-bold px-2.5 py-[3px] rounded bg-white/10 text-fg-secondary border border-white/[0.15]">4K UHD</span>
+        <span class="text-sm text-fg-secondary">2024 &middot; PG-13 &middot; 2h 46m</span>
+      </div>
+      <div class="flex gap-2 mb-5">
+        <span class="px-3.5 py-1 rounded-full text-xs font-semibold bg-surface border border-border text-fg-secondary hover:border-accent hover:text-accent transition-all cursor-pointer">Sci-Fi</span>
+        <span class="px-3.5 py-1 rounded-full text-xs font-semibold bg-surface border border-border text-fg-secondary hover:border-accent hover:text-accent transition-all cursor-pointer">Action</span>
+        <span class="px-3.5 py-1 rounded-full text-xs font-semibold bg-surface border border-border text-fg-secondary hover:border-accent hover:text-accent transition-all cursor-pointer">Adventure</span>
+        <span class="px-3.5 py-1 rounded-full text-xs font-semibold bg-surface border border-border text-fg-secondary hover:border-accent hover:text-accent transition-all cursor-pointer">Drama</span>
+      </div>
+      <p class="text-[15px] text-fg-secondary leading-relaxed mb-6 max-w-[600px]">Follow the mythic journey of Paul Atreides as he unites with Chani and the Fremen while on a warpath of revenge against the conspirators who destroyed his family. Facing a choice between the love of his life and the fate of the known universe, he endeavors to prevent a terrible future only he can foresee.</p>
+      <div class="flex gap-2.5 flex-wrap mb-8">
+        <button onclick="togglePlay()" class="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-semibold bg-accent text-white hover:bg-accent-hover hover:shadow-[0_6px_20px_rgba(229,62,79,0.25)] transition-all">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Play
+        </button>
+        <button id="listBtn" onclick="toggleList(this)" class="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-semibold bg-transparent text-fg-secondary border border-border hover:border-fg-secondary hover:text-fg transition-all">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> My List
+        </button>
+        <button class="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-semibold bg-transparent text-fg-secondary border border-border hover:border-fg-secondary hover:text-fg transition-all">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Download
+        </button>
+        <button class="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-semibold bg-transparent text-fg-secondary border border-border hover:border-fg-secondary hover:text-fg transition-all">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg> Share
+        </button>
+      </div>
+    </div>
+    <div class="pt-2">
+      <div class="mb-5"><div class="text-[11px] font-bold uppercase tracking-widest text-muted mb-1.5">Director</div><div class="text-sm text-fg-secondary">Denis Villeneuve</div></div>
+      <div class="mb-5"><div class="text-[11px] font-bold uppercase tracking-widest text-muted mb-1.5">Writers</div><div class="text-sm text-fg-secondary leading-relaxed">Denis Villeneuve, Jon Spaihts<br>Based on the novel by Frank Herbert</div></div>
+      <div class="mb-5"><div class="text-[11px] font-bold uppercase tracking-widest text-muted mb-1.5">Music</div><div class="text-sm text-fg-secondary">Hans Zimmer</div></div>
+      <div class="mb-5"><div class="text-[11px] font-bold uppercase tracking-widest text-muted mb-1.5">Cinematography</div><div class="text-sm text-fg-secondary">Greig Fraser</div></div>
+      <div class="mb-5"><div class="text-[11px] font-bold uppercase tracking-widest text-muted mb-1.5">Audio</div><div class="text-sm text-fg-secondary">Dolby Atmos &middot; 7.1 Surround</div></div>
+    </div>
+  </div>
+
+  <!-- Cast -->
+  <section id="castSection" class="px-4 sm:px-6 md:px-12 pt-10 opacity-0 translate-y-5 transition-all duration-600">
+    <h2 class="font-display text-[22px] font-bold mb-5">Cast</h2>
+    <div id="castScroll" class="drag-carousel flex gap-5 overflow-x-auto scrollbar-hide pb-2"></div>
+  </section>
+
+  <!-- Reviews -->
+  <section id="reviewsSection" class="px-4 sm:px-6 md:px-12 pt-10 opacity-0 translate-y-5 transition-all duration-600">
+    <h2 class="font-display text-[22px] font-bold mb-5">Audience Reviews</h2>
+    <div id="reviewCards" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"></div>
+  </section>
+
+  <!-- Similar -->
+  <section id="similarSection" class="px-4 sm:px-6 md:px-12 pt-10 opacity-0 translate-y-5 transition-all duration-600">
+    <h2 class="font-display text-[22px] font-bold mb-5">More Like This</h2>
+    <div id="similarScroll" class="drag-carousel flex gap-3.5 overflow-x-auto scrollbar-hide"></div>
+  </section>
+
+  <footer class="px-4 sm:px-6 md:px-12 pt-12 pb-8 border-t border-border mt-12">
+    <div class="flex items-center justify-between">
+      <span class="text-[11px] text-muted">&copy; 2024 Cinevo. All rights reserved.</span>
+      <span class="font-display text-lg font-extrabold text-accent tracking-wider uppercase">Cinevo</span>
+    </div>
+  </footer>
+
+  <script>
+  (function(){
+    // Cast data
+    var CAST = [
+      { name:'Timothee Chalamet', role:'Paul Atreides', img:3 },
+      { name:'Zendaya', role:'Chani', img:5 },
+      { name:'Austin Butler', role:'Feyd-Rautha Harkonnen', img:8 },
+      { name:'Florence Pugh', role:'Princess Irulan', img:9 },
+      { name:'Josh Brolin', role:'Gurney Halleck', img:11 },
+      { name:'Javier Bardem', role:'Stilgar', img:12 },
+      { name:'Dave Bautista', role:'Glossu Rabban', img:14 },
+      { name:'Christopher Walken', role:'Emperor Shaddam IV', img:15 },
+      { name:'Lea Seydoux', role:'Lady Margot', img:16 },
+      { name:'Stellan Skarsgard', role:'Baron Harkonnen', img:18 },
+      { name:'Charlotte Rampling', role:'Reverend Mother Mohiam', img:20 },
+      { name:'Souheila Yacoub', role:'Shishakli', img:21 }
+    ];
+
+    var castEl = document.getElementById('castScroll');
+    CAST.forEach(function(c){
+      castEl.insertAdjacentHTML('beforeend',
+        '<div class="flex-none w-[110px] md:w-[140px] text-center cursor-pointer transition-transform duration-300 hover:-translate-y-1 group">' +
+          '<div class="w-20 h-20 md:w-[110px] md:h-[110px] mx-auto mb-2.5 rounded-full overflow-hidden bg-surface border-[3px] border-border group-hover:border-accent transition-colors">' +
+            '<img src="https://i.pravatar.cc/220?img='+c.img+'" alt="'+c.name+'" loading="lazy" class="w-full h-full object-cover">' +
+          '</div>' +
+          '<div class="text-[11px] md:text-[13px] font-bold truncate">'+c.name+'</div>' +
+          '<div class="text-[10px] md:text-[11px] text-muted mt-0.5 truncate">'+c.role+'</div>' +
+        '</div>'
+      );
+    });
+
+    // Reviews
+    var REVIEWS = [
+      { author:'Alex M.', stars:5, text:'A masterpiece of modern cinema. Denis Villeneuve has crafted an epic that surpasses its predecessor in every way. The desert sequences are breathtaking.' },
+      { author:'Sarah K.', stars:4, text:'Visually stunning with incredible performances, especially Austin Butler as Feyd-Rautha. The pacing felt perfect. Hans Zimmer\'s score is otherworldly.' },
+      { author:'James R.', stars:5, text:'This is what blockbuster filmmaking should be. Every frame is a painting. Chalamet and Zendaya have fantastic chemistry. A triumph.' },
+      { author:'Maya L.', stars:4, text:'Greig Fraser\'s cinematography is on another level. The Harkonnen arena scene alone is worth the price of admission. Can\'t wait for part three.' }
+    ];
+    var revEl = document.getElementById('reviewCards');
+    REVIEWS.forEach(function(r){
+      revEl.insertAdjacentHTML('beforeend',
+        '<div class="bg-surface border border-border rounded-xl p-5 hover:border-white/10 transition-colors">' +
+          '<div class="flex items-center gap-3 mb-3">' +
+            '<div class="w-9 h-9 rounded-full" style="background:linear-gradient(135deg,#e53e4f,#8b5cf6)"></div>' +
+            '<div><div class="text-[13px] font-semibold">'+r.author+'</div><div class="text-xs text-gold">'+'&#9733;'.repeat(r.stars)+'&#9734;'.repeat(5-r.stars)+'</div></div>' +
+          '</div>' +
+          '<div class="text-[13px] text-fg-secondary leading-relaxed">'+r.text+'</div>' +
+        '</div>'
+      );
+    });
+
+    // Similar movies
+    var SIMILAR = [
+      {t:'Interstellar',y:2014,g:'Sci-Fi',s:'interstellar-hole'},
+      {t:'Blade Runner 2049',y:2017,g:'Sci-Fi',s:'blade-neon'},
+      {t:'Arrival',y:2016,g:'Sci-Fi',s:'arrival-ufo'},
+      {t:'Mad Max: Fury Road',y:2015,g:'Action',s:'fury-desert'},
+      {t:'The Martian',y:2015,g:'Sci-Fi',s:'martian-red'},
+      {t:'Sicario',y:2015,g:'Thriller',s:'sicario-border'},
+      {t:'Prometheus',y:2012,g:'Sci-Fi',s:'prometheus-ship'},
+      {t:'Foundation',y:2021,g:'Sci-Fi',s:'foundation-empire'}
+    ];
+    var simEl = document.getElementById('similarScroll');
+    SIMILAR.forEach(function(m){
+      simEl.insertAdjacentHTML('beforeend',
+        '<div class="flex-none w-[130px] sm:w-[155px] md:w-[180px] cursor-pointer transition-transform duration-300 hover:-translate-y-1.5 hover:scale-[1.02] group" onclick="location.reload()">' +
+          '<div class="w-full aspect-[2/3] rounded-lg overflow-hidden bg-surface">' +
+            '<img src="https://picsum.photos/seed/'+m.s+'/300/450" alt="'+m.t+'" loading="lazy" class="w-full h-full object-cover transition-transform duration-400 group-hover:scale-[1.06]">' +
+          '</div>' +
+          '<div class="pt-2 px-0.5"><div class="text-[13px] font-semibold truncate">'+m.t+'</div><div class="text-[11px] text-muted mt-0.5">'+m.y+' &middot; '+m.g+'</div></div>' +
+        '</div>'
+      );
+    });
+
+    // Scroll animations
+    var obs = new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(e.isIntersecting){
+          e.target.classList.remove('opacity-0','translate-y-5');
+          e.target.classList.add('opacity-100','translate-y-0');
+        }
+      });
+    },{threshold:0.08, rootMargin:'0px 0px -40px 0px'});
+    document.querySelectorAll('#castSection,#reviewsSection,#similarSection').forEach(function(s){ obs.observe(s); });
+
+    // Player interaction
+    var playing = false;
+    var player = document.getElementById('player');
+    var ppIcon = document.getElementById('ppIcon');
+    var timeEl = document.getElementById('timeLabel');
+    var progFill = document.getElementById('progressFill');
+    var elapsed = 0;
+    var timer;
+
+    window.togglePlay = function(){
+      playing = !playing;
+      player.classList.toggle('player-playing', playing);
+      ppIcon.innerHTML = playing
+        ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'
+        : '<path d="M8 5v14l11-7z"/>';
+      if(playing){
+        timer = setInterval(function(){
+          elapsed++;
+          var m = Math.floor(elapsed/60); var s = elapsed%60;
+          timeEl.textContent = m+':'+(s<10?'0':'')+s;
+          progFill.style.width = (elapsed/9960*100)+'%';
+        },1000);
+      } else {
+        clearInterval(timer);
+      }
+    };
+    document.getElementById('playBtn').addEventListener('click', togglePlay);
+    document.getElementById('playPause').addEventListener('click', togglePlay);
+
+    document.getElementById('progressTrack').addEventListener('click',function(e){
+      var rect = this.getBoundingClientRect();
+      var pct = (e.clientX - rect.left) / rect.width;
+      progFill.style.width = (pct*100)+'%';
+      elapsed = Math.floor(pct*9960);
+      var m = Math.floor(elapsed/60); var s = elapsed%60;
+      timeEl.textContent = m+':'+(s<10?'0':'')+s;
+    });
+
+    window.toggleList = function(btn){
+      var isActive = btn.classList.toggle('active');
+      if(isActive){
+        btn.classList.add('border-green','text-green');
+        btn.classList.remove('border-border','text-fg-secondary');
+      } else {
+        btn.classList.remove('border-green','text-green');
+        btn.classList.add('border-border','text-fg-secondary');
+      }
+      btn.innerHTML = isActive
+        ? '<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Added'
+        : '<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> My List';
+    };
+
+    // Drag-to-scroll for cast and similar carousels
+    document.querySelectorAll('.drag-carousel').forEach(function(carousel){
+      var isDown = false, startX, scrollLeft, velX = 0, lastX, lastTime, animFrame;
+
+      carousel.addEventListener('mousedown', function(e){
+        isDown = true;
+        carousel.classList.add('dragging');
+        startX = e.pageX - carousel.offsetLeft;
+        scrollLeft = carousel.scrollLeft;
+        velX = 0;
+        lastX = e.pageX;
+        lastTime = Date.now();
+        cancelAnimationFrame(animFrame);
+      });
+
+      carousel.addEventListener('mouseleave', endDrag);
+      carousel.addEventListener('mouseup', endDrag);
+
+      carousel.addEventListener('mousemove', function(e){
+        if(!isDown) return;
+        e.preventDefault();
+        var x = e.pageX - carousel.offsetLeft;
+        var walk = (x - startX) * 1.2;
+        carousel.scrollLeft = scrollLeft - walk;
+        var now = Date.now();
+        var dt = now - lastTime;
+        if(dt > 0) velX = (lastX - e.pageX) / dt;
+        lastX = e.pageX;
+        lastTime = now;
+      });
+
+      function endDrag(){
+        if(!isDown) return;
+        isDown = false;
+        carousel.classList.remove('dragging');
+        var momentum = velX * 120;
+        if(Math.abs(momentum) > 10){
+          var start = carousel.scrollLeft;
+          var target = start + momentum;
+          var startTime = performance.now();
+          var duration = Math.min(800, Math.abs(momentum) * 2);
+          function ease(t){ return 1 - Math.pow(1 - t, 3); }
+          function animate(now){
+            var elapsed = now - startTime;
+            var progress = Math.min(elapsed / duration, 1);
+            carousel.scrollLeft = start + (target - start) * ease(progress);
+            if(progress < 1) animFrame = requestAnimationFrame(animate);
+          }
+          animFrame = requestAnimationFrame(animate);
+        }
+      }
+
+      // Touch support
+      var touchStartX, touchScrollLeft, touchVelX, touchLastX, touchLastTime;
+      carousel.addEventListener('touchstart', function(e){
+        touchStartX = e.touches[0].pageX;
+        touchScrollLeft = carousel.scrollLeft;
+        touchVelX = 0; touchLastX = touchStartX; touchLastTime = Date.now();
+        cancelAnimationFrame(animFrame);
+      }, {passive: true});
+      carousel.addEventListener('touchmove', function(e){
+        var x = e.touches[0].pageX;
+        carousel.scrollLeft = touchScrollLeft - (x - touchStartX);
+        var now = Date.now(); var dt = now - touchLastTime;
+        if(dt > 0) touchVelX = (touchLastX - x) / dt;
+        touchLastX = x; touchLastTime = now;
+      }, {passive: true});
+      carousel.addEventListener('touchend', function(){
+        var momentum = touchVelX * 150;
+        if(Math.abs(momentum) > 10){
+          var start = carousel.scrollLeft;
+          var target = start + momentum;
+          var startTime = performance.now();
+          var duration = Math.min(800, Math.abs(momentum) * 2);
+          function ease(t){ return 1 - Math.pow(1 - t, 3); }
+          function animate(now){
+            var elapsed = now - startTime;
+            var progress = Math.min(elapsed / duration, 1);
+            carousel.scrollLeft = start + (target - start) * ease(progress);
+            if(progress < 1) animFrame = requestAnimationFrame(animate);
+          }
+          animFrame = requestAnimationFrame(animate);
+        }
+      }, {passive: true});
+    });
+  })();
+  </script>
+</body>
+</html>
