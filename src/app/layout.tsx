@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Geist } from "next/font/google";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 import WishlistProvider from "@/components/wishlist/WishlistProvider";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -36,6 +37,7 @@ export default function RootLayout({
     >
       <body className="bg-bg text-fg min-h-full flex flex-col font-sans">
         <WishlistProvider>{children}</WishlistProvider>
+        <Analytics />
       </body>
     </html>
   );
