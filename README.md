@@ -1,36 +1,132 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎬 Cinevo
 
-## Getting Started
+A modern, cinematic movie & TV streaming front-end built with **Next.js 16**, **React 19**, and **TMDB**. Browse trending titles, explore genres and studio collections, watch via embeddable players, track progress, and build a wishlist.
 
-First, run the development server:
+> ⚠️ This project runs on a build of **Next.js 16.2.6** with breaking changes from older versions. See [`AGENTS.md`](./AGENTS.md) — before changing framework code, consult the bundled docs in `node_modules/next/dist/docs/`.
+
+---
+
+## ✨ Features
+
+- **Cinematic hero banner** with inline muted trailer previews, click-through to details, and hover-to-pause rotation.
+- **Dynamic rows** powered by TMDB: Trending, New Releases, Popular TV, Top Rated, plus **studio collections** (Marvel, DC) and **regional cinema** (Bollywood, Tollywood).
+- **"See All" grid** on every row with **Load More** pagination.
+- **Genre browse view** (`/?genre=…`) with a paginated poster grid (Movies + TV Shows).
+- **Watch page** with a multi-source embed player (CineSrc / VidCore / LordFlix), sandbox toggle, season/episode selectors, cast, and a click-to-play trailer.
+- **More Like This** recommendations scoped to the current title.
+- **Search** (titles + people / filmographies), **Wishlist**, and **Continue Watching** progress — persisted to Postgres via Prisma.
+- Responsive, dark, Tailwind CSS v4 design.
+
+---
+
+## 🧱 Tech Stack
+
+| Area         | Tech                                            |
+| ------------ | ----------------------------------------------- |
+| Framework    | Next.js 16 (App Router, Server Actions)         |
+| UI           | React 19, Tailwind CSS v4, lucide-react, motion |
+| Data source  | The Movie Database (TMDB) REST API              |
+| Database     | PostgreSQL via Prisma 7 (`@prisma/adapter-pg`)  |
+| DB host      | Supabase (Postgres)                             |
+| Language     | TypeScript                                      |
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Node.js** 18.18+ (Node 20+ recommended)
+- A **TMDB** account + API credentials — https://www.themoviedb.org/settings/api
+- A **PostgreSQL** database (e.g. a Supabase project)
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure environment variables
+
+Create a `.env` file in the project root:
+
+```bash
+# TMDB — used by src/lib/tmdb.ts
+TMDB_API_KEY=your_tmdb_v3_api_key
+TMDB_ACCESS_TOKEN=your_tmdb_v4_read_access_token
+
+# PostgreSQL connection string — used by Prisma (src/lib/db.ts)
+DATABASE_URL=postgresql://user:password@host:5432/dbname?pgbouncer=true
+DIRECT_URL=postgresql://user:password@host:5432/dbname
+```
+
+### 3. Set up the database
+
+```bash
+npx prisma generate          # generate the Prisma client
+npx prisma migrate dev       # apply the schema (or: npx prisma db push)
+```
+
+### 4. Run the dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📜 Scripts
 
-## Learn More
+| Command         | Description                  |
+| --------------- | ---------------------------- |
+| `npm run dev`   | Start the development server |
+| `npm run build` | Production build             |
+| `npm run start` | Run the production build     |
+| `npm run lint`  | Lint with ESLint             |
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📁 Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+├─ app/
+│  ├─ page.tsx                 # Home dashboard + genre browse view
+│  ├─ watch/[type]/[id]/       # Watch / details page
+│  ├─ wishlist/                # Wishlist page
+│  └─ actions/                 # Server Actions (tmdb, progress, wishlist)
+├─ components/
+│  ├─ dashboard/               # HeroCarousel, MediaCarousel, GenreSection, …
+│  ├─ player/IframePlayer.tsx  # Multi-source embed player
+│  ├─ watch/                   # TrailerPlayer, CastSection, SeasonList, ShareButton
+│  └─ wishlist/                # WishlistButton, WishlistGrid
+└─ lib/
+   ├─ tmdb.ts                  # TMDB API client
+   ├─ db.ts                    # Prisma client (pg adapter)
+   └─ sources.ts               # Embed-source name ↔ index mapping
+prisma/
+└─ schema.prisma               # Profile, WatchProgress, Wishlist models
+```
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🗄️ Data Models
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Profile** — synced with the auth user ID; owns watch progress and wishlists.
+- **WatchProgress** — per-title (and per season/episode for TV) playback position.
+- **Wishlist** — saved titles with rating and release date.
+
+---
+
+## ⚠️ Notes
+
+- The embed player streams from third-party sources for demonstration purposes. The **sandbox toggle** defaults ON for every source except VidCore.
+- TMDB responses are cached for 1 hour via Next.js fetch revalidation.
+
+---
+
+## 📄 License
+
+Private project — not licensed for redistribution.

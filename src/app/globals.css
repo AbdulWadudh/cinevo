@@ -1,26 +1,94 @@
 @import "tailwindcss";
 
+@theme {
+  --color-bg: #08080f;
+  --color-bg-elevated: #0e0e18;
+  --color-surface: #141422;
+  --color-surface-hover: #1c1c30;
+  --color-fg: #eeeef4;
+  --color-fg-secondary: #b0b0c4;
+  --color-muted: #6e6e88;
+  --color-border: #1e1e32;
+  --color-accent: #e53e4f;
+  --color-accent-hover: #f04d5e;
+  --color-gold: #f59e0b;
+  --color-blue: #3b82f6;
+  --color-emerald-400: #34d399;
+
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  
+  --radius-lg: 12px;
+  --radius-md: 8px;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #08080f;
+  --foreground: #eeeef4;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #08080f;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e1e32;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #e53e4f;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(20, 20, 34, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.glass-nav {
+  background: rgba(8, 8, 15, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-b: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+@keyframes heroZoom {
+  from {
+    transform: scale(1.05);
+  }
+  to {
+    transform: scale(1.12);
+  }
+}
+
+.hero-zoom {
+  animation: heroZoom 25s ease-in-out infinite alternate;
 }
