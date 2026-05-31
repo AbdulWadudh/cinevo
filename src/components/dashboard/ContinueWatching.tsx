@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Play } from "lucide-react";
 import { getWatchProgressList } from "@/app/actions/progress";
+import WishlistHeart from "@/components/wishlist/WishlistHeart";
+import { TMDBMedia } from "@/lib/tmdb";
 
 interface ProgressItem {
   id: string;
@@ -84,6 +86,17 @@ export default function ContinueWatching() {
                     <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-semibold text-fg-secondary">
                       {percent}% watched
                     </div>
+
+                    <WishlistHeart
+                      corner="left"
+                      mediaType={item.mediaType === "tv" ? "tv" : "movie"}
+                      item={{
+                        id: Number(item.mediaId),
+                        media_type: item.mediaType === "tv" ? "tv" : "movie",
+                        title: item.title,
+                        poster_path: item.posterPath || "",
+                      } as TMDBMedia}
+                    />
                   </div>
 
                   {/* Card Meta Content */}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Geist } from "next/font/google";
 import "./globals.css";
+import WishlistProvider from "@/components/wishlist/WishlistProvider";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-display",
@@ -16,6 +17,11 @@ const geistSans = Geist({
 export const metadata: Metadata = {
   title: "Cinevo — Stream Movies & TV Shows",
   description: "Experience premium, ad-free streaming of your favorite movies and TV series with restricted ad suppression sandboxing.",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -29,7 +35,7 @@ export default function RootLayout({
       className={`${plusJakarta.variable} ${geistSans.variable} h-full antialiased`}
     >
       <body className="bg-bg text-fg min-h-full flex flex-col font-sans">
-        {children}
+        <WishlistProvider>{children}</WishlistProvider>
       </body>
     </html>
   );

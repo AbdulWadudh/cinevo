@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Play, Star, Loader2 } from "lucide-react";
 import { TMDBMedia } from "@/lib/tmdb";
 import { loadGenrePageAction } from "@/app/actions/tmdb-actions";
+import WishlistHeart from "@/components/wishlist/WishlistHeart";
 
 interface GenreSectionProps {
   title: string;
@@ -58,6 +59,7 @@ export default function GenreSection({
                 loading="lazy"
                 className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
               />
+              <WishlistHeart item={item} mediaType={mediaType} />
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity duration-300">
                 <div className="w-11 h-11 bg-accent text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(229,62,79,0.45)]">
                   <Play className="w-4 h-4 fill-white translate-x-0.5" />

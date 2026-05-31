@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Check } from "lucide-react";
 import { toggleWishlist } from "@/app/actions/wishlist";
 
@@ -24,6 +25,7 @@ export default function WishlistButton({
   initialExists
 }: WishlistButtonProps) {
   const [exists, setExists] = useState(initialExists);
+  const router = useRouter();
 
   const handleToggle = async () => {
     // Optimistic toggle
@@ -41,6 +43,10 @@ export default function WishlistButton({
     if (!res.success) {
       // Revert if failed
       setExists((prev) => !prev);
+      // Not signed in → send them to login.
+      if ("requiresAuth" in res && res.requiresAuth) {
+        router.push(`/login?redirect=/watch/${mediaType}/${mediaId}`);
+      }
     }
   };
 

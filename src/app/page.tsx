@@ -144,10 +144,14 @@ export default async function Home({ searchParams }: HomeProps) {
       </div>
 
       {/* Sleek Footer */}
-      <footer className="px-6 md:px-12 pt-10 pb-8 border-t border-border mt-16 text-center md:text-left">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="text-[11px] text-muted">&copy; 2026 Cinevo. All rights reserved.</span>
-          <span className="font-display text-lg font-extrabold text-accent tracking-wider uppercase">Cinevo</span>
+      <footer className="px-6 md:px-12 py-5 border-t border-border mt-12">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-4">
+            <span className="text-[11px] text-muted">&copy; 2026 Cinevo. All rights reserved.</span>
+            <Link href="/privacy" className="text-[11px] text-muted hover:text-fg-secondary transition-colors">Privacy</Link>
+            <Link href="/terms" className="text-[11px] text-muted hover:text-fg-secondary transition-colors">Terms</Link>
+          </div>
+          <img src="/full_logo.png" alt="Cinevo" className="h-6 w-auto opacity-90" />
         </div>
       </footer>
     </div>

@@ -1,26 +1,8 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { getOrCreateProfile } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-
-// Sync or fetch default profile for simple testing
-async function getOrCreateProfile(userId: string = "test-user-123") {
-  let profile = await db.profile.findUnique({
-    where: { id: userId },
-  });
-
-  if (!profile) {
-    profile = await db.profile.create({
-      data: {
-        id: userId,
-        email: "streamer@cinevo.com",
-        username: "Cinevo Streamer",
-        avatarUrl: "https://i.pravatar.cc/150?img=33",
-      },
-    });
-  }
-  return profile;
-}
 
 export interface WatchProgressInput {
   mediaId: string;
@@ -37,9 +19,10 @@ export interface WatchProgressInput {
  * Upserts watch progress for a movie or TV show episode.
  * Using a transaction-safe upsert based on the unique compound index.
  */
-export async function updateWatchProgress(input: WatchProgressInput, userId: string = "test-user-123") {
+export async function updateWatchProgress(input: WatchProgressInput) {
   try {
-    const profile = await getOrCreateProfile(userId);
+    const profile = await getOrCreateProfile();
+    if (!profile) return { success: false, requiresAuth: true };
     // Use 0 as default for movies/undefined to satisfy strict Prisma index typings
     const season = input.season || 0;
     const episode = input.episode || 0;
@@ -83,9 +66,10 @@ export async function updateWatchProgress(input: WatchProgressInput, userId: str
 /**
  * Fetches all WatchProgress records for a user, sorted by most recently updated first.
  */
-export async function getWatchProgressList(userId: string = "test-user-123") {
+export async function getWatchProgressList() {
   try {
-    const profile = await getOrCreateProfile(userId);
+    const profile = await getOrCreateProfile();
+    if (!profile) return { success: true, data: [] };
     const items = await db.watchProgress.findMany({
       where: {
         profileId: profile.id,
@@ -108,11 +92,11 @@ export async function getSingleWatchProgress(
   mediaId: string,
   mediaType: "movie" | "tv",
   season?: number,
-  episode?: number,
-  userId: string = "test-user-123"
+  episode?: number
 ) {
   try {
-    const profile = await getOrCreateProfile(userId);
+    const profile = await getOrCreateProfile();
+    if (!profile) return { success: true, data: null };
     const s = season || 0;
     const e = episode || 0;
 
@@ -142,11 +126,11 @@ export async function deleteWatchProgress(
   mediaId: string,
   mediaType: "movie" | "tv",
   season?: number,
-  episode?: number,
-  userId: string = "test-user-123"
+  episode?: number
 ) {
   try {
-    const profile = await getOrCreateProfile(userId);
+    const profile = await getOrCreateProfile();
+    if (!profile) return { success: false, requiresAuth: true };
     const s = season || 0;
     const e = episode || 0;
 

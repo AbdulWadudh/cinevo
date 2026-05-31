@@ -1,26 +1,8 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { getOrCreateProfile } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-
-// Sync or fetch default profile for simple testing
-async function getOrCreateProfile(userId: string = "test-user-123") {
-  let profile = await db.profile.findUnique({
-    where: { id: userId },
-  });
-
-  if (!profile) {
-    profile = await db.profile.create({
-      data: {
-        id: userId,
-        email: "streamer@cinevo.com",
-        username: "Cinevo Streamer",
-        avatarUrl: "https://i.pravatar.cc/150?img=33",
-      },
-    });
-  }
-  return profile;
-}
 
 export interface WishlistItemInput {
   mediaId: string;
@@ -34,9 +16,10 @@ export interface WishlistItemInput {
 /**
  * Toggles a media item in the user's wishlist
  */
-export async function toggleWishlist(item: WishlistItemInput, userId: string = "test-user-123") {
+export async function toggleWishlist(item: WishlistItemInput) {
   try {
-    const profile = await getOrCreateProfile(userId);
+    const profile = await getOrCreateProfile();
+    if (!profile) return { success: false, requiresAuth: true };
 
     const existing = await db.wishlist.findUnique({
       where: {
@@ -84,9 +67,10 @@ export async function toggleWishlist(item: WishlistItemInput, userId: string = "
 /**
  * Fetches all wishlist items for a user
  */
-export async function getWishlist(userId: string = "test-user-123") {
+export async function getWishlist() {
   try {
-    const profile = await getOrCreateProfile(userId);
+    const profile = await getOrCreateProfile();
+    if (!profile) return { success: true, data: [] };
     const items = await db.wishlist.findMany({
       where: {
         profileId: profile.id,
@@ -103,11 +87,31 @@ export async function getWishlist(userId: string = "test-user-123") {
 }
 
 /**
+ * Returns the set of wishlist keys (`${mediaType}:${mediaId}`) for the current
+ * user in a single query — used to pre-fill hover hearts across the app.
+ */
+export async function getWishlistKeys(): Promise<{ success: boolean; data: string[] }> {
+  try {
+    const profile = await getOrCreateProfile();
+    if (!profile) return { success: true, data: [] };
+    const items = await db.wishlist.findMany({
+      where: { profileId: profile.id },
+      select: { mediaId: true, mediaType: true },
+    });
+    return { success: true, data: items.map((i) => `${i.mediaType}:${i.mediaId}`) };
+  } catch (error) {
+    console.error("Failed to load wishlist keys:", error);
+    return { success: false, data: [] };
+  }
+}
+
+/**
  * Checks if a specific media item is in the user's wishlist
  */
-export async function checkWishlistStatus(mediaId: string, mediaType: "movie" | "tv", userId: string = "test-user-123") {
+export async function checkWishlistStatus(mediaId: string, mediaType: "movie" | "tv") {
   try {
-    const profile = await getOrCreateProfile(userId);
+    const profile = await getOrCreateProfile();
+    if (!profile) return { success: true, exists: false };
     const existing = await db.wishlist.findUnique({
       where: {
         profileId_mediaId_mediaType: {

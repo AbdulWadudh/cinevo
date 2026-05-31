@@ -11,6 +11,7 @@ import { checkWishlistStatus } from "@/app/actions/wishlist";
 import CastSection from "@/components/watch/CastSection";
 import ShareButton from "@/components/watch/ShareButton";
 import TrailerPlayer from "@/components/watch/TrailerPlayer";
+import WishlistHeart from "@/components/wishlist/WishlistHeart";
 import SeasonList from "@/components/watch/SeasonList";
 
 interface PageProps {
@@ -197,12 +198,13 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
               >
                 <Link href={`/watch/${m.media_type || mediaType}/${m.id}`} className="block cursor-pointer">
                   <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-surface border border-white/[0.04]">
-                    <img 
-                      src={m.poster_path ? `https://image.tmdb.org/t/p/w300${m.poster_path}` : "https://picsum.photos/seed/similar/300/450"} 
-                      alt={m.title || m.name} 
+                    <img
+                      src={m.poster_path ? `https://image.tmdb.org/t/p/w300${m.poster_path}` : "https://picsum.photos/seed/similar/300/450"}
+                      alt={m.title || m.name}
                       className="w-full h-full object-cover transition duration-400 group-hover:scale-105"
                       loading="lazy"
                     />
+                    <WishlistHeart item={m} mediaType={mediaType} />
                   </div>
                   <div className="pt-2 px-0.5">
                     <div className="text-xs font-semibold truncate text-fg group-hover:text-accent transition-colors">{m.title || m.name}</div>

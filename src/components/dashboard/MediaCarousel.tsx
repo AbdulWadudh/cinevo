@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, Play, Star, X, Loader2 } from "lucide-react";
 import { TMDBMedia, MediaSource } from "@/lib/tmdb";
 import { loadMediaPageAction } from "@/app/actions/tmdb-actions";
+import WishlistHeart from "@/components/wishlist/WishlistHeart";
 
 interface MediaCarouselProps {
   title: string;
@@ -210,13 +211,15 @@ export default function MediaCarousel({
                 <Link href={linkUrl} onClick={handleLinkClick} className="block cursor-pointer select-none" draggable={false}>
                   {/* Poster Container */}
                   <div className="relative aspect-[2/3] w-full bg-surface rounded-xl overflow-hidden border border-white/[0.04] shadow-md transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] hover:border-accent hover:shadow-[0_8px_25px_rgba(0,0,0,0.8)]">
-                    <img 
-                      src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "https://picsum.photos/seed/cinevoposter/300/450"} 
+                    <img
+                      src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "https://picsum.photos/seed/cinevoposter/300/450"}
                       alt={item.title || item.name}
                       className="w-full h-full object-cover transition duration-700 group-hover:scale-108"
                       loading="lazy"
                       draggable={false}
                     />
+
+                    <WishlistHeart item={item} mediaType={mediaType} />
 
                     {/* Centered Play Button Hover Overlay */}
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity duration-300 z-20">
@@ -299,13 +302,15 @@ export default function MediaCarousel({
                       className="block cursor-pointer select-none"
                     >
                       <div className="relative aspect-[2/3] w-full bg-surface rounded-xl overflow-hidden border border-white/[0.04] shadow-md transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] hover:border-accent hover:shadow-[0_8px_25px_rgba(0,0,0,0.8)]">
-                        <img 
-                          src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "https://picsum.photos/seed/cinevoposter/300/450"} 
+                        <img
+                          src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "https://picsum.photos/seed/cinevoposter/300/450"}
                           alt={item.title || item.name}
                           className="w-full h-full object-cover transition duration-700 group-hover:scale-108"
                           loading="lazy"
                           draggable={false}
                         />
+
+                        <WishlistHeart item={item} mediaType={mediaType} />
 
                         {/* Centered Play Button Hover Overlay */}
                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity duration-300 z-20">
