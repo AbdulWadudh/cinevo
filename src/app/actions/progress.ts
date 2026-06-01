@@ -56,6 +56,7 @@ export async function updateWatchProgress(input: WatchProgressInput) {
     });
 
     revalidatePath("/");
+    revalidatePath("/history");
     return { success: true, data: progress };
   } catch (error) {
     console.error("Failed to update watch progress:", error);
@@ -147,9 +148,50 @@ export async function deleteWatchProgress(
     });
 
     revalidatePath("/");
+    revalidatePath("/history");
     return { success: true };
   } catch (error) {
     console.error("Failed to delete watch progress:", error);
     return { success: false, error: "Failed to delete progress" };
+  }
+}
+
+/**
+ * Deletes specific watch-history rows by their record id (scoped to the
+ * current user). Used for single + batch removal on the history page.
+ */
+export async function deleteWatchProgressByIds(ids: string[]) {
+  try {
+    const profile = await getOrCreateProfile();
+    if (!profile) return { success: false, requiresAuth: true };
+    if (ids.length === 0) return { success: true, count: 0 };
+
+    const res = await db.watchProgress.deleteMany({
+      where: { id: { in: ids }, profileId: profile.id },
+    });
+
+    revalidatePath("/");
+    revalidatePath("/history");
+    return { success: true, count: res.count };
+  } catch (error) {
+    console.error("Failed to delete watch history items:", error);
+    return { success: false, error: "Failed to delete history items" };
+  }
+}
+
+/** Clears the current user's entire watch history. */
+export async function clearWatchProgress() {
+  try {
+    const profile = await getOrCreateProfile();
+    if (!profile) return { success: false, requiresAuth: true };
+
+    const res = await db.watchProgress.deleteMany({ where: { profileId: profile.id } });
+
+    revalidatePath("/");
+    revalidatePath("/history");
+    return { success: true, count: res.count };
+  } catch (error) {
+    console.error("Failed to clear watch history:", error);
+    return { success: false, error: "Failed to clear history" };
   }
 }

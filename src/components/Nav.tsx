@@ -49,6 +49,7 @@ export default function Nav() {
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "Wishlist", href: "/wishlist" },
+    { name: "History", href: "/history" },
   ];
 
   return (

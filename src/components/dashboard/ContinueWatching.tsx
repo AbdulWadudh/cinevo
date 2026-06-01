@@ -47,7 +47,9 @@ export default function ContinueWatching() {
       <div className="relative">
         <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x">
           {progressList.map((item) => {
-            const percent = Math.min(100, Math.floor((item.progress / item.duration) * 100));
+            const percent = item.duration > 0
+              ? Math.min(100, Math.floor((item.progress / item.duration) * 100))
+              : 0;
             const watchUrl = item.mediaType === "tv" 
               ? `/watch/tv/${item.mediaId}?season=${item.season || 1}&episode=${item.episode || 1}&t=${item.progress}`
               : `/watch/movie/${item.mediaId}?t=${item.progress}`;
@@ -67,13 +69,15 @@ export default function ContinueWatching() {
                       loading="lazy"
                     />
 
-                    {/* Progress Fill Bar */}
-                    <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20">
-                      <div 
-                        style={{ width: `${percent}%` }}
-                        className="h-full bg-accent rounded-r-md transition-all duration-300"
-                      />
-                    </div>
+                    {/* Progress Fill Bar (only when there's real progress) */}
+                    {percent > 0 && (
+                      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20">
+                        <div
+                          style={{ width: `${percent}%` }}
+                          className="h-full bg-accent rounded-r-md transition-all duration-300"
+                        />
+                      </div>
+                    )}
 
                     {/* Play Mini Hover Overlay */}
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -82,10 +86,12 @@ export default function ContinueWatching() {
                       </div>
                     </div>
 
-                    {/* Remaining Time Overlay */}
-                    <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-semibold text-fg-secondary">
-                      {percent}% watched
-                    </div>
+                    {/* Remaining Time Overlay (only when there's real progress) */}
+                    {percent > 0 && (
+                      <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-semibold text-fg-secondary">
+                        {percent}% watched
+                      </div>
+                    )}
 
                     <WishlistHeart
                       corner="left"

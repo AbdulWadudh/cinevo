@@ -5,6 +5,7 @@ import { Star, ArrowLeft, Film } from "lucide-react";
 import { tmdb } from "@/lib/tmdb";
 import Nav from "@/components/Nav";
 import IframePlayer from "@/components/player/IframePlayer";
+import TrackWatch from "@/components/watch/TrackWatch";
 import WishlistButton from "@/components/wishlist/WishlistButton";
 import { getSingleWatchProgress } from "@/app/actions/progress";
 import { checkWishlistStatus } from "@/app/actions/wishlist";
@@ -105,6 +106,16 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
             <span>Back to Browse</span>
           </Link>
         </div>
+
+        {/* Records this view into the user's watch history (no-op when signed out) */}
+        <TrackWatch
+          mediaId={id}
+          mediaType={mediaType}
+          title={details.title || details.name || ""}
+          posterPath={details.poster_path || details.backdrop_path || undefined}
+          season={isTV ? season : undefined}
+          episode={isTV ? episode : undefined}
+        />
 
         {/* Sandboxed Video Player Component */}
         <IframePlayer

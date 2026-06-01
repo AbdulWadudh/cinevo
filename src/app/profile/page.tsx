@@ -75,14 +75,17 @@ export default async function ProfilePage() {
             <div className="text-xs text-muted mt-0.5">saved titles</div>
           </Link>
 
-          <div className="bg-surface/60 border border-white/[0.08] rounded-2xl p-5">
+          <Link
+            href="/history"
+            className="group bg-surface/60 border border-white/[0.08] rounded-2xl p-5 hover:border-accent/40 transition-all"
+          >
             <div className="flex items-center gap-2 text-muted mb-1">
               <Clock className="w-4 h-4 text-accent" />
-              <span className="text-[10px] font-bold uppercase tracking-widest">Watching</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest">History</span>
             </div>
-            <div className="text-3xl font-extrabold font-display text-fg">{watchingCount}</div>
-            <div className="text-xs text-muted mt-0.5">in progress</div>
-          </div>
+            <div className="text-3xl font-extrabold font-display text-fg group-hover:text-accent transition-colors">{watchingCount}</div>
+            <div className="text-xs text-muted mt-0.5">titles watched</div>
+          </Link>
         </div>
 
         {/* Edit + Sign out */}
