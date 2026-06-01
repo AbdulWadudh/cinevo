@@ -52,6 +52,7 @@ export default async function ProfilePage() {
             <img
               src={profile.avatarUrl}
               alt={displayName}
+              referrerPolicy="no-referrer"
               className="w-24 h-24 rounded-2xl object-cover border border-white/[0.1] shadow-lg"
             />
           ) : (

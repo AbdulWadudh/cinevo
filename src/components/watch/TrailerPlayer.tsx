@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { Play, Film } from "lucide-react";
 
 interface TrailerPlayerProps {
@@ -42,10 +43,12 @@ export default function TrailerPlayer({ trailerKey, poster, title }: TrailerPlay
       aria-label={`Play ${title} trailer`}
       className="group relative w-full aspect-video rounded-xl overflow-hidden bg-surface border border-white/[0.06] cursor-pointer block"
     >
-      <img
+      <Image
         src={poster || `https://img.youtube.com/vi/${trailerKey}/hqdefault.jpg`}
         alt={`${title} trailer thumbnail`}
-        className="w-full h-full object-cover brightness-[0.6] transition duration-500 group-hover:scale-105 group-hover:brightness-[0.5]"
+        fill
+        sizes="(max-width: 1024px) 100vw, 33vw"
+        className="object-cover brightness-[0.6] transition duration-500 group-hover:scale-105 group-hover:brightness-[0.5]"
       />
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="w-14 h-14 bg-accent text-white rounded-full flex items-center justify-center shadow-[0_6px_24px_rgba(229,62,79,0.45)] transition-transform duration-300 group-hover:scale-110">

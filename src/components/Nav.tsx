@@ -76,6 +76,7 @@ export default function Nav() {
       >
         <div className="flex items-center gap-10">
           <Link href="/" className="flex items-center hover:scale-105 transition-transform duration-200">
+            {/* eslint-disable-next-line @next/next/no-img-element -- static logo, variable width */}
             <img src="/full_logo.png" alt="Cinevo" className="h-8 w-auto" />
           </Link>
           <div className="hidden md:flex items-center gap-6">
@@ -112,9 +113,11 @@ export default function Nav() {
           {authUser ? (
             <Link href="/profile" aria-label="Profile" className="block">
               {authUser.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- user avatar from arbitrary host
                 <img
                   src={authUser.avatarUrl}
                   alt="Profile"
+                  referrerPolicy="no-referrer"
                   className="w-8 h-8 rounded-lg object-cover border border-white/[0.12] hover:border-accent transition-colors"
                 />
               ) : (

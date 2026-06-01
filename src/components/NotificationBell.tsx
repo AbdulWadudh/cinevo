@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
+import Image from "next/image";
 import { Bell, BellRing, BellOff, Sparkles, CalendarClock, Check } from "lucide-react";
 import { getNewEpisodeNotifications } from "@/app/actions/notifications";
 import type { EpisodeNotification } from "@/lib/episodeNotifications";
@@ -113,7 +114,7 @@ export default function NotificationBell() {
                     >
                       <div className="w-9 h-12 rounded-md overflow-hidden bg-surface-hover flex-none">
                         {n.posterPath
-                          ? <img src={`https://image.tmdb.org/t/p/w92${n.posterPath}`} alt={n.title} className="w-full h-full object-cover" />
+                          ? <Image src={`https://image.tmdb.org/t/p/w92${n.posterPath}`} alt={n.title} width={36} height={48} className="w-full h-full object-cover" />
                           : null}
                       </div>
                       <div className="flex-1 min-w-0">

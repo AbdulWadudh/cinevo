@@ -2,6 +2,7 @@
 
 import React, { useState, useTransition } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Play, Star, Loader2 } from "lucide-react";
 import { TMDBMedia } from "@/lib/tmdb";
 import { loadGenrePageAction } from "@/app/actions/tmdb-actions";
@@ -53,11 +54,12 @@ export default function GenreSection({
         {items.map((item) => (
           <Link key={item.id} href={`/watch/${mediaType}/${item.id}`} className="group block">
             <div className="relative aspect-[2/3] w-full rounded-xl overflow-hidden bg-surface border border-white/[0.04] shadow-md transition-all duration-300 group-hover:-translate-y-1 group-hover:border-accent group-hover:shadow-[0_8px_25px_rgba(0,0,0,0.7)]">
-              <img
+              <Image
                 src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "https://picsum.photos/seed/cinevoposter/300/450"}
-                alt={item.title || item.name}
-                loading="lazy"
-                className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
+                alt={item.title || item.name || ""}
+                fill
+                sizes="(max-width: 640px) 33vw, (max-width: 1280px) 16vw, 12vw"
+                className="object-cover transition duration-500 group-hover:scale-105"
               />
               <WishlistHeart item={item} mediaType={mediaType} />
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity duration-300">

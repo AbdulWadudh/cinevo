@@ -1,6 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Star, Play, User } from "lucide-react";
 import Nav from "@/components/Nav";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
@@ -57,9 +58,9 @@ export default async function PersonPage({ params }: PageProps) {
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row gap-6 mb-12">
-          <div className="w-40 h-40 sm:w-48 sm:h-60 flex-none rounded-2xl overflow-hidden border border-white/[0.1] bg-surface-hover">
+          <div className="relative w-40 h-40 sm:w-48 sm:h-60 flex-none rounded-2xl overflow-hidden border border-white/[0.1] bg-surface-hover">
             {person.profile_path ? (
-              <img src={`https://image.tmdb.org/t/p/w300${person.profile_path}`} alt={person.name} className="w-full h-full object-cover" />
+              <Image src={`https://image.tmdb.org/t/p/w300${person.profile_path}`} alt={person.name} fill sizes="(max-width: 640px) 160px, 192px" className="object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center"><User className="w-12 h-12 text-fg-secondary" /></div>
             )}
@@ -86,7 +87,7 @@ export default async function PersonPage({ params }: PageProps) {
             return (
               <Link key={`${item.id}-${item.media_type}`} href={`/watch/${mt}/${item.id}`} className="group block cursor-pointer">
                 <div className="relative aspect-[2/3] w-full bg-surface-hover rounded-xl overflow-hidden border border-border group-hover:border-accent transition-all duration-300">
-                  <img src={`https://image.tmdb.org/t/p/w300${item.poster_path}`} alt={item.title || item.name} className="w-full h-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" />
+                  <Image src={`https://image.tmdb.org/t/p/w300${item.poster_path}`} alt={item.title || item.name || ""} fill sizes="(max-width: 640px) 50vw, 16vw" className="object-cover transition duration-500 group-hover:scale-105" />
                   <WishlistHeart item={item} mediaType={mt} />
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity duration-300 z-10">
                     <div className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-lg scale-90 group-hover:scale-100 transition-transform">

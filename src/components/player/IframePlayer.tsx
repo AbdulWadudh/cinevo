@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import {
   Maximize, RefreshCw, Shield, Tv2, Film,
   ChevronDown, Check, Server, Layers, ListOrdered, SkipForward, SkipBack, Flag,
@@ -374,10 +375,12 @@ export default function IframePlayer({
                 the embed. Backed by the poster so it never flashes plain black. */}
             {(isLoading || providersLoading || !embedUrl) && (
               <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 overflow-hidden">
-                <img
+                <Image
                   src={posterPath ? `https://image.tmdb.org/t/p/original${posterPath}` : "https://picsum.photos/seed/cinevodefault/1280/720"}
                   alt={title}
-                  className="absolute inset-0 w-full h-full object-cover brightness-[0.3]"
+                  fill
+                  sizes="100vw"
+                  className="object-cover brightness-[0.3]"
                 />
                 <div className="absolute inset-0 bg-bg/80" />
                 <RefreshCw className="relative w-10 h-10 animate-spin text-accent" />

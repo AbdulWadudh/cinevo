@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { Search, ArrowLeft, Loader2, Film, User, Star, Play } from "lucide-react";
@@ -186,7 +187,7 @@ export default function SearchClient() {
                   </div>
                   {selectedActor.profile_path ? (
                     <div className="w-12 h-12 rounded-xl overflow-hidden border border-accent/30 shadow-[0_0_12px_rgba(229,62,79,0.25)] flex-none">
-                      <img src={`https://image.tmdb.org/t/p/w185${selectedActor.profile_path}`} alt={selectedActor.name} className="w-full h-full object-cover" />
+                      <Image src={`https://image.tmdb.org/t/p/w185${selectedActor.profile_path}`} alt={selectedActor.name} width={48} height={48} className="w-full h-full object-cover" />
                     </div>
                   ) : (
                     <div className="w-12 h-12 rounded-xl bg-surface-hover flex items-center justify-center border border-border flex-none">
@@ -251,7 +252,7 @@ export default function SearchClient() {
 
                   const poster = (
                     <div className="relative aspect-[2/3] w-full bg-surface-hover rounded-xl overflow-hidden border border-border group-hover:border-accent transition-all duration-300">
-                      <img src={img} alt={item.title || item.name} className="w-full h-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" />
+                      <Image src={img} alt={item.title || item.name || ""} fill sizes="(max-width: 640px) 50vw, 12vw" className="object-cover transition duration-500 group-hover:scale-105" />
                       {!isPerson && <WishlistHeart item={item} mediaType={mt} />}
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity duration-300 z-20">
                         <div className="w-9 h-9 bg-accent text-white rounded-full flex items-center justify-center shadow-lg transform scale-75 group-hover:scale-100 transition-transform">
@@ -337,11 +338,12 @@ function CreditCategory({
           >
             <Link href={`/watch/${mediaType}/${item.id}`} className="group block cursor-pointer">
               <div className="relative aspect-[2/3] w-full bg-surface-hover rounded-xl overflow-hidden border border-border group-hover:border-accent transition-all duration-300">
-                <img
+                <Image
                   src={`https://image.tmdb.org/t/p/w300${item.poster_path}`}
-                  alt={item.title || item.name}
-                  className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
-                  loading="lazy"
+                  alt={item.title || item.name || ""}
+                  fill
+                  sizes="(max-width: 640px) 50vw, 12vw"
+                  className="object-cover transition duration-500 group-hover:scale-105"
                 />
                 <WishlistHeart item={item} mediaType={mediaType} />
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity duration-300 z-20">

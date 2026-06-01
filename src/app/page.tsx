@@ -157,6 +157,7 @@ export default async function Home({ searchParams }: HomeProps) {
             <Link href="/privacy" className="text-[11px] text-muted hover:text-fg-secondary transition-colors">Privacy</Link>
             <Link href="/terms" className="text-[11px] text-muted hover:text-fg-secondary transition-colors">Terms</Link>
           </div>
+          {/* eslint-disable-next-line @next/next/no-img-element -- static logo, variable width */}
           <img src="/full_logo.png" alt="Cinevo" className="h-6 w-auto opacity-90" />
         </div>
       </footer>

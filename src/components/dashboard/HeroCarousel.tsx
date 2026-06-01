@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Star, Play, ChevronLeft, ChevronRight } from "lucide-react";
 import { TMDBMedia } from "@/lib/tmdb";
 
@@ -83,10 +84,13 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
           >
             {/* Backdrop Image */}
             <div className="absolute inset-0 w-full h-full">
-              <img
+              <Image
                 src={item.backdrop_path ? `https://image.tmdb.org/t/p/original${item.backdrop_path}` : "https://picsum.photos/seed/cinevo/1920/1080"}
-                alt={item.title || item.name}
-                className={`w-full h-full object-cover brightness-[0.55] transition-transform duration-[7000ms] ease-out ${
+                alt={item.title || item.name || ""}
+                fill
+                priority={index === 0}
+                sizes="100vw"
+                className={`object-cover brightness-[0.55] transition-transform duration-[7000ms] ease-out ${
                   isActive ? "scale-105" : "scale-100"
                 }`}
               />

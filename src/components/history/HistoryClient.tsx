@@ -2,6 +2,7 @@
 
 import React, { useState, useTransition, useEffect, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Clock, Play, Trash2, CheckSquare, Square, X, Loader2, AlertCircle, History as HistoryIcon,
@@ -211,11 +212,12 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
               const card = (
                 <>
                   <div className={`relative aspect-[2/3] w-full bg-surface-hover rounded-xl overflow-hidden border transition-all duration-300 ${isSel ? "border-accent ring-2 ring-accent/40" : "border-border group-hover:border-accent"}`}>
-                    <img
+                    <Image
                       src={item.posterPath ? `https://image.tmdb.org/t/p/w300${item.posterPath}` : "https://picsum.photos/seed/cinevodefault/300/450"}
                       alt={item.title}
-                      className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
-                      loading="lazy"
+                      fill
+                      sizes="(max-width: 640px) 50vw, 16vw"
+                      className="object-cover transition duration-500 group-hover:scale-105"
                     />
                     {!selectMode && (
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity duration-300 z-10">

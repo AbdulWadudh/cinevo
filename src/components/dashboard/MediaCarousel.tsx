@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useEffect, useTransition } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight, Play, Star, X, Loader2 } from "lucide-react";
 import { TMDBMedia, MediaSource } from "@/lib/tmdb";
 import { loadMediaPageAction } from "@/app/actions/tmdb-actions";
@@ -211,11 +212,12 @@ export default function MediaCarousel({
                 <Link href={linkUrl} onClick={handleLinkClick} className="block cursor-pointer select-none" draggable={false}>
                   {/* Poster Container */}
                   <div className="relative aspect-[2/3] w-full bg-surface rounded-xl overflow-hidden border border-white/[0.04] shadow-md transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] hover:border-accent hover:shadow-[0_8px_25px_rgba(0,0,0,0.8)]">
-                    <img
+                    <Image
                       src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "https://picsum.photos/seed/cinevoposter/300/450"}
-                      alt={item.title || item.name}
-                      className="w-full h-full object-cover transition duration-700 group-hover:scale-108"
-                      loading="lazy"
+                      alt={item.title || item.name || ""}
+                      fill
+                      sizes="(max-width: 640px) 140px, 180px"
+                      className="object-cover transition duration-700 group-hover:scale-108"
                       draggable={false}
                     />
 
@@ -302,11 +304,12 @@ export default function MediaCarousel({
                       className="block cursor-pointer select-none"
                     >
                       <div className="relative aspect-[2/3] w-full bg-surface rounded-xl overflow-hidden border border-white/[0.04] shadow-md transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] hover:border-accent hover:shadow-[0_8px_25px_rgba(0,0,0,0.8)]">
-                        <img
+                        <Image
                           src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "https://picsum.photos/seed/cinevoposter/300/450"}
-                          alt={item.title || item.name}
-                          className="w-full h-full object-cover transition duration-700 group-hover:scale-108"
-                          loading="lazy"
+                          alt={item.title || item.name || ""}
+                          fill
+                          sizes="(max-width: 640px) 50vw, 14vw"
+                          className="object-cover transition duration-700 group-hover:scale-108"
                           draggable={false}
                         />
 

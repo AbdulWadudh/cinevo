@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Film, ChevronDown, ChevronUp } from "lucide-react";
 import { TMDBCast } from "@/lib/tmdb";
 
@@ -40,11 +41,12 @@ export default function CastSection({ cast }: CastSectionProps) {
                 >
                   {/* Portrait photo */}
                   <div className="w-full aspect-[3/4] mb-3 rounded-xl overflow-hidden bg-surface border-2 border-border group-hover:border-accent transition-all shadow-md relative group-hover:shadow-[0_0_15px_rgba(229,62,79,0.25)]">
-                    <img 
-                      src={c.profile_path ? `https://image.tmdb.org/t/p/w300${c.profile_path}` : `https://i.pravatar.cc/300?u=${c.id}`} 
-                      alt={c.name} 
-                      className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
-                      loading="lazy"
+                    <Image
+                      src={c.profile_path ? `https://image.tmdb.org/t/p/w300${c.profile_path}` : `https://i.pravatar.cc/300?u=${c.id}`}
+                      alt={c.name}
+                      fill
+                      sizes="(max-width: 640px) 50vw, 150px"
+                      className="object-cover transition duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                       <Film className="w-4 h-4 text-white animate-pulse" />

@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Play } from "lucide-react";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
 import { TMDBMedia } from "@/lib/tmdb";
@@ -48,11 +49,12 @@ export default function ContinueWatching() {
                 <Link href={watchUrl} className="block cursor-pointer">
                   {/* Card Image Container */}
                   <div className="relative aspect-[16/10] bg-surface rounded-lg overflow-hidden border border-white/[0.04] shadow-md hover:border-accent hover:-translate-y-1 transition-all duration-300">
-                    <img 
+                    <Image
                       src={item.posterPath ? `https://image.tmdb.org/t/p/w500${item.posterPath}` : "https://picsum.photos/seed/cinevodefault/300/180"}
                       alt={item.title}
-                      className="w-full h-full object-cover brightness-[0.7] group-hover:brightness-[0.45] transition-all duration-500 scale-100 group-hover:scale-105"
-                      loading="lazy"
+                      fill
+                      sizes="(max-width: 640px) 170px, 210px"
+                      className="object-cover brightness-[0.7] group-hover:brightness-[0.45] transition-all duration-500 scale-100 group-hover:scale-105"
                     />
 
                     {/* Progress Fill Bar (only when there's real progress) */}

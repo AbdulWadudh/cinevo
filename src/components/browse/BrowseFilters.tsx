@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useTransition, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "motion/react";
 import { Film, Tv2, Star, Play, Loader2, SlidersHorizontal, Tag, CalendarDays, ArrowDownWideNarrow } from "lucide-react";
 import { discoverMediaAction } from "@/app/actions/tmdb-actions";
@@ -135,11 +136,12 @@ export default function BrowseFilters() {
                 >
                   <Link href={`/watch/${mediaType}/${item.id}`} className="group block cursor-pointer">
                     <div className="relative aspect-[2/3] w-full bg-surface-hover rounded-xl overflow-hidden border border-border group-hover:border-accent transition-all duration-300">
-                      <img
+                      <Image
                         src={item.poster_path ? `https://image.tmdb.org/t/p/w300${item.poster_path}` : "https://picsum.photos/seed/cinevodefault/300/450"}
-                        alt={item.title || item.name}
-                        className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
-                        loading="lazy"
+                        alt={item.title || item.name || ""}
+                        fill
+                        sizes="(max-width: 640px) 50vw, 16vw"
+                        className="object-cover transition duration-500 group-hover:scale-105"
                       />
                       <WishlistHeart item={item} mediaType={mediaType} />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity duration-300 z-10">

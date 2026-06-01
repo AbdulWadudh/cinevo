@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Play, Heart, Trash2, Star, Film } from "lucide-react";
 import { toggleWishlist, getWishlist } from "@/app/actions/wishlist";
 
@@ -95,11 +96,12 @@ export default function WishlistGrid() {
             >
               {/* Card Container */}
               <div className="relative aspect-[2/3] w-full bg-surface rounded-xl overflow-hidden border border-white/[0.04] shadow-md transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] hover:border-accent hover:shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
-                <img 
-                  src={item.posterPath ? `https://image.tmdb.org/t/p/w500${item.posterPath}` : "https://picsum.photos/seed/cinevoposter/300/450"} 
+                <Image
+                  src={item.posterPath ? `https://image.tmdb.org/t/p/w500${item.posterPath}` : "https://picsum.photos/seed/cinevoposter/300/450"}
                   alt={item.title}
-                  className="w-full h-full object-cover transition duration-700 group-hover:scale-105"
-                  loading="lazy"
+                  fill
+                  sizes="(max-width: 640px) 50vw, 16vw"
+                  className="object-cover transition duration-700 group-hover:scale-105"
                 />
 
                 {/* Centered Play Button Hover Overlay */}

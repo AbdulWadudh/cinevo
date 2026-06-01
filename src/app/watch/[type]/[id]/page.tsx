@@ -1,6 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { Star, ArrowLeft, Film } from "lucide-react";
 import { tmdb } from "@/lib/tmdb";
 import Nav from "@/components/Nav";
@@ -271,11 +272,12 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
               >
                 <Link href={`/watch/${m.media_type || mediaType}/${m.id}`} className="block cursor-pointer">
                   <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-surface border border-white/[0.04]">
-                    <img
+                    <Image
                       src={m.poster_path ? `https://image.tmdb.org/t/p/w300${m.poster_path}` : "https://picsum.photos/seed/similar/300/450"}
-                      alt={m.title || m.name}
-                      className="w-full h-full object-cover transition duration-400 group-hover:scale-105"
-                      loading="lazy"
+                      alt={m.title || m.name || ""}
+                      fill
+                      sizes="(max-width: 640px) 130px, 160px"
+                      className="object-cover transition duration-400 group-hover:scale-105"
                     />
                     <WishlistHeart item={m} mediaType={mediaType} />
                   </div>

@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Play,
   ChevronDown,
@@ -78,10 +79,12 @@ function OverviewPopup({ overview, epName, epNumber, seasonNumber, thumbUrl, onC
       >
         {/* Thumbnail */}
         <div className="relative aspect-video w-full overflow-hidden">
-          <img
+          <Image
             src={thumbUrl}
             alt={epName}
-            className="w-full h-full object-cover brightness-75"
+            fill
+            sizes="(max-width: 640px) 100vw, 512px"
+            className="object-cover brightness-75"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-surface/95 via-surface/30 to-transparent" />
           {/* Badge */}
@@ -403,11 +406,12 @@ export default function SeasonList({
 
                   {/* Poster */}
                   <div className="w-24 sm:w-[88px] aspect-[2/3] rounded-xl overflow-hidden bg-surface flex-none relative shadow-xl border border-white/[0.06] group/poster transition-all duration-300">
-                    <img
+                    <Image
                       src={posterUrl}
                       alt={s.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover/poster:scale-110"
-                      loading="lazy"
+                      fill
+                      sizes="88px"
+                      className="object-cover transition-transform duration-700 group-hover/poster:scale-110"
                       draggable={false}
                     />
                     {/* Scan line on hover */}
@@ -548,11 +552,12 @@ export default function SeasonList({
                                 onClick={(e) => handleLinkClick(e, s.season_number)}
                                 draggable={false}
                               >
-                                <img
+                                <Image
                                   src={epThumb}
                                   alt={ep.name}
-                                  className="w-full h-full object-cover brightness-[0.82] transition-all duration-500 group-hover/row:scale-110 group-hover/row:brightness-100"
-                                  loading="lazy"
+                                  fill
+                                  sizes="(max-width: 640px) 120px, 156px"
+                                  className="object-cover brightness-[0.82] transition-all duration-500 group-hover/row:scale-110 group-hover/row:brightness-100"
                                   draggable={false}
                                 />
                                 {/* Hover play overlay */}
