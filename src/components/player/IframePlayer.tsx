@@ -7,6 +7,8 @@ import {
   ChevronDown, Check, Server, Layers, ListOrdered,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useProviders } from "@/lib/useProviders";
+import { buildEmbedUrl, providerIndexFromKey } from "@/lib/sources";
 
 interface SeasonInfo {
   season_number: number;
@@ -22,133 +24,12 @@ interface IframePlayerProps {
   season?: number;
   episode?: number;
   initialProgress?: number;
-  initialSource?: number;
-  sandboxDisabled?: boolean;
+  /** `?source=` key — resolved against the loaded provider list. */
+  initialSourceKey?: string;
+  /** Explicit `?sandbox=` value; when absent we use the provider's default. */
+  initialSandbox?: "on" | "off";
   seasons?: SeasonInfo[];
 }
-
-export const PROVIDERS = [
-  {
-    key: "cinesrc",
-    label: "CineSrc",
-    sub: "Server Alpha",
-    url: (id: string, t: string, s?: number, e?: number) =>
-      t === "movie"
-        ? `https://cinesrc.st/embed/movie/${id}`
-        : `https://cinesrc.st/embed/tv/${id}?s=${s}&e=${e}`,
-  },
-  {
-    key: "vidcore",
-    label: "VidCore",
-    sub: "Server Beta",
-    url: (id: string, t: string, s?: number, e?: number) =>
-      t === "movie"
-        ? `https://vidcore.net/movie/${id}`
-        : `https://vidcore.net/tv/${id}/${s}/${e}`,
-  },
-  {
-    key: "lordflix",
-    label: "LordFlix",
-    sub: "Server Gamma",
-    url: (id: string, t: string, s?: number, e?: number) =>
-      t === "movie"
-        ? `https://lordflix.org/watch/movie/${id}`
-        : `https://lordflix.org/watch/tv/${id}/${s}/${e}`,
-  },
-  {
-    key: "videasy",
-    label: "Videasy",
-    sub: "Server Delta",
-    url: (id: string, t: string, s?: number, e?: number) =>
-      t === "movie"
-        ? `https://player.videasy.net/movie/${id}`
-        : `https://player.videasy.net/tv/${id}/${s}/${e}`,
-  },
-  {
-    key: "vidlink",
-    label: "VidLink",
-    sub: "Server Delta",
-    url: (id: string, t: string, s?: number, e?: number) =>
-      t === "movie"
-        ? `https://vidlink.pro/movie/${id}`
-        : `https://vidlink.pro/tv/${id}/${s}/${e}`,
-  },
-  {
-    key: "vixsrc",
-    label: "VixSrc",
-    sub: "Server Echo",
-    url: (id: string, t: string, s?: number, e?: number) =>
-      t === "movie"
-        ? `https://vixsrc.to/movie/${id}`
-        : `https://vixsrc.to/tv/${id}/${s}/${e}`,
-  },
-  {
-    key: "vidfast",
-    label: "VidFast",
-    sub: "Server Foxtrot",
-    url: (id: string, t: string, s?: number, e?: number) =>
-      t === "movie"
-        ? `https://vidfast.pro/movie/${id}`
-        : `https://vidfast.pro/tv/${id}/${s}/${e}`,
-  },
-  {
-    key: "toustream",
-    label: "TouStream",
-    sub: "Server Golf",
-    url: (id: string, t: string, s?: number, e?: number) =>
-      t === "movie"
-        ? `https://toustream.xyz/tou/movie/${id}`
-        : `https://toustream.xyz/tou/tv/${id}/${s}/${e}`,
-  },
-  {
-    key: "vidzee",
-    label: "VidZee",
-    sub: "Server Hotel",
-    url: (id: string, t: string, s?: number, e?: number) =>
-      t === "movie"
-        ? `https://player.vidzee.wtf/embed/movie/${id}`
-        : `https://player.vidzee.wtf/embed/tv/${id}/${s}/${e}`,
-  },
-  {
-    key: "vidsrc",
-    label: "VidSrc",
-    sub: "Server India",
-    url: (id: string, t: string, s?: number, e?: number) =>
-      t === "movie"
-        ? `https://vidsrc.cc/v2/embed/movie/${id}`
-        : `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}`,
-  },
-  {
-    key: "vidnest",
-    label: "VidNest",
-    sub: "Server Juliett",
-    url: (id: string, t: string, s?: number, e?: number) =>
-      t === "movie"
-        ? `https://vidnest.fun/movie/${id}`
-        : `https://vidnest.fun/tv/${id}/${s}/${e}`,
-  },
-  {
-    key: "thisiscinema",
-    label: "ThisIsCinema",
-    sub: "Server Kilo",
-    url: (id: string, t: string, s?: number, e?: number) =>
-      t === "movie"
-        ? `https://thisiscinema.pages.dev/?version=v5&type=movie&id=${id}`
-        : `https://thisiscinema.pages.dev/?version=v5&type=tv&id=${id}&season=${s}&episode=${e}`,
-  },
-  {
-    key: "primewire",
-    label: "PrimeWire",
-    sub: "Server Lima",
-    url: (id: string, t: string, s?: number, e?: number) =>
-      t === "movie"
-        ? `https://primewire.mov/embed/movie?tmdb=${id}`
-        : `https://primewire.mov/embed/tv?tmdb=${id}&season=${s}&episode=${e}`,
-  },
-];
-
-/** Default sandbox state for a provider index: ON for everything except VidCore. */
-const sandboxDefaultFor = (idx: number) => PROVIDERS[idx]?.key !== "vidcore";
 
 /* ─── Custom animated dropdown ─────────────────────────────── */
 interface DropdownOption { value: number; label: string; sub?: string }
@@ -159,9 +40,12 @@ interface CustomDropdownProps {
   value: number;
   onChange: (v: number) => void;
   onOpenChange?: (open: boolean) => void;
+  disabled?: boolean;
+  /** Optional control rendered on the right of the panel header (e.g. refresh). */
+  headerAction?: React.ReactNode;
 }
 
-function CustomDropdown({ icon, label, options, value, onChange, onOpenChange }: CustomDropdownProps) {
+function CustomDropdown({ icon, label, options, value, onChange, onOpenChange, disabled, headerAction }: CustomDropdownProps) {
   const [open, setOpen] = useState(false);
   const [rect, setRect] = useState<{ top: number; left: number } | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -217,10 +101,13 @@ function CustomDropdown({ icon, label, options, value, onChange, onOpenChange }:
       {/* Trigger */}
       <button
         ref={triggerRef}
-        onClick={() => toggleOpen(!open)}
-        className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all duration-200 cursor-pointer outline-none group/trigger ${open
-            ? "bg-accent/20 border-accent/60 shadow-[0_0_16px_rgba(229,62,79,0.15)]"
-            : "bg-white/[0.05] border-white/[0.10] hover:bg-white/[0.09] hover:border-white/[0.20]"
+        onClick={() => !disabled && toggleOpen(!open)}
+        disabled={disabled}
+        className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all duration-200 outline-none group/trigger ${disabled
+            ? "bg-white/[0.03] border-white/[0.06] opacity-60 cursor-not-allowed"
+            : open
+            ? "bg-accent/20 border-accent/60 shadow-[0_0_16px_rgba(229,62,79,0.15)] cursor-pointer"
+            : "bg-white/[0.05] border-white/[0.10] hover:bg-white/[0.09] hover:border-white/[0.20] cursor-pointer"
           }`}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -254,8 +141,9 @@ function CustomDropdown({ icon, label, options, value, onChange, onOpenChange }:
             className="w-[220px] bg-surface/98 backdrop-blur-2xl border border-white/[0.12] rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.9)] overflow-hidden"
           >
             {/* Panel header */}
-            <div className="px-4 py-2.5 border-b border-white/[0.06]">
+            <div className="px-4 py-2.5 border-b border-white/[0.06] flex items-center justify-between gap-2">
               <p className="text-[9px] font-extrabold uppercase tracking-widest text-accent">{label}</p>
+              {headerAction}
             </div>
             {/* Options */}
             <div className="flex flex-col py-1 max-h-[220px] overflow-y-auto">
@@ -295,21 +183,39 @@ export default function IframePlayer({
   posterPath,
   season: initialSeason = 1,
   episode: initialEpisode = 1,
-  initialSource = 0, // CineSrc by default
-  sandboxDisabled: initialSandboxDisabled = false, // sandbox ON by default (except VidCore)
+  initialSourceKey,
+  initialSandbox,
   seasons = [],
 }: IframePlayerProps) {
   const router = useRouter();
   const playerRef = useRef<HTMLDivElement>(null);
 
+  // Providers are loaded from localStorage (version + TTL) then the DB.
+  const { providers, loading: providersLoading, refreshing, refresh } = useProviders();
+
   // No autoplay — the user clicks the poster's play button to start the embed.
   const [isPlaying, setIsPlaying] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState(Math.min(initialSource, PROVIDERS.length - 1));
+  const [selectedProvider, setSelectedProvider] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [currentSeason, setCurrentSeason] = useState(initialSeason);
   const [currentEpisode, setCurrentEpisode] = useState(initialEpisode);
   const [anyDropdownOpen, setAnyDropdownOpen] = useState(false);
-  const [sandboxEnabled, setSandboxEnabled] = useState(!initialSandboxDisabled);
+  const [sandboxEnabled, setSandboxEnabled] = useState(initialSandbox !== "off");
+  const initializedRef = useRef(false);
+
+  // Once providers arrive, resolve the initial source from the URL key and
+  // apply its default sandbox state (unless the URL pinned an explicit one).
+  useEffect(() => {
+    if (providersLoading || providers.length === 0 || initializedRef.current) return;
+    initializedRef.current = true;
+    const idx = providerIndexFromKey(providers, initialSourceKey);
+    setSelectedProvider(idx);
+    if (!initialSandbox) {
+      setSandboxEnabled(providers[idx]?.sandboxEnabled ?? true);
+    }
+  }, [providersLoading, providers, initialSourceKey, initialSandbox]);
+
+  const activeProvider = providers[selectedProvider];
 
   // Build a consistent URL with all persistent query params
   const buildUrl = (opts: { season?: number; episode?: number; source?: number; sandbox?: boolean }) => {
@@ -317,7 +223,7 @@ export default function IframePlayer({
     const e = opts.episode ?? currentEpisode;
     const src = opts.source ?? selectedProvider;
     const sb = opts.sandbox ?? sandboxEnabled;
-    const srcKey = PROVIDERS[src]?.key ?? PROVIDERS[0].key;
+    const srcKey = providers[src]?.key ?? providers[0]?.key ?? "";
     const base = mediaType === "tv"
       ? `/watch/tv/${mediaId}?season=${s}&episode=${e}&source=${srcKey}`
       : `/watch/movie/${mediaId}?source=${srcKey}`;
@@ -352,8 +258,8 @@ export default function IframePlayer({
 
   const handleProviderChange = (v: number) => {
     setSelectedProvider(v);
-    // Apply the new source's default sandbox state (ON for all except VidCore).
-    const sb = sandboxDefaultFor(v);
+    // Apply the new provider's configured default sandbox state.
+    const sb = providers[v]?.sandboxEnabled ?? true;
     setSandboxEnabled(sb);
     if (isPlaying) reload();
     router.replace(buildUrl({ source: v, sandbox: sb }), { scroll: false });
@@ -381,10 +287,12 @@ export default function IframePlayer({
     }
   };
 
-  const embedUrl = PROVIDERS[selectedProvider].url(mediaId, mediaType, currentSeason, currentEpisode);
+  const embedUrl = activeProvider
+    ? buildEmbedUrl(activeProvider, mediaId, mediaType, currentSeason, currentEpisode)
+    : "";
 
   /* ─── Dropdown option arrays ── */
-  const providerOptions: DropdownOption[] = PROVIDERS.map((p, i) => ({ value: i, label: p.label, sub: p.sub }));
+  const providerOptions: DropdownOption[] = providers.map((p, i) => ({ value: i, label: p.label, sub: p.sub ?? undefined }));
   const seasonOptions: DropdownOption[] = validSeasons.length > 0
     ? validSeasons.map((s) => ({ value: s.season_number, label: s.name || `Season ${s.season_number}` }))
     : Array.from({ length: 10 }, (_, i) => ({ value: i + 1, label: `Season ${i + 1}` }));
@@ -416,15 +324,17 @@ export default function IframePlayer({
                   <p className="text-sm font-semibold text-fg-secondary animate-pulse">Securing safe link…</p>
                 </div>
               )}
-              <iframe
-                key={`${selectedProvider}-${currentSeason}-${currentEpisode}`}
-                src={embedUrl}
-                className="w-full h-full border-none"
-                allowFullScreen
-                allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                {...(sandboxEnabled ? { sandbox: "allow-scripts allow-same-origin allow-forms" as any } : {})}
-                title={title}
-              />
+              {embedUrl && (
+                <iframe
+                  key={`${activeProvider?.key}-${currentSeason}-${currentEpisode}`}
+                  src={embedUrl}
+                  className="w-full h-full border-none"
+                  allowFullScreen
+                  allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                  {...(sandboxEnabled ? { sandbox: "allow-scripts allow-same-origin allow-forms" as any } : {})}
+                  title={title}
+                />
+              )}
               {/* Transparent overlay blocks iframe from stealing pointer events when a dropdown is open */}
               {anyDropdownOpen && (
                 <div className="absolute inset-0 z-[9998]" aria-hidden="true" />
@@ -441,10 +351,13 @@ export default function IframePlayer({
               <div className="absolute inset-0 flex flex-col items-center justify-center z-10 p-6 text-center">
                 <button
                   onClick={handlePlay}
+                  disabled={providersLoading || !activeProvider}
                   aria-label="Play"
-                  className="w-20 h-20 bg-accent hover:bg-accent-hover text-white rounded-full flex items-center justify-center shadow-[0_8px_40px_rgba(229,62,79,0.4)] hover:scale-110 active:scale-95 transition-all duration-300 mb-5 cursor-pointer"
+                  className="w-20 h-20 bg-accent hover:bg-accent-hover text-white rounded-full flex items-center justify-center shadow-[0_8px_40px_rgba(229,62,79,0.4)] hover:scale-110 active:scale-95 transition-all duration-300 mb-5 cursor-pointer disabled:opacity-50 disabled:cursor-wait disabled:hover:scale-100"
                 >
-                  <Play className="w-8 h-8 fill-white translate-x-0.5" />
+                  {providersLoading
+                    ? <RefreshCw className="w-7 h-7 animate-spin" />
+                    : <Play className="w-8 h-8 fill-white translate-x-0.5" />}
                 </button>
                 <h2 className="text-xl md:text-3xl font-extrabold tracking-tight text-white font-display mb-2 max-w-[80%]">
                   {title}
@@ -489,18 +402,31 @@ export default function IframePlayer({
             </span>
           </button>
 
-          {/* Center: the dropdowns stay on one line together (Source/Season/Episode).
+          {/* Center: the dropdowns stay on one line together (Provider/Season/Episode).
               On mobile this group drops to its own full-width row; on desktop it
               flex-centers between the side items. Scrolls if too narrow. */}
           <div className="flex items-center justify-center gap-2 flex-nowrap sm:flex-1 sm:min-w-0 order-last w-full sm:order-none sm:w-auto overflow-x-auto scrollbar-hide">
-            {/* Source */}
+            {/* Provider — the refresh control lives in the dropdown header.
+                Clears the localStorage cache and re-fetches providers from the DB. */}
             <CustomDropdown
               icon={<Server className="w-3.5 h-3.5" />}
-              label="Source"
+              label="Provider"
               options={providerOptions}
               value={selectedProvider}
               onChange={handleProviderChange}
               onOpenChange={setAnyDropdownOpen}
+              disabled={providersLoading || providers.length === 0}
+              headerAction={
+                <button
+                  onClick={(e) => { e.stopPropagation(); refresh(); }}
+                  disabled={refreshing}
+                  title="Refresh providers from server"
+                  aria-label="Refresh providers"
+                  className="flex items-center justify-center w-6 h-6 rounded-md border bg-white/[0.05] border-white/[0.10] hover:bg-white/[0.09] hover:border-accent/40 text-muted hover:text-accent transition-all duration-200 cursor-pointer disabled:opacity-60 disabled:cursor-wait"
+                >
+                  <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin text-accent" : ""}`} />
+                </button>
+              }
             />
 
             {mediaType === "tv" && (

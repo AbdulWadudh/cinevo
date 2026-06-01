@@ -5,7 +5,6 @@ import { Star, ArrowLeft, Film } from "lucide-react";
 import { tmdb } from "@/lib/tmdb";
 import Nav from "@/components/Nav";
 import IframePlayer from "@/components/player/IframePlayer";
-import { sourceIndexFromKey, SOURCE_KEYS } from "@/lib/sources";
 import WishlistButton from "@/components/wishlist/WishlistButton";
 import { getSingleWatchProgress } from "@/app/actions/progress";
 import { checkWishlistStatus } from "@/app/actions/wishlist";
@@ -36,11 +35,11 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
   const season = search.season ? parseInt(search.season) : 1;
   const episode = search.episode ? parseInt(search.episode) : 1;
   const queryTime = search.t ? parseInt(search.t) : undefined;
-  const initialSource = sourceIndexFromKey(search.source); // by name, defaults to VidCore
-  // Sandbox defaults ON for every source except VidCore; an explicit ?sandbox= wins.
-  const sandboxDisabled = search.sandbox
-    ? search.sandbox === "off"
-    : SOURCE_KEYS[initialSource] === "vidcore";
+  // Provider selection and sandbox state are resolved client-side once the
+  // provider list loads (from localStorage / DB). We just forward the raw
+  // ?source= key and explicit ?sandbox= preference (if any).
+  const initialSourceKey = search.source;
+  const initialSandbox = search.sandbox === "off" ? "off" : search.sandbox === "on" ? "on" : undefined;
 
   // Verify parameters
   const isTV = type === "tv";
@@ -116,8 +115,8 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
           season={isTV ? season : undefined}
           episode={isTV ? episode : undefined}
           initialProgress={initialTime}
-          initialSource={initialSource}
-          sandboxDisabled={sandboxDisabled}
+          initialSourceKey={initialSourceKey}
+          initialSandbox={initialSandbox}
           seasons={isTV && details.seasons ? (details.seasons as any[]).filter((s: any) => s.season_number > 0) : undefined}
         />
       </section>

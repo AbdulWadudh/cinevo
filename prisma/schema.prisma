@@ -14,10 +14,30 @@ model Profile {
   email         String          @unique
   username      String?
   avatarUrl     String?
+  role          String          @default("user") // "user" | "admin"
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   watchProgress WatchProgress[]
   wishlists     Wishlist[]
+}
+
+// Embeddable video provider. URL fields are templates that support the
+// placeholders {id}, {season}, {episode}.
+model Provider {
+  id             String   @id @default(uuid())
+  key            String   @unique // stable slug used in ?source= and as identity
+  label          String
+  sub            String?
+  movieUrl       String // e.g. https://host/movie/{id}
+  tvUrl          String // e.g. https://host/tv/{id}/{season}/{episode}
+  sandboxEnabled Boolean  @default(true) // default iframe sandbox state for this provider
+  enabled        Boolean  @default(true) // hidden from the player when false
+  isDefault      Boolean  @default(false) // selected provider when a link has no ?source=
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([enabled, sortOrder])
 }
 
 model WatchProgress {

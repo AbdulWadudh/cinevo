@@ -6,15 +6,20 @@ import Nav from "@/components/Nav";
 import EditProfileForm from "@/components/auth/EditProfileForm";
 import { getOrCreateProfile } from "@/lib/auth";
 import { signOut } from "@/app/actions/auth";
+import { getAllProviders } from "@/app/actions/providers";
 import { db } from "@/lib/db";
+import ProviderAdmin from "@/components/admin/ProviderAdmin";
 
 export default async function ProfilePage() {
   const profile = await getOrCreateProfile();
   if (!profile) redirect("/login?redirect=/profile");
 
-  const [wishlistCount, watchingCount] = await Promise.all([
+  const isAdmin = profile.role === "admin";
+
+  const [wishlistCount, watchingCount, providersRes] = await Promise.all([
     db.wishlist.count({ where: { profileId: profile.id } }),
     db.watchProgress.count({ where: { profileId: profile.id } }),
+    isAdmin ? getAllProviders() : Promise.resolve({ success: true, data: [] as const }),
   ]);
 
   const displayName = profile.username || profile.email.split("@")[0];
@@ -97,6 +102,11 @@ export default async function ProfilePage() {
             </form>
           </div>
         </div>
+
+        {/* Admin-only: stream provider management */}
+        {isAdmin && providersRes.success && (
+          <ProviderAdmin initial={[...providersRes.data]} />
+        )}
       </section>
     </div>
   );
