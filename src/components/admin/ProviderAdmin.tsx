@@ -13,7 +13,7 @@ import type { PlayerProvider, ProviderInput } from "@/lib/providers";
 
 const emptyForm: ProviderInput = {
   key: "", label: "", sub: "", movieUrl: "", tvUrl: "",
-  sandboxEnabled: true, enabled: true, isDefault: false, sortOrder: 0,
+  sandboxEnabled: false, enabled: true, isDefault: false, sortOrder: 0,
 };
 
 const inputCls =

@@ -75,6 +75,14 @@ export async function signOut(): Promise<void> {
   redirect("/login");
 }
 
+/** Lightweight profile info for the nav avatar (app source of truth). */
+export async function getProfileBrief(): Promise<{ avatarUrl: string | null; initial: string } | null> {
+  const profile = await getOrCreateProfile();
+  if (!profile) return null;
+  const name = profile.username || profile.email || "U";
+  return { avatarUrl: profile.avatarUrl ?? null, initial: String(name).charAt(0).toUpperCase() };
+}
+
 /** Update the current user's profile (username + avatar URL). */
 export async function updateProfile(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const user = await getCurrentUser();

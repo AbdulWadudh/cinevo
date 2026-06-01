@@ -86,7 +86,7 @@ model Provider {
   sub            String?
   movieUrl       String // e.g. https://host/movie/{id}
   tvUrl          String // e.g. https://host/tv/{id}/{season}/{episode}
-  sandboxEnabled Boolean  @default(true) // default iframe sandbox state for this provider
+  sandboxEnabled Boolean  @default(false) // sandbox OFF by default; enable per-provider (the explicit exceptions)
   enabled        Boolean  @default(true) // hidden from the player when false
   isDefault      Boolean  @default(false) // selected provider when a link has no ?source=
   sortOrder      Int      @default(0)

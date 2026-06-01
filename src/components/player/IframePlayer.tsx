@@ -213,7 +213,7 @@ export default function IframePlayer({
   const [currentSeason, setCurrentSeason] = useState(initialSeason);
   const [currentEpisode, setCurrentEpisode] = useState(initialEpisode);
   const [anyDropdownOpen, setAnyDropdownOpen] = useState(false);
-  const [sandboxEnabled, setSandboxEnabled] = useState(initialSandbox !== "off");
+  const [sandboxEnabled, setSandboxEnabled] = useState(initialSandbox === "on");
   const [reported, setReported] = useState(false);
   const initializedRef = useRef(false);
 
@@ -228,7 +228,7 @@ export default function IframePlayer({
     const idx = providerIndexFromKey(providers, initialSourceKey ?? lastKey);
     setSelectedProvider(idx);
     if (!initialSandbox) {
-      setSandboxEnabled(providers[idx]?.sandboxEnabled ?? true);
+      setSandboxEnabled(providers[idx]?.sandboxEnabled ?? false);
     }
   }, [providersLoading, providers, initialSourceKey, initialSandbox]);
 

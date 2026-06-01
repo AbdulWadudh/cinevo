@@ -109,16 +109,16 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
   const savedProgress = progressRes.success && progressRes.data ? progressRes.data.progress : 0;
   const initialTime = queryTime !== undefined ? queryTime : savedProgress;
 
-  const releaseYear = details.release_date 
-    ? details.release_date.split("-")[0] 
-    : details.first_air_date 
-      ? details.first_air_date.split("-")[0] 
+  const releaseYear = details.release_date
+    ? details.release_date.split("-")[0]
+    : details.first_air_date
+      ? details.first_air_date.split("-")[0]
       : "";
 
-  const durationText = isTV 
-    ? `${details.number_of_seasons} Seasons` 
-    : details.runtime 
-      ? `${Math.floor(details.runtime / 60)}h ${details.runtime % 60}m` 
+  const durationText = isTV
+    ? `${details.number_of_seasons} Seasons`
+    : details.runtime
+      ? `${Math.floor(details.runtime / 60)}h ${details.runtime % 60}m`
       : "";
 
   return (
@@ -181,8 +181,8 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
           {/* Genres Tags */}
           <div className="flex gap-2 flex-wrap mb-6">
             {details.genres.map((g) => (
-              <Link 
-                key={g.id} 
+              <Link
+                key={g.id}
                 href={`/?genre=${g.id}&genreName=${encodeURIComponent(g.name)}`}
                 className="px-3.5 py-1 rounded-full text-xs font-semibold bg-surface border border-border text-fg-secondary hover:border-accent hover:text-accent transition-colors cursor-pointer"
               >
@@ -265,7 +265,7 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
           <h2 className="font-display text-xl md:text-2xl font-bold mb-5">More Like This</h2>
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x">
             {similar.slice(0, 24).map((m) => (
-              <div 
+              <div
                 key={m.id}
                 className="flex-none w-[130px] sm:w-[160px] snap-start group"
               >

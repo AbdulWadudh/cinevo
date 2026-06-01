@@ -81,7 +81,7 @@ export function providerIndexFromKey(providers: { key: string; isDefault?: boole
 /** Seed data inserted on first run when the Source table is empty. */
 export const DEFAULT_PROVIDERS: Omit<PlayerProvider, "id">[] = [
   {
-    key: "cinesrc", label: "CineSrc", sub: "Server Alpha", sandboxEnabled: true, enabled: true, isDefault: false, sortOrder: 3,
+    key: "cinesrc", label: "CineSrc", sub: "Server Alpha", sandboxEnabled: false, enabled: true, isDefault: false, sortOrder: 3,
     movieUrl: "https://cinesrc.st/embed/movie/{id}", tvUrl: "https://cinesrc.st/embed/tv/{id}?s={season}&e={episode}"
   },
   {
@@ -89,47 +89,47 @@ export const DEFAULT_PROVIDERS: Omit<PlayerProvider, "id">[] = [
     movieUrl: "https://vidcore.net/movie/{id}", tvUrl: "https://vidcore.net/tv/{id}/{season}/{episode}"
   },
   {
-    key: "lordflix", label: "LordFlix", sub: "Server Gamma", sandboxEnabled: true, enabled: true, isDefault: false, sortOrder: 2,
+    key: "lordflix", label: "LordFlix", sub: "Server Gamma", sandboxEnabled: false, enabled: true, isDefault: false, sortOrder: 2,
     movieUrl: "https://lordflix.org/watch/movie/{id}", tvUrl: "https://lordflix.org/watch/tv/{id}/{season}/{episode}"
   },
   {
-    key: "videasy", label: "Videasy", sub: "Server Delta", sandboxEnabled: true, enabled: true, isDefault: true, sortOrder: 1,
+    key: "videasy", label: "Videasy", sub: "Server Delta", sandboxEnabled: false, enabled: true, isDefault: true, sortOrder: 1,
     movieUrl: "https://player.videasy.net/movie/{id}", tvUrl: "https://player.videasy.net/tv/{id}/{season}/{episode}"
   },
   {
-    key: "vidlink", label: "VidLink", sub: "Server Echo", sandboxEnabled: true, enabled: true, isDefault: false, sortOrder: 4,
+    key: "vidlink", label: "VidLink", sub: "Server Echo", sandboxEnabled: false, enabled: true, isDefault: false, sortOrder: 4,
     movieUrl: "https://vidlink.pro/movie/{id}", tvUrl: "https://vidlink.pro/tv/{id}/{season}/{episode}"
   },
   {
-    key: "vixsrc", label: "VixSrc", sub: "Server Foxtrot", sandboxEnabled: true, enabled: true, isDefault: false, sortOrder: 5,
+    key: "vixsrc", label: "VixSrc", sub: "Server Foxtrot", sandboxEnabled: false, enabled: true, isDefault: false, sortOrder: 5,
     movieUrl: "https://vixsrc.to/movie/{id}", tvUrl: "https://vixsrc.to/tv/{id}/{season}/{episode}"
   },
   {
-    key: "vidfast", label: "VidFast", sub: "Server Golf", sandboxEnabled: true, enabled: true, isDefault: false, sortOrder: 6,
+    key: "vidfast", label: "VidFast", sub: "Server Golf", sandboxEnabled: false, enabled: true, isDefault: false, sortOrder: 6,
     movieUrl: "https://vidfast.pro/movie/{id}", tvUrl: "https://vidfast.pro/tv/{id}/{season}/{episode}"
   },
   {
-    key: "toustream", label: "TouStream", sub: "Server Hotel", sandboxEnabled: true, enabled: true, isDefault: false, sortOrder: 7,
+    key: "toustream", label: "TouStream", sub: "Server Hotel", sandboxEnabled: false, enabled: true, isDefault: false, sortOrder: 7,
     movieUrl: "https://toustream.xyz/tou/movie/{id}", tvUrl: "https://toustream.xyz/tou/tv/{id}/{season}/{episode}"
   },
   {
-    key: "vidzee", label: "VidZee", sub: "Server India", sandboxEnabled: true, enabled: true, isDefault: false, sortOrder: 8,
+    key: "vidzee", label: "VidZee", sub: "Server India", sandboxEnabled: false, enabled: true, isDefault: false, sortOrder: 8,
     movieUrl: "https://player.vidzee.wtf/embed/movie/{id}", tvUrl: "https://player.vidzee.wtf/embed/tv/{id}/{season}/{episode}"
   },
   {
-    key: "vidsrc", label: "VidSrc", sub: "Server Juliett", sandboxEnabled: true, enabled: true, isDefault: false, sortOrder: 9,
+    key: "vidsrc", label: "VidSrc", sub: "Server Juliett", sandboxEnabled: false, enabled: true, isDefault: false, sortOrder: 9,
     movieUrl: "https://vidsrc.cc/v2/embed/movie/{id}", tvUrl: "https://vidsrc.cc/v2/embed/tv/{id}/{season}/{episode}"
   },
   {
-    key: "vidnest", label: "VidNest", sub: "Server Kilo", sandboxEnabled: true, enabled: true, isDefault: false, sortOrder: 10,
+    key: "vidnest", label: "VidNest", sub: "Server Kilo", sandboxEnabled: false, enabled: true, isDefault: false, sortOrder: 10,
     movieUrl: "https://vidnest.fun/movie/{id}", tvUrl: "https://vidnest.fun/tv/{id}/{season}/{episode}"
   },
   {
-    key: "thisiscinema", label: "ThisIsCinema", sub: "Server Lima", sandboxEnabled: true, enabled: true, isDefault: false, sortOrder: 11,
+    key: "thisiscinema", label: "ThisIsCinema", sub: "Server Lima", sandboxEnabled: false, enabled: true, isDefault: false, sortOrder: 11,
     movieUrl: "https://thisiscinema.pages.dev/?version=v5&type=movie&id={id}", tvUrl: "https://thisiscinema.pages.dev/?version=v5&type=tv&id={id}&season={season}&episode={episode}"
   },
   {
-    key: "primewire", label: "PrimeWire", sub: "Server Mike", sandboxEnabled: true, enabled: true, isDefault: false, sortOrder: 12,
+    key: "primewire", label: "PrimeWire", sub: "Server Mike", sandboxEnabled: false, enabled: true, isDefault: false, sortOrder: 12,
     movieUrl: "https://primewire.mov/embed/movie?tmdb={id}", tvUrl: "https://primewire.mov/embed/tv?tmdb={id}&season={season}&episode={episode}"
   },
 ];

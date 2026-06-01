@@ -3,40 +3,41 @@
 import React, { useState, useEffect, useTransition, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { Film, Tv2, Star, Play, Loader2, SlidersHorizontal } from "lucide-react";
+import { Film, Tv2, Star, Play, Loader2, SlidersHorizontal, Tag, CalendarDays, ArrowDownWideNarrow } from "lucide-react";
 import { discoverMediaAction } from "@/app/actions/tmdb-actions";
 import { TMDBMedia, DiscoverFilters } from "@/lib/tmdb";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
+import CustomSelect, { type SelectOption } from "@/components/ui/CustomSelect";
 
-const GENRES_MOVIE = [
-  { name: "All", id: "" }, { name: "Action", id: "28" }, { name: "Adventure", id: "12" },
-  { name: "Animation", id: "16" }, { name: "Comedy", id: "35" }, { name: "Crime", id: "80" },
-  { name: "Documentary", id: "99" }, { name: "Drama", id: "18" }, { name: "Fantasy", id: "14" },
-  { name: "Horror", id: "27" }, { name: "Mystery", id: "9648" }, { name: "Romance", id: "10749" },
-  { name: "Sci-Fi", id: "878" }, { name: "Thriller", id: "53" }, { name: "War", id: "10752" },
+const GENRES_MOVIE: SelectOption[] = [
+  { label: "All genres", value: "" }, { label: "Action", value: "28" }, { label: "Adventure", value: "12" },
+  { label: "Animation", value: "16" }, { label: "Comedy", value: "35" }, { label: "Crime", value: "80" },
+  { label: "Documentary", value: "99" }, { label: "Drama", value: "18" }, { label: "Fantasy", value: "14" },
+  { label: "Horror", value: "27" }, { label: "Mystery", value: "9648" }, { label: "Romance", value: "10749" },
+  { label: "Sci-Fi", value: "878" }, { label: "Thriller", value: "53" }, { label: "War", value: "10752" },
 ];
-const GENRES_TV = [
-  { name: "All", id: "" }, { name: "Action & Adventure", id: "10759" }, { name: "Animation", id: "16" },
-  { name: "Comedy", id: "35" }, { name: "Crime", id: "80" }, { name: "Documentary", id: "99" },
-  { name: "Drama", id: "18" }, { name: "Kids", id: "10762" }, { name: "Mystery", id: "9648" },
-  { name: "Sci-Fi & Fantasy", id: "10765" }, { name: "Reality", id: "10764" },
+const GENRES_TV: SelectOption[] = [
+  { label: "All genres", value: "" }, { label: "Action & Adventure", value: "10759" }, { label: "Animation", value: "16" },
+  { label: "Comedy", value: "35" }, { label: "Crime", value: "80" }, { label: "Documentary", value: "99" },
+  { label: "Drama", value: "18" }, { label: "Kids", value: "10762" }, { label: "Mystery", value: "9648" },
+  { label: "Sci-Fi & Fantasy", value: "10765" }, { label: "Reality", value: "10764" },
 ];
-const SORTS = [
+const SORTS: SelectOption[] = [
   { label: "Most Popular", value: "popularity.desc" },
   { label: "Top Rated", value: "vote_average.desc" },
   { label: "Newest", value: "primary_release_date.desc" },
   { label: "Oldest", value: "primary_release_date.asc" },
 ];
-const RATINGS = [
+const RATINGS: SelectOption[] = [
   { label: "Any rating", value: "" }, { label: "6+", value: "6" },
   { label: "7+", value: "7" }, { label: "8+", value: "8" }, { label: "9+", value: "9" },
 ];
 
 const currentYear = 2026;
-const YEARS = ["", ...Array.from({ length: 56 }, (_, i) => String(currentYear - i))];
-
-const selectCls =
-  "bg-surface border border-border rounded-xl px-3 py-2 text-sm text-fg outline-none focus:border-accent/60 transition-colors cursor-pointer";
+const YEARS: SelectOption[] = [
+  { label: "Any year", value: "" },
+  ...Array.from({ length: 56 }, (_, i) => ({ label: String(currentYear - i), value: String(currentYear - i) })),
+];
 
 export default function BrowseFilters() {
   const [mediaType, setMediaType] = useState<"movie" | "tv">("movie");
@@ -98,21 +99,10 @@ export default function BrowseFilters() {
           ))}
         </div>
 
-        <select value={genre} onChange={(e) => setGenre(e.target.value)} className={selectCls} aria-label="Genre">
-          {genres.map((g) => <option key={g.id || "all"} value={g.id}>{g.name === "All" ? "All genres" : g.name}</option>)}
-        </select>
-
-        <select value={year} onChange={(e) => setYear(e.target.value)} className={selectCls} aria-label="Year">
-          {YEARS.map((y) => <option key={y || "any"} value={y}>{y || "Any year"}</option>)}
-        </select>
-
-        <select value={minRating} onChange={(e) => setMinRating(e.target.value)} className={selectCls} aria-label="Minimum rating">
-          {RATINGS.map((r) => <option key={r.value || "any"} value={r.value}>{r.label}</option>)}
-        </select>
-
-        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className={selectCls} aria-label="Sort by">
-          {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-        </select>
+        <CustomSelect value={genre} options={genres} onChange={setGenre} ariaLabel="Genre" icon={<Tag className="w-3.5 h-3.5" />} />
+        <CustomSelect value={year} options={YEARS} onChange={setYear} ariaLabel="Year" icon={<CalendarDays className="w-3.5 h-3.5" />} />
+        <CustomSelect value={minRating} options={RATINGS} onChange={setMinRating} ariaLabel="Minimum rating" icon={<Star className="w-3.5 h-3.5" />} />
+        <CustomSelect value={sortBy} options={SORTS} onChange={setSortBy} ariaLabel="Sort by" icon={<ArrowDownWideNarrow className="w-3.5 h-3.5" />} />
       </div>
 
       {/* Results */}

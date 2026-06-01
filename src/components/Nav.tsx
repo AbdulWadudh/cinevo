@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Search, Bell, Menu, X, Heart } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
 import { createClient } from "@/lib/supabase/client";
+import { getProfileBrief } from "@/app/actions/auth";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 export default function Nav() {
@@ -29,9 +30,21 @@ export default function Nav() {
         initial: String(name).charAt(0).toUpperCase(),
       };
     };
-    supabase.auth.getUser().then(({ data }) => setAuthUser(toUser(data.user)));
+    // Prefer the app's own profile (Prisma) so an edited avatar/username shows
+    // immediately; fall back to Supabase metadata (e.g. fresh Google sign-in).
+    const hydrate = async (u: SupabaseUser | null) => {
+      const base = toUser(u);
+      if (!u) { setAuthUser(null); return; }
+      setAuthUser(base);
+      try {
+        const brief = await getProfileBrief();
+        if (brief) setAuthUser({ avatarUrl: brief.avatarUrl || base?.avatarUrl || null, initial: brief.initial });
+      } catch { /* keep metadata fallback */ }
+    };
+
+    supabase.auth.getUser().then(({ data }) => hydrate(data.user));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) =>
-      setAuthUser(toUser(session?.user ?? null))
+      hydrate(session?.user ?? null)
     );
     return () => sub.subscription.unsubscribe();
   }, []);
