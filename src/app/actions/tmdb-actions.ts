@@ -1,6 +1,22 @@
 "use server";
 
-import { tmdb, TMDBMedia, MediaSource } from "@/lib/tmdb";
+import { tmdb, TMDBMedia, MediaSource, DiscoverFilters } from "@/lib/tmdb";
+
+/**
+ * Server Action for the /browse discover grid — filtered + paginated.
+ */
+export async function discoverMediaAction(
+  filters: DiscoverFilters,
+  page: number
+): Promise<{ success: boolean; data: TMDBMedia[]; totalPages: number }> {
+  try {
+    const { results, totalPages } = await tmdb.discover(filters, page);
+    return { success: true, data: results, totalPages };
+  } catch (error) {
+    console.error("Failed to discover media:", error);
+    return { success: false, data: [], totalPages: 0 };
+  }
+}
 
 /**
  * Server Action to search or discover movies dynamically by TMDb genre ID

@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Geist } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import WishlistProvider from "@/components/wishlist/WishlistProvider";
+import WatchSync from "@/components/watch/WatchSync";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-display",
@@ -37,6 +38,7 @@ export default function RootLayout({
     >
       <body className="bg-bg text-fg min-h-full flex flex-col font-sans">
         <WishlistProvider>{children}</WishlistProvider>
+        <WatchSync />
         <Analytics />
       </body>
     </html>

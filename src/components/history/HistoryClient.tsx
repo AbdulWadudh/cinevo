@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useTransition, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Clock, Play, Trash2, CheckSquare, Square, X, Loader2, AlertCircle, History as HistoryIcon,
 } from "lucide-react";
-import { deleteWatchProgressByIds, clearWatchProgress } from "@/app/actions/progress";
+import { deleteWatchEntries, clearWatchProgress } from "@/app/actions/progress";
+import {
+  useWatchHistory, removeEntries, clearAll, mergeFromDb, entryKey, type WatchEntry,
+} from "@/lib/watchStore";
 
 export interface HistoryItem {
   id: string;
@@ -21,10 +24,8 @@ export interface HistoryItem {
   updatedAt: string;
 }
 
-/** "3 days ago" style relative time from an ISO string. */
-function relativeTime(iso: string): string {
-  const then = new Date(iso).getTime();
-  const diff = Date.now() - then;
+function relativeTime(ms: number): string {
+  const diff = Date.now() - ms;
   const sec = Math.floor(diff / 1000);
   if (sec < 60) return "just now";
   const min = Math.floor(sec / 60);
@@ -35,64 +36,81 @@ function relativeTime(iso: string): string {
   if (day < 7) return `${day}d ago`;
   const wk = Math.floor(day / 7);
   if (wk < 5) return `${wk}w ago`;
-  return new Date(iso).toLocaleDateString();
+  return new Date(ms).toLocaleDateString();
 }
 
-function watchUrl(item: HistoryItem): string {
+function watchUrl(item: WatchEntry): string {
   return item.mediaType === "tv"
     ? `/watch/tv/${item.mediaId}?season=${item.season || 1}&episode=${item.episode || 1}`
     : `/watch/movie/${item.mediaId}`;
 }
 
 export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
-  const [items, setItems] = useState<HistoryItem[]>(initial);
+  // Seed the local store from the server-rendered DB snapshot (cross-device).
+  useEffect(() => {
+    mergeFromDb(
+      initial.map((i) => ({
+        mediaId: i.mediaId,
+        mediaType: i.mediaType === "tv" ? "tv" : "movie",
+        title: i.title,
+        posterPath: i.posterPath,
+        season: i.season ?? 0,
+        episode: i.episode ?? 0,
+        progress: i.progress,
+        duration: i.duration,
+        updatedAt: new Date(i.updatedAt).getTime(),
+      }))
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const items = useWatchHistory();
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmClear, setConfirmClear] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const toggleSelect = (id: string) =>
+  const byKey = useMemo(() => {
+    const m = new Map<string, WatchEntry>();
+    items.forEach((e) => m.set(entryKey(e), e));
+    return m;
+  }, [items]);
+
+  const toggleSelect = (key: string) =>
     setSelected((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
 
-  const exitSelect = () => {
-    setSelectMode(false);
-    setSelected(new Set());
-  };
+  const exitSelect = () => { setSelectMode(false); setSelected(new Set()); };
 
-  const removeIds = (ids: string[]) => {
+  const removeKeys = (keys: string[]) => {
     setError(null);
+    const entries = keys.map((k) => byKey.get(k)).filter(Boolean) as WatchEntry[];
+    removeEntries(keys); // optimistic local removal
+    setSelected((prev) => {
+      const next = new Set(prev);
+      keys.forEach((k) => next.delete(k));
+      return next;
+    });
     startTransition(async () => {
-      const res = await deleteWatchProgressByIds(ids);
-      if (res.success) {
-        const gone = new Set(ids);
-        setItems((prev) => prev.filter((i) => !gone.has(i.id)));
-        setSelected((prev) => {
-          const next = new Set(prev);
-          ids.forEach((id) => next.delete(id));
-          return next;
-        });
-      } else {
-        setError(res.error || "Failed to delete");
-      }
+      const res = await deleteWatchEntries(
+        entries.map((e) => ({ mediaId: e.mediaId, mediaType: e.mediaType, season: e.season, episode: e.episode }))
+      );
+      if (!res.success) setError(res.error || "Failed to delete");
     });
   };
 
-  const clearAll = () => {
+  const clearEverything = () => {
     setError(null);
+    clearAll(); // optimistic
+    setConfirmClear(false);
+    exitSelect();
     startTransition(async () => {
       const res = await clearWatchProgress();
-      if (res.success) {
-        setItems([]);
-        setConfirmClear(false);
-        exitSelect();
-      } else {
-        setError(res.error || "Failed to clear history");
-      }
+      if (!res.success) setError(res.error || "Failed to clear history");
     });
   };
 
@@ -115,12 +133,11 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
             {selectMode ? (
               <>
                 <button
-                  onClick={() => removeIds([...selected])}
-                  disabled={selected.size === 0 || pending}
+                  onClick={() => removeKeys([...selected])}
+                  disabled={selected.size === 0}
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-bold bg-red-500/15 border border-red-500/30 text-red-400 hover:bg-red-500/25 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                  Delete ({selected.size})
+                  <Trash2 className="w-4 h-4" /> Delete ({selected.size})
                 </button>
                 <button
                   onClick={exitSelect}
@@ -139,7 +156,7 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
                 </button>
                 {confirmClear ? (
                   <button
-                    onClick={clearAll}
+                    onClick={clearEverything}
                     disabled={pending}
                     className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-bold bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 transition-all cursor-pointer disabled:opacity-50"
                   >
@@ -176,7 +193,6 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
         </div>
       )}
 
-      {/* Empty state */}
       {items.length === 0 ? (
         <div className="text-center py-24 text-muted">
           <HistoryIcon className="w-12 h-12 mx-auto mb-4 opacity-30 text-accent" />
@@ -190,8 +206,8 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
           <AnimatePresence>
             {items.map((item, i) => {
-              const isSel = selected.has(item.id);
-              const pct = item.duration > 0 ? Math.min(100, Math.floor((item.progress / item.duration) * 100)) : 0;
+              const key = entryKey(item);
+              const isSel = selected.has(key);
               const card = (
                 <>
                   <div className={`relative aspect-[2/3] w-full bg-surface-hover rounded-xl overflow-hidden border transition-all duration-300 ${isSel ? "border-accent ring-2 ring-accent/40" : "border-border group-hover:border-accent"}`}>
@@ -201,14 +217,6 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
                       className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
                       loading="lazy"
                     />
-
-                    {pct > 0 && (
-                      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20">
-                        <div style={{ width: `${pct}%` }} className="h-full bg-accent" />
-                      </div>
-                    )}
-
-                    {/* Hover play (browse mode) */}
                     {!selectMode && (
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity duration-300 z-10">
                         <div className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-lg scale-90 group-hover:scale-100 transition-transform">
@@ -216,8 +224,6 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
                         </div>
                       </div>
                     )}
-
-                    {/* Selection checkbox */}
                     {selectMode && (
                       <div className="absolute top-2 left-2 z-20">
                         {isSel
@@ -225,12 +231,9 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
                           : <Square className="w-6 h-6 text-white/80 drop-shadow" />}
                       </div>
                     )}
-
-                    {/* Single delete (browse mode) */}
                     {!selectMode && (
                       <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeIds([item.id]); }}
-                        disabled={pending}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeKeys([key]); }}
                         title="Remove from history"
                         aria-label="Remove from history"
                         className="absolute top-2 right-2 z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-red-500/80 border border-white/10 hover:border-red-400 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
@@ -239,10 +242,7 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
                       </button>
                     )}
                   </div>
-
-                  <h5 className="text-[11px] sm:text-xs font-bold truncate text-fg mt-2 group-hover:text-accent transition-colors">
-                    {item.title}
-                  </h5>
+                  <h5 className="text-[11px] sm:text-xs font-bold truncate text-fg mt-2 group-hover:text-accent transition-colors">{item.title}</h5>
                   <p className="text-[9px] sm:text-[10px] text-muted mt-0.5 flex items-center justify-between gap-1">
                     <span className="truncate">{item.mediaType === "tv" ? `S${item.season} E${item.episode}` : "Movie"}</span>
                     <span className="flex-none">{relativeTime(item.updatedAt)}</span>
@@ -252,7 +252,7 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
 
               return (
                 <motion.div
-                  key={item.id}
+                  key={key}
                   layout
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -260,13 +260,9 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
                   transition={{ duration: 0.2, delay: Math.min(i * 0.015, 0.3) }}
                 >
                   {selectMode ? (
-                    <button onClick={() => toggleSelect(item.id)} className="group block text-left w-full cursor-pointer">
-                      {card}
-                    </button>
+                    <button onClick={() => toggleSelect(key)} className="group block text-left w-full cursor-pointer">{card}</button>
                   ) : (
-                    <Link href={watchUrl(item)} className="group block cursor-pointer">
-                      {card}
-                    </Link>
+                    <Link href={watchUrl(item)} className="group block cursor-pointer">{card}</Link>
                   )}
                 </motion.div>
               );

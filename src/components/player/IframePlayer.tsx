@@ -4,11 +4,12 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
   Maximize, RefreshCw, Shield, Tv2, Film,
-  ChevronDown, Check, Server, Layers, ListOrdered,
+  ChevronDown, Check, Server, Layers, ListOrdered, SkipForward, SkipBack, Flag,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useProviders } from "@/lib/useProviders";
 import { buildEmbedUrl, providerIndexFromKey, LAST_PROVIDER_KEY } from "@/lib/providers";
+import { reportProvider } from "@/app/actions/reports";
 
 interface SeasonInfo {
   season_number: number;
@@ -43,9 +44,11 @@ interface CustomDropdownProps {
   disabled?: boolean;
   /** Optional control rendered on the right of the panel header (e.g. refresh). */
   headerAction?: React.ReactNode;
+  /** When set, mobile shows a compact "{shortLabel}{value}" trigger (e.g. "S1"). */
+  shortLabel?: string;
 }
 
-function CustomDropdown({ icon, label, options, value, onChange, onOpenChange, disabled, headerAction }: CustomDropdownProps) {
+function CustomDropdown({ icon, label, options, value, onChange, onOpenChange, disabled, headerAction, shortLabel }: CustomDropdownProps) {
   const [open, setOpen] = useState(false);
   const [rect, setRect] = useState<{ top: number; left: number } | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -103,7 +106,7 @@ function CustomDropdown({ icon, label, options, value, onChange, onOpenChange, d
         ref={triggerRef}
         onClick={() => !disabled && toggleOpen(!open)}
         disabled={disabled}
-        className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all duration-200 outline-none group/trigger ${disabled
+        className={`flex items-center gap-1.5 sm:gap-2 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl border transition-all duration-200 outline-none group/trigger ${disabled
           ? "bg-white/[0.03] border-white/[0.06] opacity-60 cursor-not-allowed"
           : open
             ? "bg-accent/20 border-accent/60 shadow-[0_0_16px_rgba(229,62,79,0.15)] cursor-pointer"
@@ -115,10 +118,22 @@ function CustomDropdown({ icon, label, options, value, onChange, onOpenChange, d
         <span className={`transition-colors duration-200 ${open ? "text-accent" : "text-muted"}`}>
           {icon}
         </span>
-        <div className="flex flex-col items-start leading-none">
-          <span className="text-[9px] font-extrabold uppercase tracking-widest text-muted">{label}</span>
-          <span className="text-xs font-bold text-white mt-0.5 max-w-[96px] truncate">{selected?.label ?? "—"}</span>
-        </div>
+        {shortLabel ? (
+          <>
+            {/* Mobile: compact e.g. "S1" / "E1" */}
+            <span className="sm:hidden text-sm font-bold text-white">{shortLabel}{value}</span>
+            {/* Desktop: full label + value */}
+            <div className="hidden sm:flex flex-col items-start leading-none">
+              <span className="text-[9px] font-extrabold uppercase tracking-widest text-muted">{label}</span>
+              <span className="text-xs font-bold text-white mt-0.5 max-w-[96px] truncate">{selected?.label ?? "—"}</span>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-start leading-none">
+            <span className="text-[9px] font-extrabold uppercase tracking-widest text-muted">{label}</span>
+            <span className="text-xs font-bold text-white mt-0.5 max-w-[96px] truncate">{selected?.label ?? "—"}</span>
+          </div>
+        )}
         <ChevronDown
           className={`w-3.5 h-3.5 text-muted ml-1 transition-transform duration-300 ${open ? "rotate-180 text-accent" : ""}`}
         />
@@ -198,6 +213,7 @@ export default function IframePlayer({
   const [currentEpisode, setCurrentEpisode] = useState(initialEpisode);
   const [anyDropdownOpen, setAnyDropdownOpen] = useState(false);
   const [sandboxEnabled, setSandboxEnabled] = useState(initialSandbox !== "off");
+  const [reported, setReported] = useState(false);
   const initializedRef = useRef(false);
 
   // Once providers arrive, pick the initial source: an explicit ?source= wins,
@@ -286,6 +302,34 @@ export default function IframePlayer({
   const embedUrl = activeProvider
     ? buildEmbedUrl(activeProvider, mediaId, mediaType, currentSeason, currentEpisode)
     : "";
+
+  /* ─── Prev / Next episode (TV) ── */
+  const seasonOrder = validSeasons.map((s) => s.season_number);
+  const seasonIdx = seasonOrder.indexOf(currentSeason);
+
+  const nextEpisode: { season: number; episode: number } | null = (() => {
+    if (mediaType !== "tv") return null;
+    if (currentEpisode < episodeCount) return { season: currentSeason, episode: currentEpisode + 1 };
+    const nextSeason = seasonIdx >= 0 ? seasonOrder[seasonIdx + 1] : currentSeason + 1;
+    return nextSeason !== undefined ? { season: nextSeason, episode: 1 } : null;
+  })();
+
+  const prevEpisode: { season: number; episode: number } | null = (() => {
+    if (mediaType !== "tv") return null;
+    if (currentEpisode > 1) return { season: currentSeason, episode: currentEpisode - 1 };
+    if (seasonIdx > 0) {
+      const prevSeason = validSeasons[seasonIdx - 1];
+      return { season: prevSeason.season_number, episode: Math.max(1, prevSeason.episode_count || 1) };
+    }
+    return null; // already at S1E1
+  })();
+
+  const goToEpisode = (target: { season: number; episode: number }) => {
+    setCurrentSeason(target.season);
+    setCurrentEpisode(target.episode);
+    reload();
+    router.replace(buildUrl({ season: target.season, episode: target.episode }), { scroll: false });
+  };
 
   /* ─── Dropdown option arrays ── */
   const providerOptions: DropdownOption[] = providers.map((p, i) => ({ value: i, label: p.label, sub: p.sub ?? undefined }));
@@ -377,10 +421,38 @@ export default function IframePlayer({
             </span>
           </button>
 
+          {/* Report broken provider */}
+          <button
+            onClick={() => {
+              if (reported || !activeProvider) return;
+              setReported(true);
+              reportProvider({
+                providerKey: activeProvider.key,
+                providerLabel: activeProvider.label,
+                mediaId,
+                mediaType,
+                title,
+              }).catch(() => { /* best-effort */ });
+              setTimeout(() => setReported(false), 4000);
+            }}
+            disabled={reported || !activeProvider}
+            title={reported ? "Thanks — reported" : "Report this provider as not working"}
+            aria-label="Report broken provider"
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all duration-300 cursor-pointer flex-shrink-0 ${reported
+              ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
+              : "bg-white/[0.04] border-white/[0.08] text-muted hover:text-accent hover:border-accent/40"
+              }`}
+          >
+            <Flag className="w-3 h-3" />
+            <span className="text-[9px] font-extrabold uppercase tracking-widest hidden sm:inline">
+              {reported ? "Reported" : "Report"}
+            </span>
+          </button>
+
           {/* Center: the dropdowns stay on one line together (Provider/Season/Episode).
               On mobile this group drops to its own full-width row; on desktop it
               flex-centers between the side items. Scrolls if too narrow. */}
-          <div className="flex items-center justify-center gap-2 flex-nowrap sm:flex-1 sm:min-w-0 order-last w-full sm:order-none sm:w-auto overflow-x-auto scrollbar-hide">
+          <div className="flex flex-wrap items-center justify-center gap-2 w-full order-last sm:flex-1 sm:min-w-0 sm:flex-nowrap sm:order-none sm:w-auto sm:overflow-x-auto scrollbar-hide">
             {/* Provider — the refresh control lives in the dropdown header.
                 Clears the localStorage cache and re-fetches providers from the DB. */}
             <CustomDropdown
@@ -407,12 +479,13 @@ export default function IframePlayer({
             {mediaType === "tv" && (
               <>
                 {/* Divider */}
-                <div className="w-px h-8 bg-white/[0.08] flex-shrink-0" />
+                <div className="hidden sm:block w-px h-8 bg-white/[0.08] flex-shrink-0" />
 
                 {/* Season */}
                 <CustomDropdown
                   icon={<Layers className="w-3.5 h-3.5" />}
                   label="Season"
+                  shortLabel="S"
                   options={seasonOptions}
                   value={currentSeason}
                   onChange={handleSeasonChange}
@@ -420,17 +493,45 @@ export default function IframePlayer({
                 />
 
                 {/* Divider */}
-                <div className="w-px h-8 bg-white/[0.08] flex-shrink-0" />
+                <div className="hidden sm:block w-px h-8 bg-white/[0.08] flex-shrink-0" />
 
                 {/* Episode */}
                 <CustomDropdown
                   icon={<ListOrdered className="w-3.5 h-3.5" />}
                   label="Episode"
+                  shortLabel="E"
                   options={episodeOptions}
                   value={currentEpisode}
                   onChange={handleEpisodeChange}
                   onOpenChange={setAnyDropdownOpen}
                 />
+
+                {/* Prev / Next — icon-only, side by side; each hidden at its
+                    boundary. Drops to its own centered row below on mobile. */}
+                {(prevEpisode || nextEpisode) && (
+                  <div className="flex items-center justify-center gap-1.5 w-full sm:w-auto sm:flex-shrink-0">
+                    {prevEpisode && (
+                      <button
+                        onClick={() => goToEpisode(prevEpisode)}
+                        title={`Previous: S${prevEpisode.season} E${prevEpisode.episode}`}
+                        aria-label="Previous episode"
+                        className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl border bg-white/[0.05] border-white/[0.10] hover:bg-accent/20 hover:border-accent/60 text-muted hover:text-accent transition-all duration-200 cursor-pointer"
+                      >
+                        <SkipBack className="w-4 h-4" />
+                      </button>
+                    )}
+                    {nextEpisode && (
+                      <button
+                        onClick={() => goToEpisode(nextEpisode)}
+                        title={`Next: S${nextEpisode.season} E${nextEpisode.episode}`}
+                        aria-label="Next episode"
+                        className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl border bg-white/[0.05] border-white/[0.10] hover:bg-accent/20 hover:border-accent/60 text-muted hover:text-accent transition-all duration-200 cursor-pointer"
+                      >
+                        <SkipForward className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                )}
               </>
             )}
           </div>

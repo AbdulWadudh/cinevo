@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, Film } from "lucide-react";
 import Nav from "@/components/Nav";
 import ContinueWatching from "@/components/dashboard/ContinueWatching";
+import BecauseYouWatched from "@/components/dashboard/BecauseYouWatched";
 import MediaCarousel from "@/components/dashboard/MediaCarousel";
 import BrowseSection from "@/components/dashboard/BrowseSection";
 import GenreSection from "@/components/dashboard/GenreSection";
@@ -118,6 +119,11 @@ export default async function Home({ searchParams }: HomeProps) {
 
       {/* Continuous Watch Progress Dashboard */}
       <ContinueWatching />
+
+      {/* Personalized recommendations seeded from the latest watch */}
+      <Suspense fallback={null}>
+        <BecauseYouWatched />
+      </Suspense>
 
       {/* TMDb-powered dynamic carousels */}
       <MediaCarousel title="Trending Now" items={trendingMovies} mediaType="movie" badge="trend" source={{ kind: "trending", mediaType: "movie" }} />

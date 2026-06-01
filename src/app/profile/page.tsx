@@ -7,8 +7,10 @@ import EditProfileForm from "@/components/auth/EditProfileForm";
 import { getOrCreateProfile } from "@/lib/auth";
 import { signOut } from "@/app/actions/auth";
 import { getAllProviders } from "@/app/actions/providers";
+import { getProviderReports } from "@/app/actions/reports";
 import { db } from "@/lib/db";
 import ProviderAdmin from "@/components/admin/ProviderAdmin";
+import ProviderReportsAdmin from "@/components/admin/ProviderReportsAdmin";
 
 export default async function ProfilePage() {
   const profile = await getOrCreateProfile();
@@ -16,10 +18,11 @@ export default async function ProfilePage() {
 
   const isAdmin = profile.role === "admin";
 
-  const [wishlistCount, watchingCount, providersRes] = await Promise.all([
+  const [wishlistCount, watchingCount, providersRes, reportsRes] = await Promise.all([
     db.wishlist.count({ where: { profileId: profile.id } }),
     db.watchProgress.count({ where: { profileId: profile.id } }),
     isAdmin ? getAllProviders() : Promise.resolve({ success: true, data: [] as const }),
+    isAdmin ? getProviderReports() : Promise.resolve({ success: true, data: [] as const, counts: [] as const }),
   ]);
 
   const displayName = profile.username || profile.email.split("@")[0];
@@ -109,6 +112,11 @@ export default async function ProfilePage() {
         {/* Admin-only: stream provider management */}
         {isAdmin && providersRes.success && (
           <ProviderAdmin initial={[...providersRes.data]} />
+        )}
+
+        {/* Admin-only: provider trouble reports */}
+        {isAdmin && reportsRes.success && (
+          <ProviderReportsAdmin initial={[...reportsRes.data]} counts={[...reportsRes.counts]} />
         )}
       </section>
     </div>

@@ -157,17 +157,76 @@ export async function deleteWatchProgress(
 }
 
 /**
- * Deletes specific watch-history rows by their record id (scoped to the
- * current user). Used for single + batch removal on the history page.
+ * Batch-upsert watch-history entries from the local store. Called by the
+ * background syncer (every ~10 min + on tab hide), not per playback event.
  */
-export async function deleteWatchProgressByIds(ids: string[]) {
+export async function syncWatchProgress(entries: WatchProgressInput[]) {
   try {
     const profile = await getOrCreateProfile();
     if (!profile) return { success: false, requiresAuth: true };
-    if (ids.length === 0) return { success: true, count: 0 };
+    if (entries.length === 0) return { success: true, count: 0 };
+
+    await db.$transaction(
+      entries.map((input) => {
+        const season = input.season || 0;
+        const episode = input.episode || 0;
+        return db.watchProgress.upsert({
+          where: {
+            profileId_mediaId_mediaType_season_episode: {
+              profileId: profile.id,
+              mediaId: input.mediaId,
+              mediaType: input.mediaType,
+              season,
+              episode,
+            },
+          },
+          update: { progress: input.progress, duration: input.duration, title: input.title, posterPath: input.posterPath || null, updatedAt: new Date() },
+          create: {
+            profileId: profile.id,
+            mediaId: input.mediaId,
+            mediaType: input.mediaType,
+            title: input.title,
+            posterPath: input.posterPath || null,
+            season,
+            episode,
+            progress: input.progress,
+            duration: input.duration,
+          },
+        });
+      })
+    );
+
+    revalidatePath("/");
+    revalidatePath("/history");
+    return { success: true, count: entries.length };
+  } catch (error) {
+    console.error("Failed to sync watch progress:", error);
+    return { success: false, error: "Failed to sync history" };
+  }
+}
+
+/**
+ * Deletes watch-history rows by media identity (works whether or not the row
+ * has been synced yet). Used for single + batch removal on the history page.
+ */
+export async function deleteWatchEntries(
+  entries: { mediaId: string; mediaType: string; season: number; episode: number }[]
+) {
+  try {
+    const profile = await getOrCreateProfile();
+    if (!profile) return { success: false, requiresAuth: true };
+    if (entries.length === 0) return { success: true, count: 0 };
 
     const res = await db.watchProgress.deleteMany({
-      where: { id: { in: ids }, profileId: profile.id },
+      where: {
+        profileId: profile.id,
+        OR: entries.map((e) => ({
+          mediaId: e.mediaId,
+          mediaType: e.mediaType,
+          season: e.season,
+          episode: e.episode,
+        })),
+      },
     });
 
     revalidatePath("/");

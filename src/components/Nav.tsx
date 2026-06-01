@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Search, Bell, Menu, X, Heart } from "lucide-react";
+import NotificationBell from "@/components/NotificationBell";
 import { createClient } from "@/lib/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -48,6 +49,7 @@ export default function Nav() {
 
   const navLinks = [
     { name: "Home", href: "/" },
+    { name: "Browse", href: "/browse" },
     { name: "Wishlist", href: "/wishlist" },
     { name: "History", href: "/history" },
   ];
@@ -90,10 +92,7 @@ export default function Nav() {
           >
             <Search className="w-5 h-5" />
           </button>
-          <button aria-label="Notifications" className="p-2 text-fg-secondary hover:text-fg hover:bg-white/[0.06] rounded-full transition-all relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-accent rounded-full" />
-          </button>
+          <NotificationBell />
           <Link href="/wishlist" aria-label="Wishlist Dashboard" className="p-2 text-fg-secondary hover:text-fg hover:bg-white/[0.06] rounded-full transition-all">
             <Heart className="w-5 h-5" />
           </Link>

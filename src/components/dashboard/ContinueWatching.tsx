@@ -1,40 +1,26 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { Play } from "lucide-react";
-import { getWatchProgressList } from "@/app/actions/progress";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
 import { TMDBMedia } from "@/lib/tmdb";
-
-interface ProgressItem {
-  id: string;
-  mediaId: string;
-  mediaType: string;
-  title: string;
-  posterPath: string | null;
-  season: number | null;
-  episode: number | null;
-  progress: number;
-  duration: number;
-}
+import { useWatchHistory } from "@/lib/watchStore";
 
 export default function ContinueWatching() {
-  const [progressList, setProgressList] = useState<ProgressItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const history = useWatchHistory();
 
-  useEffect(() => {
-    async function loadProgress() {
-      const res = await getWatchProgressList();
-      if (res.success && res.data) {
-        setProgressList(res.data as unknown as ProgressItem[]);
-      }
-      setLoading(false);
-    }
-    loadProgress();
-  }, []);
+  // Collapse a TV series to a single card (its most recent episode). The list
+  // is already newest-first, so keep the first occurrence per title.
+  const seen = new Set<string>();
+  const progressList = history.filter((item) => {
+    const key = `${item.mediaType}:${item.mediaId}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 
-  if (loading || progressList.length === 0) return null;
+  if (progressList.length === 0) return null;
 
   return (
     <section className="px-6 md:px-12 mb-10 w-full animate-fade-in">
@@ -50,13 +36,13 @@ export default function ContinueWatching() {
             const percent = item.duration > 0
               ? Math.min(100, Math.floor((item.progress / item.duration) * 100))
               : 0;
-            const watchUrl = item.mediaType === "tv" 
-              ? `/watch/tv/${item.mediaId}?season=${item.season || 1}&episode=${item.episode || 1}&t=${item.progress}`
-              : `/watch/movie/${item.mediaId}?t=${item.progress}`;
+            const watchUrl = item.mediaType === "tv"
+              ? `/watch/tv/${item.mediaId}?season=${item.season || 1}&episode=${item.episode || 1}`
+              : `/watch/movie/${item.mediaId}`;
 
             return (
-              <div 
-                key={item.id}
+              <div
+                key={`${item.mediaType}:${item.mediaId}`}
                 className="flex-none w-[170px] sm:w-[210px] snap-start group"
               >
                 <Link href={watchUrl} className="block cursor-pointer">

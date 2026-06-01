@@ -19,6 +19,38 @@ model Profile {
   updatedAt     DateTime        @updatedAt
   watchProgress WatchProgress[]
   wishlists     Wishlist[]
+  ratings       Rating[]
+}
+
+// A user's personal rating (1–10) for a title.
+model Rating {
+  id        String   @id @default(uuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  mediaId   String
+  mediaType String // "movie" | "tv"
+  rating    Int // 1–10
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([profileId, mediaId, mediaType])
+  @@index([profileId])
+}
+
+// A user-submitted "this provider isn't working" report, surfaced to admins.
+model ProviderReport {
+  id            String   @id @default(uuid())
+  providerKey   String
+  providerLabel String?
+  mediaId       String
+  mediaType     String
+  title         String?
+  profileId     String? // reporter (null if signed out)
+  resolved      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@index([resolved, createdAt])
+  @@index([providerKey])
 }
 
 // Embeddable video provider. URL fields are templates that support the

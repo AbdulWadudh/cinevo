@@ -47,19 +47,22 @@ export interface ProvidersCache {
   providers: PlayerProvider[];
 }
 
-/** Fill a provider URL template for a given title. */
+/** Fill a provider URL template for a given title. Supports an optional
+ * {progress} placeholder (resume point, in seconds) for providers that accept it. */
 export function buildEmbedUrl(
   provider: Pick<PlayerProvider, "movieUrl" | "tvUrl">,
   mediaId: string,
   mediaType: "movie" | "tv",
   season?: number,
-  episode?: number
+  episode?: number,
+  progress?: number
 ): string {
   const template = mediaType === "tv" ? provider.tvUrl : provider.movieUrl;
   return template
     .replaceAll("{id}", String(mediaId))
     .replaceAll("{season}", String(season ?? 1))
-    .replaceAll("{episode}", String(episode ?? 1));
+    .replaceAll("{episode}", String(episode ?? 1))
+    .replaceAll("{progress}", String(Math.max(0, Math.floor(progress ?? 0))));
 }
 
 /**

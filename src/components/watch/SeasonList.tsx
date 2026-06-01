@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
   Play,
@@ -14,8 +14,10 @@ import {
   Hash,
   AlignLeft,
   X,
+  Check,
 } from "lucide-react";
 import { getSeasonDetailsAction } from "@/app/actions/tmdb-actions";
+import { useWatchHistory } from "@/lib/watchStore";
 
 interface Season {
   id: number;
@@ -176,6 +178,24 @@ export default function SeasonList({
   const validSeasons = seasons
     .filter((s) => s.season_number > 0)
     .sort((a, b) => a.season_number - b.season_number);
+
+  // Episodes the user has opened (from the local watch store), keyed "season:episode".
+  const history = useWatchHistory();
+  const watched = useMemo(() => {
+    const set = new Set<string>();
+    for (const e of history) {
+      if (e.mediaType === "tv" && e.mediaId === seriesId) set.add(`${e.season}:${e.episode}`);
+    }
+    return set;
+  }, [history, seriesId]);
+  const watchedInSeason = useCallback(
+    (sn: number) => {
+      let c = 0;
+      watched.forEach((k) => { if (k.startsWith(`${sn}:`)) c++; });
+      return c;
+    },
+    [watched]
+  );
 
   /* ── Toggle expand (whole card click) ── */
   const handleToggleEpisodes = async (seasonNumber: number) => {
@@ -423,6 +443,12 @@ export default function SeasonList({
                           <CalendarDays className="w-2.5 h-2.5" />
                           {year}
                         </span>
+                        {watchedInSeason(s.season_number) > 0 && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded-full">
+                            <Check className="w-2.5 h-2.5" />
+                            {watchedInSeason(s.season_number)}/{s.episode_count} watched
+                          </span>
+                        )}
                         {isExpanded && (
                           <span className="inline-flex items-center gap-1 text-[10px] font-extrabold bg-accent/15 text-accent border border-accent/25 px-2 py-0.5 rounded-full" style={{ animation: "badgePop 0.4s cubic-bezier(0.22,1,0.36,1) both" }}>
                             Episodes loaded
@@ -539,6 +565,12 @@ export default function SeasonList({
                                 <div className="absolute bottom-1.5 left-1.5 bg-black/70 backdrop-blur-md text-white text-[8px] font-extrabold px-1.5 py-0.5 rounded border border-white/10">
                                   {ep.episode_number}
                                 </div>
+                                {/* Watched check */}
+                                {watched.has(`${s.season_number}:${ep.episode_number}`) && (
+                                  <div className="absolute bottom-1.5 right-1.5 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shadow-md badge-pop">
+                                    <Check className="w-3 h-3 text-white stroke-[3]" />
+                                  </div>
+                                )}
                                 {/* Now Playing */}
                                 {isCurrentPlaying && (
                                   <div className="absolute top-1.5 left-1.5 badge-pop">

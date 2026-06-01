@@ -6,6 +6,9 @@ import { tmdb } from "@/lib/tmdb";
 import Nav from "@/components/Nav";
 import IframePlayer from "@/components/player/IframePlayer";
 import TrackWatch from "@/components/watch/TrackWatch";
+import CollectionRow from "@/components/watch/CollectionRow";
+import WatchActions from "@/components/watch/WatchActions";
+import { getRating } from "@/app/actions/ratings";
 import WishlistButton from "@/components/wishlist/WishlistButton";
 import { getSingleWatchProgress } from "@/app/actions/progress";
 import { checkWishlistStatus } from "@/app/actions/wishlist";
@@ -53,14 +56,16 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
     similar,
     progressRes,
     wishlistRes,
-    trailerKey
+    trailerKey,
+    userRating
   ] = await Promise.all([
     tmdb.getDetails(id, mediaType),
     tmdb.getCast(id, mediaType),
     tmdb.getSimilar(id, mediaType),
     getSingleWatchProgress(id, mediaType, isTV ? season : undefined, isTV ? episode : undefined),
     checkWishlistStatus(id, mediaType),
-    tmdb.getVideos(id, mediaType)
+    tmdb.getVideos(id, mediaType),
+    getRating(id, mediaType)
   ]);
 
   if (!details) {
@@ -180,6 +185,19 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
 
             <ShareButton title={details.title || details.name || ""} />
           </div>
+
+          {/* Personal rating + mark-watched */}
+          <div className="mb-10">
+            <WatchActions
+              mediaId={id}
+              mediaType={mediaType}
+              title={details.title || details.name || ""}
+              posterPath={details.poster_path || details.backdrop_path || undefined}
+              season={isTV ? season : undefined}
+              episode={isTV ? episode : undefined}
+              initialRating={userRating}
+            />
+          </div>
         </div>
 
         {/* Sidebar: Trailer */}
@@ -206,6 +224,16 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
 
       {/* Interactive Cast Section showing Person Filmographies */}
       <CastSection cast={cast} />
+
+      {/* Franchise / collection row (movies that belong to a collection) */}
+      {!isTV && details.belongs_to_collection && (
+        <section className="px-6 md:px-12 pt-12">
+          <CollectionRow
+            collectionId={details.belongs_to_collection.id}
+            name={details.belongs_to_collection.name}
+          />
+        </section>
+      )}
 
       {/* Similar Titles */}
       {similar.length > 0 && (

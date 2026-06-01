@@ -93,6 +93,27 @@ export interface TMDBDetails extends TMDBMedia {
   seasons?: any[];
   original_language?: string;
   status?: string;
+  belongs_to_collection?: { id: number; name: string; poster_path: string | null; backdrop_path: string | null } | null;
+}
+
+export interface TMDBPerson {
+  id: number;
+  name: string;
+  biography: string;
+  birthday: string | null;
+  deathday: string | null;
+  place_of_birth: string | null;
+  profile_path: string | null;
+  known_for_department: string | null;
+}
+
+/** Filters accepted by the /browse discover view. */
+export interface DiscoverFilters {
+  mediaType: "movie" | "tv";
+  genre?: string;
+  year?: string;
+  minRating?: string;
+  sortBy?: string;
 }
 
 export interface TMDBReview {
@@ -359,5 +380,49 @@ export const tmdb = {
     } catch {
       return null;
     }
-  }
+  },
+
+  // Fetch a person's profile/biography
+  getPerson: async (personId: string): Promise<TMDBPerson | null> => {
+    try {
+      return await tmdbFetch<TMDBPerson>(`/person/${personId}`);
+    } catch {
+      return null;
+    }
+  },
+
+  // Fetch a collection (franchise) with its parts
+  getCollection: async (collectionId: string): Promise<{ id: number; name: string; overview: string; backdrop_path: string | null; parts: TMDBMedia[] } | null> => {
+    try {
+      return await tmdbFetch<{ id: number; name: string; overview: string; backdrop_path: string | null; parts: TMDBMedia[] }>(`/collection/${collectionId}`);
+    } catch {
+      return null;
+    }
+  },
+
+  // Discover with arbitrary filters (genre, year, rating, sort) — powers /browse
+  discover: async (filters: DiscoverFilters, page: number = 1): Promise<TMDBPagedResult> => {
+    const { mediaType } = filters;
+    const params: Record<string, string> = {
+      sort_by: filters.sortBy || "popularity.desc",
+      page: String(page),
+      "vote_count.gte": "50",
+    };
+    if (filters.genre) params.with_genres = filters.genre;
+    if (filters.minRating) params["vote_average.gte"] = filters.minRating;
+    if (filters.year) {
+      if (mediaType === "movie") params.primary_release_year = filters.year;
+      else params.first_air_date_year = filters.year;
+    }
+    try {
+      const data = await tmdbFetch<TMDBResponse>(`/discover/${mediaType}`, params);
+      return {
+        results: data.results,
+        page: data.page ?? page,
+        totalPages: Math.min(data.total_pages ?? 1, 500),
+      };
+    } catch {
+      return { results: [], page, totalPages: 0 };
+    }
+  },
 };
