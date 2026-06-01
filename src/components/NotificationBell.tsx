@@ -3,8 +3,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
-import { Bell, Sparkles, CalendarClock, Check } from "lucide-react";
-import { getNewEpisodeNotifications, type EpisodeNotification } from "@/app/actions/notifications";
+import { Bell, BellRing, BellOff, Sparkles, CalendarClock, Check } from "lucide-react";
+import { getNewEpisodeNotifications } from "@/app/actions/notifications";
+import type { EpisodeNotification } from "@/lib/episodeNotifications";
+import { getPushState, enablePush, disablePush, type PushState } from "@/lib/pushClient";
+import { toast } from "sonner";
 
 const DISMISS_KEY = "cinevo:notifDismissed";
 
@@ -19,12 +22,28 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<EpisodeNotification[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [pushState, setPushState] = useState<PushState>("unsubscribed");
+  const [pushBusy, setPushBusy] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setDismissed(readDismissed());
     getNewEpisodeNotifications().then(setItems).catch(() => {});
+    getPushState().then(setPushState).catch(() => {});
   }, []);
+
+  const togglePush = async () => {
+    setPushBusy(true);
+    try {
+      const next = pushState === "subscribed" ? await disablePush() : await enablePush();
+      setPushState(next);
+      if (next === "subscribed") toast.success("Push alerts enabled");
+      else if (next === "unsubscribed") toast("Push alerts turned off");
+      else if (next === "denied") toast.error("Notifications are blocked in your browser");
+    } finally {
+      setPushBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -111,6 +130,27 @@ export default function NotificationBell() {
                 })
               )}
             </div>
+
+            {/* Push toggle footer */}
+            {pushState !== "unsupported" && (
+              <div className="border-t border-white/[0.06] px-4 py-3">
+                {pushState === "denied" ? (
+                  <p className="text-[11px] text-muted">Notifications are blocked in your browser settings.</p>
+                ) : (
+                  <button
+                    onClick={togglePush}
+                    disabled={pushBusy}
+                    className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-60 ${pushState === "subscribed"
+                      ? "bg-white/[0.05] border border-white/[0.1] text-fg-secondary hover:text-fg"
+                      : "bg-accent/15 border border-accent/30 text-accent hover:bg-accent/25"
+                      }`}
+                  >
+                    {pushState === "subscribed" ? <BellOff className="w-3.5 h-3.5" /> : <BellRing className="w-3.5 h-3.5" />}
+                    {pushState === "subscribed" ? "Turn off push alerts" : "Enable push alerts"}
+                  </button>
+                )}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

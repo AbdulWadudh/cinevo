@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { getWatchProgressList, syncWatchProgress } from "@/app/actions/progress";
-import { getDirty, markSynced, mergeFromDb, entryKey, type WatchEntry } from "@/lib/watchStore";
+import { flushWatch, pullWatch } from "@/lib/watchSyncClient";
 
 const SYNC_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -18,44 +17,15 @@ export default function WatchSync() {
 
   const flush = useCallback(async () => {
     if (!authedRef.current) return;
-    const dirty = getDirty();
-    if (dirty.length === 0) return;
-    const stamped = dirty.map((e) => ({ key: entryKey(e), updatedAt: e.updatedAt }));
-    const res = await syncWatchProgress(
-      dirty.map((e) => ({
-        mediaId: e.mediaId,
-        mediaType: e.mediaType,
-        title: e.title,
-        posterPath: e.posterPath ?? undefined,
-        season: e.mediaType === "tv" ? e.season : undefined,
-        episode: e.mediaType === "tv" ? e.episode : undefined,
-        progress: e.progress,
-        duration: e.duration,
-      }))
-    );
-    if (res.success) markSynced(stamped);
+    await flushWatch();
   }, []);
 
   const pull = useCallback(async () => {
     if (!authedRef.current) return;
-    const res = await getWatchProgressList();
-    if (res.success && res.data) {
-      const rows: Omit<WatchEntry, "dirty">[] = res.data.map((i: any) => ({
-        mediaId: i.mediaId,
-        mediaType: i.mediaType === "tv" ? "tv" : "movie",
-        title: i.title,
-        posterPath: i.posterPath ?? null,
-        season: i.season ?? 0,
-        episode: i.episode ?? 0,
-        progress: i.progress ?? 0,
-        duration: i.duration ?? 0,
-        updatedAt: new Date(i.updatedAt).getTime(),
-      }));
-      mergeFromDb(rows);
-    }
+    await pullWatch();
     // Push anything local that the DB didn't already have / that's newer.
-    flush();
-  }, [flush]);
+    await flushWatch();
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();

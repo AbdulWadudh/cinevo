@@ -8,9 +8,12 @@ import { getOrCreateProfile } from "@/lib/auth";
 import { signOut } from "@/app/actions/auth";
 import { getAllProviders } from "@/app/actions/providers";
 import { getProviderReports } from "@/app/actions/reports";
+import { getAdminStats } from "@/app/actions/admin";
+import AdminDashboard from "@/components/admin/AdminDashboard";
 import { db } from "@/lib/db";
 import ProviderAdmin from "@/components/admin/ProviderAdmin";
 import ProviderReportsAdmin from "@/components/admin/ProviderReportsAdmin";
+import ForceSyncButton from "@/components/watch/ForceSyncButton";
 
 export default async function ProfilePage() {
   const profile = await getOrCreateProfile();
@@ -18,11 +21,12 @@ export default async function ProfilePage() {
 
   const isAdmin = profile.role === "admin";
 
-  const [wishlistCount, watchingCount, providersRes, reportsRes] = await Promise.all([
+  const [wishlistCount, watchingCount, providersRes, reportsRes, statsRes] = await Promise.all([
     db.wishlist.count({ where: { profileId: profile.id } }),
     db.watchProgress.count({ where: { profileId: profile.id } }),
     isAdmin ? getAllProviders() : Promise.resolve({ success: true, data: [] as const }),
     isAdmin ? getProviderReports() : Promise.resolve({ success: true, data: [] as const, counts: [] as const }),
+    isAdmin ? getAdminStats() : Promise.resolve({ success: false as const }),
   ]);
 
   const displayName = profile.username || profile.email.split("@")[0];
@@ -96,6 +100,17 @@ export default async function ProfilePage() {
           <h2 className="font-display text-lg font-bold mb-5">Account Settings</h2>
           <EditProfileForm username={profile.username || ""} avatarUrl={profile.avatarUrl || ""} />
 
+          {/* Watch history sync */}
+          <div className="border-t border-white/[0.06] mt-8 pt-6">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div>
+                <h3 className="text-sm font-bold text-fg">Watch history</h3>
+                <p className="text-xs text-muted mt-0.5">History saves locally and syncs every 10 min. Force a sync to push/pull now.</p>
+              </div>
+              <ForceSyncButton />
+            </div>
+          </div>
+
           <div className="border-t border-white/[0.06] mt-8 pt-6">
             <form action={signOut}>
               <button
@@ -108,6 +123,11 @@ export default async function ProfilePage() {
             </form>
           </div>
         </div>
+
+        {/* Admin-only: overview stats + role management */}
+        {isAdmin && statsRes.success && "data" in statsRes && statsRes.data && (
+          <AdminDashboard stats={statsRes.data} />
+        )}
 
         {/* Admin-only: stream provider management */}
         {isAdmin && providersRes.success && (

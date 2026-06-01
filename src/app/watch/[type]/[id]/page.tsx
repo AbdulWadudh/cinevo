@@ -29,7 +29,31 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const mediaType: "movie" | "tv" = type === "tv" ? "tv" : "movie";
   const details = await tmdb.getDetails(id, mediaType);
   const title = details?.title || details?.name;
-  return { title: title ? `${title} - Cinevo` : "Cinevo" };
+  if (!title) return { title: "Cinevo" };
+
+  const description = details?.overview?.slice(0, 200) || "Stream on Cinevo.";
+  const image = details?.backdrop_path
+    ? `https://image.tmdb.org/t/p/w1280${details.backdrop_path}`
+    : details?.poster_path
+      ? `https://image.tmdb.org/t/p/w780${details.poster_path}`
+      : undefined;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title: `${title} · Cinevo`,
+      description,
+      type: mediaType === "tv" ? "video.tv_show" : "video.movie",
+      images: image ? [image] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} · Cinevo`,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
 }
 
 export default async function WatchPage({ params, searchParams }: PageProps) {

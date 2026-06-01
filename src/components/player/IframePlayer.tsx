@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useProviders } from "@/lib/useProviders";
 import { buildEmbedUrl, providerIndexFromKey, LAST_PROVIDER_KEY } from "@/lib/providers";
 import { reportProvider } from "@/app/actions/reports";
+import { toast } from "sonner";
 
 interface SeasonInfo {
   season_number: number;
@@ -432,7 +433,9 @@ export default function IframePlayer({
                 mediaId,
                 mediaType,
                 title,
-              }).catch(() => { /* best-effort */ });
+              })
+                .then(() => toast.success(`Reported ${activeProvider.label}`, { description: "Thanks — our team will take a look." }))
+                .catch(() => toast.error("Couldn't submit report"));
               setTimeout(() => setReported(false), 4000);
             }}
             disabled={reported || !activeProvider}
@@ -465,7 +468,7 @@ export default function IframePlayer({
               disabled={providersLoading || providers.length === 0}
               headerAction={
                 <button
-                  onClick={(e) => { e.stopPropagation(); refresh(); }}
+                  onClick={(e) => { e.stopPropagation(); refresh().then(() => toast.success("Providers refreshed")); }}
                   disabled={refreshing}
                   title="Refresh providers from server"
                   aria-label="Refresh providers"

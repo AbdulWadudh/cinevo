@@ -20,6 +20,30 @@ model Profile {
   watchProgress WatchProgress[]
   wishlists     Wishlist[]
   ratings       Rating[]
+  pushSubs      PushSubscription[]
+}
+
+// A browser Web Push subscription (one per device/browser the user enables).
+model PushSubscription {
+  id        String   @id @default(uuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([profileId])
+}
+
+// Dedupe log so a given episode is pushed to a user at most once.
+model SentPush {
+  id        String   @id @default(uuid())
+  profileId String
+  episodeId String // `${mediaId}:${season}:${episode}`
+  createdAt DateTime @default(now())
+
+  @@unique([profileId, episodeId])
 }
 
 // A user's personal rating (1–10) for a title.

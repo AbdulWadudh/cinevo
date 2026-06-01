@@ -2,6 +2,7 @@
 
 import React, { useState, useTransition } from "react";
 import { Star, Check, Eye } from "lucide-react";
+import { toast } from "sonner";
 import { setRating, removeRating } from "@/app/actions/ratings";
 import { touchWatch, useWatchHistory } from "@/lib/watchStore";
 
@@ -33,8 +34,8 @@ export default function WatchActions({
     const next = value === rating ? 0 : value; // click same star to clear
     setRatingState(next);
     startTransition(async () => {
-      if (next === 0) await removeRating(mediaId, mediaType);
-      else await setRating(mediaId, mediaType, next);
+      if (next === 0) { await removeRating(mediaId, mediaType); toast("Rating removed"); }
+      else { await setRating(mediaId, mediaType, next); toast.success(`Rated ${next}/10`); }
     });
   };
 
