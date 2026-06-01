@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
   Play, Maximize, RefreshCw, Shield, Tv2, Film,
   ChevronDown, Check, Server, Layers, ListOrdered,
@@ -75,32 +76,60 @@ interface CustomDropdownProps {
 
 function CustomDropdown({ icon, label, options, value, onChange, onOpenChange }: CustomDropdownProps) {
   const [open, setOpen] = useState(false);
+  const [rect, setRect] = useState<{ top: number; left: number } | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const selected = options.find((o) => o.value === value);
+
+  useEffect(() => setMounted(true), []);
+
+  // Position the (portaled) panel under the trigger, clamped inside the viewport
+  // so its edges never run off-screen.
+  const updatePosition = useCallback(() => {
+    const el = triggerRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const PANEL_W = 220;
+    const margin = 8;
+    const maxLeft = window.innerWidth - PANEL_W - margin;
+    const left = Math.max(margin, Math.min(r.left, maxLeft));
+    setRect({ top: r.bottom + 8, left });
+  }, []);
 
   const toggleOpen = (next: boolean) => {
+    if (next) updatePosition();
     setOpen(next);
     onOpenChange?.(next);
   };
-  const ref = useRef<HTMLDivElement>(null);
-  const selected = options.find((o) => o.value === value);
 
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) toggleOpen(false);
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (triggerRef.current?.contains(t) || panelRef.current?.contains(t)) return;
+      toggleOpen(false);
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") toggleOpen(false); };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, []);
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") toggleOpen(false); };
+    const reposition = () => updatePosition();
+    document.addEventListener("mousedown", onDown);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   return (
-    <div ref={ref} className="relative">
+    <div className="relative">
       {/* Trigger */}
       <button
+        ref={triggerRef}
         onClick={() => toggleOpen(!open)}
         className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all duration-200 cursor-pointer outline-none group/trigger ${
           open
@@ -122,43 +151,53 @@ function CustomDropdown({ icon, label, options, value, onChange, onOpenChange }:
         />
       </button>
 
-      {/* Panel */}
-      {open && (
-        <div
-          className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 z-[9999] min-w-[190px] bg-surface/98 backdrop-blur-2xl border border-white/[0.12] rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.9)] overflow-hidden"
-          style={{ animation: "dropDown 0.22s cubic-bezier(0.22,1,0.36,1) both" }}
-          role="listbox"
-        >
-          {/* Panel header */}
-          <div className="px-4 py-2.5 border-b border-white/[0.06]">
-            <p className="text-[9px] font-extrabold uppercase tracking-widest text-accent">{label}</p>
-          </div>
-          {/* Options */}
-          <div className="flex flex-col py-1 max-h-[220px] overflow-y-auto">
-            {options.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => { onChange(opt.value); toggleOpen(false); }}
-                role="option"
-                aria-selected={opt.value === value}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all duration-150 cursor-pointer group/opt ${
-                  opt.value === value
-                    ? "bg-accent/15 text-accent"
-                    : "text-fg hover:bg-white/[0.06] hover:text-white"
-                }`}
-              >
-                <span className={`flex-1 flex flex-col gap-0.5`}>
-                  <span className="text-xs font-bold leading-none">{opt.label}</span>
-                  {opt.sub && <span className="text-[9px] text-muted leading-none mt-0.5">{opt.sub}</span>}
-                </span>
-                {opt.value === value && (
-                  <Check className="w-3.5 h-3.5 text-accent flex-none" />
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Panel — portaled to <body> so it escapes the player's backdrop-blur
+          stacking context and the page's overflow clipping. */}
+      {open && rect && mounted &&
+        createPortal(
+          <div
+            ref={panelRef}
+            role="listbox"
+            style={{
+              position: "fixed",
+              top: rect.top,
+              left: rect.left,
+              zIndex: 1000,
+              animation: "dropDown 0.22s cubic-bezier(0.22,1,0.36,1) both",
+            }}
+            className="w-[220px] bg-surface/98 backdrop-blur-2xl border border-white/[0.12] rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.9)] overflow-hidden"
+          >
+            {/* Panel header */}
+            <div className="px-4 py-2.5 border-b border-white/[0.06]">
+              <p className="text-[9px] font-extrabold uppercase tracking-widest text-accent">{label}</p>
+            </div>
+            {/* Options */}
+            <div className="flex flex-col py-1 max-h-[220px] overflow-y-auto">
+              {options.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => { onChange(opt.value); toggleOpen(false); }}
+                  role="option"
+                  aria-selected={opt.value === value}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all duration-150 cursor-pointer group/opt ${
+                    opt.value === value
+                      ? "bg-accent/15 text-accent"
+                      : "text-fg hover:bg-white/[0.06] hover:text-white"
+                  }`}
+                >
+                  <span className={`flex-1 flex flex-col gap-0.5`}>
+                    <span className="text-xs font-bold leading-none">{opt.label}</span>
+                    {opt.sub && <span className="text-[9px] text-muted leading-none mt-0.5">{opt.sub}</span>}
+                  </span>
+                  {opt.value === value && (
+                    <Check className="w-3.5 h-3.5 text-accent flex-none" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
@@ -274,7 +313,7 @@ export default function IframePlayer({
       <style>{`
         @keyframes splashPop  { from{opacity:0;transform:scale(0.6)} to{opacity:1;transform:scale(1)} }
         @keyframes splashFade { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes dropDown   { from{opacity:0;transform:translateX(-50%) translateY(-8px) scale(0.96)} to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)} }
+        @keyframes dropDown   { from{opacity:0;transform:translateY(-8px) scale(0.96)} to{opacity:1;transform:translateY(0) scale(1)} }
       `}</style>
 
       <div className="flex flex-col gap-0 w-full">
@@ -345,7 +384,7 @@ export default function IframePlayer({
         </div>
 
         {/* ── Controls bar ── */}
-        <div className="w-full bg-surface/50 backdrop-blur-xl border border-white/[0.07] border-t border-t-white/[0.04] rounded-b-xl px-5 py-3 flex items-center justify-between gap-4 relative overflow-visible">
+        <div className="w-full bg-surface/50 backdrop-blur-xl border border-white/[0.07] border-t border-t-white/[0.04] rounded-b-xl px-2.5 py-2 sm:px-5 sm:py-3 flex flex-wrap items-center justify-center gap-2 sm:flex-nowrap sm:justify-between sm:gap-4 relative overflow-visible">
 
           {/* Left: Sandbox toggle */}
           <button
@@ -368,8 +407,10 @@ export default function IframePlayer({
             </span>
           </button>
 
-          {/* Center: the three dropdowns */}
-          <div className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
+          {/* Center: the dropdowns stay on one line together (Source/Season/Episode).
+              On mobile this group drops to its own full-width row; on desktop it
+              flex-centers between the side items. Scrolls if too narrow. */}
+          <div className="flex items-center justify-center gap-2 flex-nowrap sm:flex-1 sm:min-w-0 order-last w-full sm:order-none sm:w-auto overflow-x-auto scrollbar-hide">
             {/* Source */}
             <CustomDropdown
               icon={<Server className="w-3.5 h-3.5" />}
@@ -412,7 +453,7 @@ export default function IframePlayer({
           </div>
 
           {/* Right: media type badge */}
-          <div className="flex items-center gap-1.5 bg-white/[0.04] border border-white/[0.07] px-2.5 py-1.5 rounded-lg flex-shrink-0 ml-auto">
+          <div className="flex items-center gap-1.5 bg-white/[0.04] border border-white/[0.07] px-2.5 py-1.5 rounded-lg flex-shrink-0">
             {mediaType === "tv"
               ? <><Tv2 className="w-3.5 h-3.5 text-accent" /><span className="text-[9px] font-extrabold text-muted uppercase tracking-widest hidden sm:inline">Series</span></>
               : <><Film className="w-3.5 h-3.5 text-fg-secondary" /><span className="text-[9px] font-extrabold text-muted uppercase tracking-widest hidden sm:inline">Movie</span></>

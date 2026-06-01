@@ -3,3 +3,28 @@
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
+
+# Motion & Animation — use it everywhere, heavily
+
+Cinevo is a cinematic, premium product. **Every** new or changed UI element should
+move. Treat animation as a default, not a finishing touch — static UI is a bug here.
+
+- **Library:** use [`motion`](https://motion.dev) (already a dependency) for component
+  animation in client components — `import { motion, AnimatePresence } from "motion/react"`.
+  Use Tailwind transitions / CSS keyframes for simple hover and state changes.
+- **Apply broadly:**
+  - **Entrance:** fade/slide/scale content in on mount and on scroll into view
+    (stagger lists and grids).
+  - **Hover & press:** scale, lift, glow, and color transitions on every interactive
+    element (cards, buttons, links, icons).
+  - **Layout & route changes:** animate mounts/unmounts with `AnimatePresence`; animate
+    reordering with `layout`.
+  - **Micro-interactions:** loaders, toggles, dropdowns, modals/overlays, skeletons,
+    and feedback states (added-to-wishlist, copied, etc.) should all be animated.
+- **Feel:** prefer spring or ease-out curves, short durations (150–400ms), and subtle
+  stagger. Keep it smooth and intentional — animate `transform`/`opacity` (GPU-friendly),
+  avoid animating layout-thrashing properties.
+- **Accessibility:** respect `prefers-reduced-motion` — gate non-essential motion behind it.
+
+When in doubt, add motion. A new screen, card, list, or control should never ship
+without an entrance animation and interactive hover/press feedback.

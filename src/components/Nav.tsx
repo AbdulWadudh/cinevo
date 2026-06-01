@@ -73,13 +73,16 @@ function NavInner() {
   }, []);
 
   // Listen to search parameter changes in the URL for bidirectional search sync.
-  // NOTE: does not touch `includePeople` — that checkbox is user-controlled only,
-  // otherwise every keystroke (which updates ?search=) would re-tick it.
+  // `includePeople` is normally user-controlled (so keystrokes don't re-tick it),
+  // but a `people=1` flag (set when clicking a cast member) auto-enables it.
   useEffect(() => {
     const searchVal = searchParams?.get("search");
     if (searchVal) {
       setIsSearchOpen(true);
       setSearchQuery(searchVal);
+      if (searchParams?.get("people") === "1") {
+        setIncludePeople(true);
+      }
     }
   }, [searchParams]);
 
@@ -97,6 +100,7 @@ function NavInner() {
     setSearchQuery("");
     setSearchResults([]);
     setSelectedSearchActor(null);
+    setIncludePeople(false);
     router.push(pathname);
   };
 
@@ -241,11 +245,20 @@ function NavInner() {
       </nav>
 
       {/* Mobile Menu Panel */}
-      <div 
-        className={`fixed inset-0 bg-bg/98 z-40 flex flex-col justify-center p-8 transition-all duration-300 md:hidden ${
+      <div
+        className={`fixed inset-0 bg-bg/98 z-50 flex flex-col justify-center p-8 transition-all duration-300 md:hidden ${
           mobileMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-full pointer-events-none"
         }`}
       >
+        {/* Close button */}
+        <button
+          onClick={() => setMobileMenuOpen(false)}
+          aria-label="Close menu"
+          className="absolute top-5 right-5 p-2.5 bg-surface hover:bg-surface-hover hover:text-accent text-fg-secondary border border-border rounded-xl transition-all cursor-pointer"
+        >
+          <X className="w-6 h-6" />
+        </button>
+
         <div className="flex flex-col gap-6 text-center">
           {navLinks.map((link) => {
             const active = pathname === link.href;
@@ -260,9 +273,29 @@ function NavInner() {
               </Link>
             );
           })}
+
+          {/* Auth entry */}
+          {authUser ? (
+            <Link
+              href="/profile"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-2xl font-bold font-display text-fg-secondary hover:text-fg"
+            >
+              Profile
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className="mx-auto mt-1 inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-accent text-white hover:bg-accent-hover transition-all"
+            >
+              Sign In
+            </Link>
+          )}
+
           <div className="h-px bg-border w-1/3 mx-auto my-4" />
           <div className="flex justify-center gap-6">
-            <button 
+            <button
               onClick={() => {
                 setMobileMenuOpen(false);
                 setIsSearchOpen(true);

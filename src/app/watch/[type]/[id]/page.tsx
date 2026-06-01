@@ -97,8 +97,9 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
       {/* Scroll responsive transparent nav */}
       <Nav />
 
-      {/* Embedded Iframe Player Container */}
-      <section className="pt-[72px] w-full px-0 sm:px-6 md:px-12">
+      {/* Embedded Iframe Player Container (relative z-20 so the player's source/season/
+          episode dropdowns render above the metadata section below) */}
+      <section className="relative z-20 pt-[72px] w-full px-0 sm:px-6 md:px-12">
         <div className="mb-4 hidden sm:flex items-center gap-2">
           <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-fg-secondary bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] hover:text-fg px-3.5 py-2 rounded-lg transition-all">
             <ArrowLeft className="w-3.5 h-3.5" />

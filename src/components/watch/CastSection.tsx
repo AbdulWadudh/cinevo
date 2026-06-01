@@ -17,8 +17,9 @@ export default function CastSection({ cast }: CastSectionProps) {
   const visibleCast = isExpanded ? cast : cast.slice(0, INITIAL_LIMIT);
 
   const handleActorClick = (actor: TMDBCast) => {
-    // Navigate to set search parameter in URL, which triggers full-screen search
-    router.push(`?search=${encodeURIComponent(actor.name)}`);
+    // Navigate to set the search parameter, which opens search. `people=1` tells
+    // the search panel to auto-enable the "include actors & crew" filter.
+    router.push(`?search=${encodeURIComponent(actor.name)}&people=1`);
   };
 
   return (
