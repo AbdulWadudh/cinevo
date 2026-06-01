@@ -3,12 +3,12 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
-  Play, Maximize, RefreshCw, Shield, Tv2, Film,
+  Maximize, RefreshCw, Shield, Tv2, Film,
   ChevronDown, Check, Server, Layers, ListOrdered,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useProviders } from "@/lib/useProviders";
-import { buildEmbedUrl, providerIndexFromKey } from "@/lib/sources";
+import { buildEmbedUrl, providerIndexFromKey, LAST_PROVIDER_KEY } from "@/lib/providers";
 
 interface SeasonInfo {
   season_number: number;
@@ -104,8 +104,8 @@ function CustomDropdown({ icon, label, options, value, onChange, onOpenChange, d
         onClick={() => !disabled && toggleOpen(!open)}
         disabled={disabled}
         className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all duration-200 outline-none group/trigger ${disabled
-            ? "bg-white/[0.03] border-white/[0.06] opacity-60 cursor-not-allowed"
-            : open
+          ? "bg-white/[0.03] border-white/[0.06] opacity-60 cursor-not-allowed"
+          : open
             ? "bg-accent/20 border-accent/60 shadow-[0_0_16px_rgba(229,62,79,0.15)] cursor-pointer"
             : "bg-white/[0.05] border-white/[0.10] hover:bg-white/[0.09] hover:border-white/[0.20] cursor-pointer"
           }`}
@@ -154,8 +154,8 @@ function CustomDropdown({ icon, label, options, value, onChange, onOpenChange, d
                   role="option"
                   aria-selected={opt.value === value}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all duration-150 cursor-pointer group/opt ${opt.value === value
-                      ? "bg-accent/15 text-accent"
-                      : "text-fg hover:bg-white/[0.06] hover:text-white"
+                    ? "bg-accent/15 text-accent"
+                    : "text-fg hover:bg-white/[0.06] hover:text-white"
                     }`}
                 >
                   <span className={`flex-1 flex flex-col gap-0.5`}>
@@ -192,9 +192,6 @@ export default function IframePlayer({
 
   // Providers are loaded from localStorage (version + TTL) then the DB.
   const { providers, loading: providersLoading, refreshing, refresh } = useProviders();
-
-  // No autoplay — the user clicks the poster's play button to start the embed.
-  const [isPlaying, setIsPlaying] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [currentSeason, setCurrentSeason] = useState(initialSeason);
@@ -203,12 +200,15 @@ export default function IframePlayer({
   const [sandboxEnabled, setSandboxEnabled] = useState(initialSandbox !== "off");
   const initializedRef = useRef(false);
 
-  // Once providers arrive, resolve the initial source from the URL key and
-  // apply its default sandbox state (unless the URL pinned an explicit one).
+  // Once providers arrive, pick the initial source: an explicit ?source= wins,
+  // otherwise fall back to the user's last-used provider, then the admin default.
   useEffect(() => {
     if (providersLoading || providers.length === 0 || initializedRef.current) return;
     initializedRef.current = true;
-    const idx = providerIndexFromKey(providers, initialSourceKey);
+    const lastKey = (() => {
+      try { return localStorage.getItem(LAST_PROVIDER_KEY) ?? undefined; } catch { return undefined; }
+    })();
+    const idx = providerIndexFromKey(providers, initialSourceKey ?? lastKey);
     setSelectedProvider(idx);
     if (!initialSandbox) {
       setSandboxEnabled(providers[idx]?.sandboxEnabled ?? true);
@@ -246,36 +246,32 @@ export default function IframePlayer({
   const handleSeasonChange = (v: number) => {
     setCurrentSeason(v);
     setCurrentEpisode(1);
-    if (isPlaying) reload();
+    reload();
     router.replace(buildUrl({ season: v, episode: 1 }), { scroll: false });
   };
 
   const handleEpisodeChange = (v: number) => {
     setCurrentEpisode(v);
-    if (isPlaying) reload();
+    reload();
     router.replace(buildUrl({ episode: v }), { scroll: false });
   };
 
   const handleProviderChange = (v: number) => {
     setSelectedProvider(v);
+    // Remember this as the user's base provider for future visits.
+    try { if (providers[v]) localStorage.setItem(LAST_PROVIDER_KEY, providers[v].key); } catch { /* storage unavailable */ }
     // Apply the new provider's configured default sandbox state.
     const sb = providers[v]?.sandboxEnabled ?? true;
     setSandboxEnabled(sb);
-    if (isPlaying) reload();
+    reload();
     router.replace(buildUrl({ source: v, sandbox: sb }), { scroll: false });
   };
 
   const handleSandboxToggle = () => {
     const next = !sandboxEnabled;
     setSandboxEnabled(next);
-    if (isPlaying) reload();
+    reload();
     router.replace(buildUrl({ sandbox: next }), { scroll: false });
-  };
-
-  const handlePlay = () => {
-    setIsLoading(true);
-    setIsPlaying(true);
-    setTimeout(() => setIsLoading(false), 1200);
   };
 
   const toggleFullscreen = () => {
@@ -316,60 +312,39 @@ export default function IframePlayer({
           ref={playerRef}
           className="relative w-full aspect-video max-h-[70vh] bg-black rounded-t-xl overflow-hidden select-none shadow-2xl border border-white/[0.04] border-b-0 group"
         >
-          {isPlaying ? (
-            <div className="w-full h-full relative">
-              {isLoading && (
-                <div className="absolute inset-0 bg-bg/95 z-20 flex flex-col items-center justify-center gap-4">
-                  <RefreshCw className="w-10 h-10 animate-spin text-accent" />
-                  <p className="text-sm font-semibold text-fg-secondary animate-pulse">Securing safe link…</p>
-                </div>
-              )}
-              {embedUrl && (
-                <iframe
-                  key={`${activeProvider?.key}-${currentSeason}-${currentEpisode}`}
-                  src={embedUrl}
-                  className="w-full h-full border-none"
-                  allowFullScreen
-                  allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                  {...(sandboxEnabled ? { sandbox: "allow-scripts allow-same-origin allow-forms" as any } : {})}
-                  title={title}
-                />
-              )}
-              {/* Transparent overlay blocks iframe from stealing pointer events when a dropdown is open */}
-              {anyDropdownOpen && (
-                <div className="absolute inset-0 z-[9998]" aria-hidden="true" />
-              )}
-            </div>
-          ) : (
-            <div className="absolute inset-0">
-              <img
-                src={posterPath ? `https://image.tmdb.org/t/p/original${posterPath}` : "https://picsum.photos/seed/cinevodefault/1280/720"}
-                alt={title}
-                className="w-full h-full object-cover brightness-[0.45] transition duration-700 group-hover:scale-105"
+          <div className="w-full h-full relative">
+            {embedUrl && (
+              <iframe
+                key={`${activeProvider?.key}-${currentSeason}-${currentEpisode}`}
+                src={embedUrl}
+                className="w-full h-full border-none"
+                allowFullScreen
+                allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                {...(sandboxEnabled ? { sandbox: "allow-scripts allow-same-origin allow-forms" as any } : {})}
+                title={title}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-black/40" />
-              <div className="absolute inset-0 flex flex-col items-center justify-center z-10 p-6 text-center">
-                <button
-                  onClick={handlePlay}
-                  disabled={providersLoading || !activeProvider}
-                  aria-label="Play"
-                  className="w-20 h-20 bg-accent hover:bg-accent-hover text-white rounded-full flex items-center justify-center shadow-[0_8px_40px_rgba(229,62,79,0.4)] hover:scale-110 active:scale-95 transition-all duration-300 mb-5 cursor-pointer disabled:opacity-50 disabled:cursor-wait disabled:hover:scale-100"
-                >
-                  {providersLoading
-                    ? <RefreshCw className="w-7 h-7 animate-spin" />
-                    : <Play className="w-8 h-8 fill-white translate-x-0.5" />}
-                </button>
-                <h2 className="text-xl md:text-3xl font-extrabold tracking-tight text-white font-display mb-2 max-w-[80%]">
-                  {title}
-                </h2>
-                {mediaType === "tv" && (
-                  <p className="text-sm text-accent font-semibold tracking-wider uppercase">
-                    Season {currentSeason} &bull; Episode {currentEpisode}
-                  </p>
-                )}
+            )}
+
+            {/* Loading veil — shown while providers resolve or a switch reloads
+                the embed. Backed by the poster so it never flashes plain black. */}
+            {(isLoading || providersLoading || !embedUrl) && (
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 overflow-hidden">
+                <img
+                  src={posterPath ? `https://image.tmdb.org/t/p/original${posterPath}` : "https://picsum.photos/seed/cinevodefault/1280/720"}
+                  alt={title}
+                  className="absolute inset-0 w-full h-full object-cover brightness-[0.3]"
+                />
+                <div className="absolute inset-0 bg-bg/80" />
+                <RefreshCw className="relative w-10 h-10 animate-spin text-accent" />
+                <p className="relative text-sm font-semibold text-fg-secondary animate-pulse">Securing safe link…</p>
               </div>
-            </div>
-          )}
+            )}
+
+            {/* Transparent overlay blocks iframe from stealing pointer events when a dropdown is open */}
+            {anyDropdownOpen && (
+              <div className="absolute inset-0 z-9998" aria-hidden="true" />
+            )}
+          </div>
 
           {/* Fullscreen */}
           <button
@@ -389,8 +364,8 @@ export default function IframePlayer({
             onClick={handleSandboxToggle}
             title={sandboxEnabled ? "Sandbox ON — click to disable (allows full player features)" : "Sandbox OFF — click to enable (blocks ads/popups)"}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all duration-300 cursor-pointer flex-shrink-0 ${sandboxEnabled
-                ? "bg-emerald-500/10 border-emerald-500/25 hover:bg-emerald-500/20"
-                : "bg-orange-500/10 border-orange-500/25 hover:bg-orange-500/20"
+              ? "bg-emerald-500/10 border-emerald-500/25 hover:bg-emerald-500/20"
+              : "bg-orange-500/10 border-orange-500/25 hover:bg-orange-500/20"
               }`}
             aria-label="Toggle iframe sandbox"
           >

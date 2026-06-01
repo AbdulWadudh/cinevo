@@ -9,7 +9,7 @@ import {
 import {
   createProvider, updateProvider, deleteProvider, reorderProviders, setDefaultProvider,
 } from "@/app/actions/providers";
-import type { PlayerProvider, ProviderInput } from "@/lib/sources";
+import type { PlayerProvider, ProviderInput } from "@/lib/providers";
 
 const emptyForm: ProviderInput = {
   key: "", label: "", sub: "", movieUrl: "", tvUrl: "",

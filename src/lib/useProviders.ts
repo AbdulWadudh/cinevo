@@ -8,7 +8,7 @@ import {
   PROVIDERS_CACHE_VERSION,
   type PlayerProvider,
   type ProvidersCache,
-} from "@/lib/sources";
+} from "@/lib/providers";
 
 /** Read a still-valid (matching version, not past TTL) cache, or null. */
 function readCache(): PlayerProvider[] | null {

@@ -7,7 +7,7 @@ import {
   DEFAULT_PROVIDERS,
   type PlayerProvider,
   type ProviderInput,
-} from "@/lib/sources";
+} from "@/lib/providers";
 
 /** Map a Prisma Source row to the serializable PlayerProvider shape. */
 function toProvider(s: {

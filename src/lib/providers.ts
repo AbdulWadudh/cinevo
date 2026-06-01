@@ -38,6 +38,9 @@ export const PROVIDERS_CACHE_KEY = "cinevo:providers:v1";
 export const PROVIDERS_CACHE_VERSION = 2;
 export const PROVIDERS_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
+/** Remembers the provider key the user last played on (their personal base). */
+export const LAST_PROVIDER_KEY = "cinevo:lastProvider";
+
 export interface ProvidersCache {
   version: number;
   fetchedAt: number;
@@ -75,7 +78,7 @@ export function providerIndexFromKey(providers: { key: string; isDefault?: boole
 /** Seed data inserted on first run when the Source table is empty. */
 export const DEFAULT_PROVIDERS: Omit<PlayerProvider, "id">[] = [
   {
-    key: "cinesrc", label: "CineSrc", sub: "Server Alpha", sandboxEnabled: true, enabled: true, isDefault: true, sortOrder: 3,
+    key: "cinesrc", label: "CineSrc", sub: "Server Alpha", sandboxEnabled: true, enabled: true, isDefault: false, sortOrder: 3,
     movieUrl: "https://cinesrc.st/embed/movie/{id}", tvUrl: "https://cinesrc.st/embed/tv/{id}?s={season}&e={episode}"
   },
   {
@@ -87,7 +90,7 @@ export const DEFAULT_PROVIDERS: Omit<PlayerProvider, "id">[] = [
     movieUrl: "https://lordflix.org/watch/movie/{id}", tvUrl: "https://lordflix.org/watch/tv/{id}/{season}/{episode}"
   },
   {
-    key: "videasy", label: "Videasy", sub: "Server Delta", sandboxEnabled: true, enabled: true, isDefault: false, sortOrder: 1,
+    key: "videasy", label: "Videasy", sub: "Server Delta", sandboxEnabled: true, enabled: true, isDefault: true, sortOrder: 1,
     movieUrl: "https://player.videasy.net/movie/{id}", tvUrl: "https://player.videasy.net/tv/{id}/{season}/{episode}"
   },
   {
