@@ -29,7 +29,6 @@ interface IframePlayerProps {
 
 export const PROVIDERS = [
   {
-    id: 0,
     key: "cinesrc",
     label: "CineSrc",
     sub: "Server Alpha",
@@ -39,7 +38,6 @@ export const PROVIDERS = [
         : `https://cinesrc.st/embed/tv/${id}?s=${s}&e=${e}`,
   },
   {
-    id: 1,
     key: "vidcore",
     label: "VidCore",
     sub: "Server Beta",
@@ -49,7 +47,6 @@ export const PROVIDERS = [
         : `https://vidcore.net/tv/${id}/${s}/${e}`,
   },
   {
-    id: 2,
     key: "lordflix",
     label: "LordFlix",
     sub: "Server Gamma",
@@ -57,6 +54,96 @@ export const PROVIDERS = [
       t === "movie"
         ? `https://lordflix.org/watch/movie/${id}`
         : `https://lordflix.org/watch/tv/${id}/${s}/${e}`,
+  },
+  {
+    key: "videasy",
+    label: "Videasy",
+    sub: "Server Delta",
+    url: (id: string, t: string, s?: number, e?: number) =>
+      t === "movie"
+        ? `https://player.videasy.net/movie/${id}`
+        : `https://player.videasy.net/tv/${id}/${s}/${e}`,
+  },
+  {
+    key: "vidlink",
+    label: "VidLink",
+    sub: "Server Delta",
+    url: (id: string, t: string, s?: number, e?: number) =>
+      t === "movie"
+        ? `https://vidlink.pro/movie/${id}`
+        : `https://vidlink.pro/tv/${id}/${s}/${e}`,
+  },
+  {
+    key: "vixsrc",
+    label: "VixSrc",
+    sub: "Server Echo",
+    url: (id: string, t: string, s?: number, e?: number) =>
+      t === "movie"
+        ? `https://vixsrc.to/movie/${id}`
+        : `https://vixsrc.to/tv/${id}/${s}/${e}`,
+  },
+  {
+    key: "vidfast",
+    label: "VidFast",
+    sub: "Server Foxtrot",
+    url: (id: string, t: string, s?: number, e?: number) =>
+      t === "movie"
+        ? `https://vidfast.pro/movie/${id}`
+        : `https://vidfast.pro/tv/${id}/${s}/${e}`,
+  },
+  {
+    key: "toustream",
+    label: "TouStream",
+    sub: "Server Golf",
+    url: (id: string, t: string, s?: number, e?: number) =>
+      t === "movie"
+        ? `https://toustream.xyz/tou/movie/${id}`
+        : `https://toustream.xyz/tou/tv/${id}/${s}/${e}`,
+  },
+  {
+    key: "vidzee",
+    label: "VidZee",
+    sub: "Server Hotel",
+    url: (id: string, t: string, s?: number, e?: number) =>
+      t === "movie"
+        ? `https://player.vidzee.wtf/embed/movie/${id}`
+        : `https://player.vidzee.wtf/embed/tv/${id}/${s}/${e}`,
+  },
+  {
+    key: "vidsrc",
+    label: "VidSrc",
+    sub: "Server India",
+    url: (id: string, t: string, s?: number, e?: number) =>
+      t === "movie"
+        ? `https://vidsrc.cc/v2/embed/movie/${id}`
+        : `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}`,
+  },
+  {
+    key: "vidnest",
+    label: "VidNest",
+    sub: "Server Juliett",
+    url: (id: string, t: string, s?: number, e?: number) =>
+      t === "movie"
+        ? `https://vidnest.fun/movie/${id}`
+        : `https://vidnest.fun/tv/${id}/${s}/${e}`,
+  },
+  {
+    key: "thisiscinema",
+    label: "ThisIsCinema",
+    sub: "Server Kilo",
+    url: (id: string, t: string, s?: number, e?: number) =>
+      t === "movie"
+        ? `https://thisiscinema.pages.dev/?version=v5&type=movie&id=${id}`
+        : `https://thisiscinema.pages.dev/?version=v5&type=tv&id=${id}&season=${s}&episode=${e}`,
+  },
+  {
+    key: "primewire",
+    label: "PrimeWire",
+    sub: "Server Lima",
+    url: (id: string, t: string, s?: number, e?: number) =>
+      t === "movie"
+        ? `https://primewire.mov/embed/movie?tmdb=${id}`
+        : `https://primewire.mov/embed/tv?tmdb=${id}&season=${s}&episode=${e}`,
   },
 ];
 
@@ -131,11 +218,10 @@ function CustomDropdown({ icon, label, options, value, onChange, onOpenChange }:
       <button
         ref={triggerRef}
         onClick={() => toggleOpen(!open)}
-        className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all duration-200 cursor-pointer outline-none group/trigger ${
-          open
+        className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all duration-200 cursor-pointer outline-none group/trigger ${open
             ? "bg-accent/20 border-accent/60 shadow-[0_0_16px_rgba(229,62,79,0.15)]"
             : "bg-white/[0.05] border-white/[0.10] hover:bg-white/[0.09] hover:border-white/[0.20]"
-        }`}
+          }`}
         aria-haspopup="listbox"
         aria-expanded={open}
       >
@@ -179,11 +265,10 @@ function CustomDropdown({ icon, label, options, value, onChange, onOpenChange }:
                   onClick={() => { onChange(opt.value); toggleOpen(false); }}
                   role="option"
                   aria-selected={opt.value === value}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all duration-150 cursor-pointer group/opt ${
-                    opt.value === value
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all duration-150 cursor-pointer group/opt ${opt.value === value
                       ? "bg-accent/15 text-accent"
                       : "text-fg hover:bg-white/[0.06] hover:text-white"
-                  }`}
+                    }`}
                 >
                   <span className={`flex-1 flex flex-col gap-0.5`}>
                     <span className="text-xs font-bold leading-none">{opt.label}</span>
@@ -299,7 +384,7 @@ export default function IframePlayer({
   const embedUrl = PROVIDERS[selectedProvider].url(mediaId, mediaType, currentSeason, currentEpisode);
 
   /* ─── Dropdown option arrays ── */
-  const providerOptions: DropdownOption[] = PROVIDERS.map((p) => ({ value: p.id, label: p.label, sub: p.sub }));
+  const providerOptions: DropdownOption[] = PROVIDERS.map((p, i) => ({ value: i, label: p.label, sub: p.sub }));
   const seasonOptions: DropdownOption[] = validSeasons.length > 0
     ? validSeasons.map((s) => ({ value: s.season_number, label: s.name || `Season ${s.season_number}` }))
     : Array.from({ length: 10 }, (_, i) => ({ value: i + 1, label: `Season ${i + 1}` }));
@@ -390,19 +475,16 @@ export default function IframePlayer({
           <button
             onClick={handleSandboxToggle}
             title={sandboxEnabled ? "Sandbox ON — click to disable (allows full player features)" : "Sandbox OFF — click to enable (blocks ads/popups)"}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all duration-300 cursor-pointer flex-shrink-0 ${
-              sandboxEnabled
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all duration-300 cursor-pointer flex-shrink-0 ${sandboxEnabled
                 ? "bg-emerald-500/10 border-emerald-500/25 hover:bg-emerald-500/20"
                 : "bg-orange-500/10 border-orange-500/25 hover:bg-orange-500/20"
-            }`}
+              }`}
             aria-label="Toggle iframe sandbox"
           >
-            <Shield className={`w-3 h-3 transition-colors duration-300 ${
-              sandboxEnabled ? "text-emerald-400" : "text-orange-400"
-            }`} />
-            <span className={`text-[9px] font-extrabold uppercase tracking-widest hidden sm:inline transition-colors duration-300 ${
-              sandboxEnabled ? "text-emerald-400" : "text-orange-400"
-            }`}>
+            <Shield className={`w-3 h-3 transition-colors duration-300 ${sandboxEnabled ? "text-emerald-400" : "text-orange-400"
+              }`} />
+            <span className={`text-[9px] font-extrabold uppercase tracking-widest hidden sm:inline transition-colors duration-300 ${sandboxEnabled ? "text-emerald-400" : "text-orange-400"
+              }`}>
               {sandboxEnabled ? "Sandbox ON" : "Sandbox OFF"}
             </span>
           </button>
