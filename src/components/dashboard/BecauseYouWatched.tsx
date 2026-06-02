@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import MediaCarousel from "@/components/dashboard/MediaCarousel";
 import { getWatchProgressList } from "@/app/actions/progress";
 import { tmdb } from "@/lib/tmdb";
@@ -20,7 +21,17 @@ export default async function BecauseYouWatched() {
 
   return (
     <MediaCarousel
-      title={`Because you watched ${recent.title}`}
+      title={
+        <>
+          Because you watched - {" "}
+          <Link
+            href={`/watch/${mediaType}/${recent.mediaId}`}
+            className="text-accent hover:underline underline-offset-2 cursor-pointer"
+          >
+            {recent.title}
+          </Link>
+        </>
+      }
       items={items}
       mediaType={mediaType}
     />

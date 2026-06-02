@@ -8,9 +8,98 @@ import { TMDBMedia, MediaSource } from "@/lib/tmdb";
 import { loadMediaPageAction } from "@/app/actions/tmdb-actions";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
 import { useTrailer } from "@/components/TrailerProvider";
+import { useFocusable } from "@noriginmedia/norigin-spatial-navigation";
+import { FocusSection } from "@/components/tv/Focusable";
+
+const badgeConfig = {
+  trend: { label: "Trending", style: "bg-accent text-white" },
+  new: { label: "New", style: "bg-blue text-white" },
+  top: { label: "Top 10", style: "bg-gold text-black" },
+} as const;
+
+type BadgeKey = keyof typeof badgeConfig;
+
+/* ─── Focusable poster card (D-pad navigable on TV) ─────────────── */
+function PosterCard({
+  item, mediaType, badge, onLinkClick, onCardFocus,
+}: {
+  item: TMDBMedia;
+  mediaType: "movie" | "tv";
+  badge?: BadgeKey;
+  onLinkClick: (e: React.MouseEvent) => void;
+  onCardFocus: () => void;
+}) {
+  const { openTrailer } = useTrailer();
+  const { ref, focused } = useFocusable({
+    onEnterPress: () => ref.current?.click(),
+    onFocus: () => {
+      onCardFocus();
+      ref.current?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    },
+  });
+  const currentBadge = badge ? badgeConfig[badge] : null;
+  const linkUrl = `/watch/${item.media_type || mediaType}/${item.id}`;
+
+  return (
+    <div className="flex-none w-[140px] sm:w-[180px] snap-start group">
+      <Link
+        ref={ref}
+        href={linkUrl}
+        onClick={onLinkClick}
+        draggable={false}
+        className={`tv-focusable block cursor-pointer select-none rounded-xl ${focused ? "tv-focused" : ""}`}
+      >
+        <div className="relative aspect-[2/3] w-full bg-surface rounded-xl overflow-hidden border border-white/[0.04] shadow-md transition-all duration-500 group-hover:-translate-y-2 group-hover:scale-[1.02] group-hover:border-accent group-hover:shadow-[0_8px_25px_rgba(0,0,0,0.8)]">
+          <Image
+            src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "https://picsum.photos/seed/cinevoposter/300/450"}
+            alt={item.title || item.name || ""}
+            fill
+            sizes="(max-width: 640px) 140px, 180px"
+            className="object-cover transition duration-700 group-hover:scale-108"
+            draggable={false}
+          />
+          <WishlistHeart item={item} mediaType={mediaType} />
+          <div className="absolute inset-0 flex items-center justify-center gap-2.5 opacity-0 group-hover:opacity-100 bg-black/55 transition-opacity duration-300 z-20">
+            <span className="w-11 h-11 bg-accent text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(229,62,79,0.45)] transform scale-75 group-hover:scale-100 transition-transform duration-300" title="Play">
+              <Play className="w-4.5 h-4.5 fill-white translate-x-0.5" />
+            </span>
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); openTrailer({ id: String(item.id), mediaType: (item.media_type as "movie" | "tv") || mediaType, title: item.title || item.name || "", rating: item.vote_average, date: item.release_date || item.first_air_date }); }}
+              title="Watch trailer"
+              aria-label="Watch trailer"
+              className="w-11 h-11 bg-white/15 text-white border border-white/30 rounded-full flex items-center justify-center backdrop-blur-md hover:bg-white/25 transform scale-75 group-hover:scale-100 transition-all duration-300 cursor-pointer"
+            >
+              <Clapperboard className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/95 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+            <div className="flex items-center gap-1 text-[11px] font-bold text-gold">
+              <Star className="w-3.5 h-3.5 fill-gold stroke-gold" />
+              <span>{item.vote_average ? item.vote_average.toFixed(1) : "N/A"}</span>
+            </div>
+          </div>
+          {currentBadge && (
+            <span className={`absolute top-2 left-2 text-[9px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider z-20 shadow-md ${currentBadge.style}`}>
+              {currentBadge.label}
+            </span>
+          )}
+        </div>
+        <div className="pt-2 px-1">
+          <h3 className="text-xs sm:text-sm font-semibold truncate text-fg group-hover:text-accent transition-colors">
+            {item.title || item.name}
+          </h3>
+          <p className="text-[10px] sm:text-xs text-muted mt-0.5 font-medium">
+            {item.release_date ? item.release_date.split("-")[0] : item.first_air_date ? item.first_air_date.split("-")[0] : ""} &bull; {item.media_type === "tv" || mediaType === "tv" ? "TV" : "Movie"}
+          </p>
+        </div>
+      </Link>
+    </div>
+  );
+}
 
 interface MediaCarouselProps {
-  title: string;
+  /** Plain text, or a node (e.g. with only part of it linked). */
+  title: React.ReactNode;
   items: TMDBMedia[];
   mediaType?: "movie" | "tv";
   badge?: "trend" | "new" | "top";
@@ -23,7 +112,7 @@ export default function MediaCarousel({
   items,
   mediaType = "movie",
   badge,
-  source
+  source,
 }: MediaCarouselProps) {
   const { openTrailer } = useTrailer();
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -146,13 +235,11 @@ export default function MediaCarousel({
     }
   };
 
-  if (items.length === 0) return null;
+  // When a card gains D-pad focus, hold the auto-pan off so it doesn't fight
+  // the focus scroll-into-view.
+  const pauseAutoPan = () => { resumeAtRef.current = performance.now() + 60000; };
 
-  const badgeConfig = {
-    trend: { label: "Trending", style: "bg-accent text-white" },
-    new: { label: "New", style: "bg-blue text-white" },
-    top: { label: "Top 10", style: "bg-gold text-black" }
-  };
+  if (items.length === 0) return null;
 
   return (
     <section className="px-6 md:px-12 mb-12 relative w-full group/carousel">
@@ -196,73 +283,18 @@ export default function MediaCarousel({
           style={{ WebkitOverflowScrolling: "touch" }}
           className={`flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x cursor-grab active:cursor-grabbing select-none transition-transform duration-300 ${dragging ? "scale-[0.985]" : "scale-100"}`}
         >
-          {items.map((item) => {
-            const currentBadge = badge ? badgeConfig[badge] : null;
-            const linkUrl = `/watch/${item.media_type || mediaType}/${item.id}`;
-
-            return (
-              <div 
+          <FocusSection className="flex gap-4">
+            {items.map((item) => (
+              <PosterCard
                 key={item.id}
-                className="flex-none w-[140px] sm:w-[180px] snap-start group"
-              >
-                <Link href={linkUrl} onClick={handleLinkClick} className="block cursor-pointer select-none" draggable={false}>
-                  {/* Poster Container */}
-                  <div className="relative aspect-[2/3] w-full bg-surface rounded-xl overflow-hidden border border-white/[0.04] shadow-md transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] hover:border-accent hover:shadow-[0_8px_25px_rgba(0,0,0,0.8)]">
-                    <Image
-                      src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "https://picsum.photos/seed/cinevoposter/300/450"}
-                      alt={item.title || item.name || ""}
-                      fill
-                      sizes="(max-width: 640px) 140px, 180px"
-                      className="object-cover transition duration-700 group-hover:scale-108"
-                      draggable={false}
-                    />
-
-                    <WishlistHeart item={item} mediaType={mediaType} />
-
-                    {/* Hover preview: Play + Watch Trailer actions */}
-                    <div className="absolute inset-0 flex items-center justify-center gap-2.5 opacity-0 group-hover:opacity-100 bg-black/55 transition-opacity duration-300 z-20">
-                      <span className="w-11 h-11 bg-accent text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(229,62,79,0.45)] transform scale-75 group-hover:scale-100 transition-transform duration-300" title="Play">
-                        <Play className="w-4.5 h-4.5 fill-white translate-x-0.5" />
-                      </span>
-                      <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); openTrailer({ id: String(item.id), mediaType: (item.media_type as "movie" | "tv") || mediaType, title: item.title || item.name || "", rating: item.vote_average, date: item.release_date || item.first_air_date }); }}
-                        title="Watch trailer"
-                        aria-label="Watch trailer"
-                        className="w-11 h-11 bg-white/15 text-white border border-white/30 rounded-full flex items-center justify-center backdrop-blur-md hover:bg-white/25 transform scale-75 group-hover:scale-100 transition-all duration-300 cursor-pointer"
-                      >
-                        <Clapperboard className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Bottom Metadata Hover Overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/95 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-                      <div className="flex items-center gap-1 text-[11px] font-bold text-gold">
-                        <Star className="w-3.5 h-3.5 fill-gold stroke-gold" />
-                        <span>{item.vote_average ? item.vote_average.toFixed(1) : "N/A"}</span>
-                      </div>
-                    </div>
-
-                    {/* Optional Ribbon Badge */}
-                    {currentBadge && (
-                      <span className={`absolute top-2 left-2 text-[9px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider z-20 shadow-md ${currentBadge.style}`}>
-                        {currentBadge.label}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Text Metadata */}
-                  <div className="pt-2 px-1">
-                    <h3 className="text-xs sm:text-sm font-semibold truncate text-fg group-hover:text-accent transition-colors">
-                      {item.title || item.name}
-                    </h3>
-                    <p className="text-[10px] sm:text-xs text-muted mt-0.5 font-medium">
-                      {item.release_date ? item.release_date.split("-")[0] : item.first_air_date ? item.first_air_date.split("-")[0] : ""} &bull; {item.media_type === "tv" || mediaType === "tv" ? "TV" : "Movie"}
-                    </p>
-                  </div>
-                </Link>
-              </div>
-            );
-          })}
+                item={item}
+                mediaType={mediaType}
+                badge={badge}
+                onLinkClick={handleLinkClick}
+                onCardFocus={pauseAutoPan}
+              />
+            ))}
+          </FocusSection>
         </div>
 
         {/* Right Arrow */}

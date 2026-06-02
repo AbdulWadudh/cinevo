@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Star, Play, ChevronLeft, ChevronRight, Clapperboard } from "lucide-react";
 import { TMDBMedia } from "@/lib/tmdb";
 import { useTrailer } from "@/components/TrailerProvider";
+import { FocusSection, FocusableLink, FocusableButton } from "@/components/tv/Focusable";
 
 interface HeroCarouselProps {
   items: TMDBMedia[];
@@ -145,30 +146,32 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
                 {item.overview}
               </p>
               
-              <div className="flex items-center gap-3 pointer-events-auto">
-                <Link
-                  href={`/watch/${item.media_type || "movie"}/${item.id}`}
-                  className="relative z-20 inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold bg-accent text-white hover:bg-accent-hover hover:shadow-[0_6px_20px_rgba(229,62,79,0.35)] transition-all cursor-pointer"
-                >
-                  <Play className="w-4 h-4 fill-white" /> Play Now
-                </Link>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    openTrailer({
-                      id: String(item.id),
-                      mediaType: (item.media_type as "movie" | "tv") || "movie",
-                      title: item.title || item.name || "",
-                      rating: item.vote_average,
-                      date: item.release_date || item.first_air_date,
-                      key: trailers[item.id],
-                    });
-                  }}
-                  className="relative z-20 inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold bg-white/[0.12] text-white border border-white/20 hover:bg-white/20 backdrop-blur-md transition-all cursor-pointer"
-                >
-                  <Clapperboard className="w-4 h-4" /> Watch Trailer
-                </button>
-              </div>
+              {/* Only the active slide's actions are focusable (others are hidden). */}
+              {isActive && (
+                <FocusSection className="flex items-center gap-3 pointer-events-auto" focusKey="HERO_ACTIONS" saveChild={false}>
+                  <FocusableLink
+                    href={`/watch/${item.media_type || "movie"}/${item.id}`}
+                    className="relative z-20 inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold bg-accent text-white hover:bg-accent-hover hover:shadow-[0_6px_20px_rgba(229,62,79,0.35)] transition-all cursor-pointer"
+                  >
+                    <Play className="w-4 h-4 fill-white" /> Play Now
+                  </FocusableLink>
+                  <FocusableButton
+                    onPress={() =>
+                      openTrailer({
+                        id: String(item.id),
+                        mediaType: (item.media_type as "movie" | "tv") || "movie",
+                        title: item.title || item.name || "",
+                        rating: item.vote_average,
+                        date: item.release_date || item.first_air_date,
+                        key: trailers[item.id],
+                      })
+                    }
+                    className="relative z-20 inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold bg-white/[0.12] text-white border border-white/20 hover:bg-white/20 backdrop-blur-md transition-all cursor-pointer"
+                  >
+                    <Clapperboard className="w-4 h-4" /> Watch Trailer
+                  </FocusableButton>
+                </FocusSection>
+              )}
             </div>
           </div>
         );
