@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import {
   Maximize, RefreshCw, Shield, ShieldOff, Tv2, Film,
-  ChevronDown, Check, Server, Layers, ListOrdered, SkipForward, SkipBack, Flag,
+  ChevronDown, Check, Server, Layers, ListOrdered, SkipForward, SkipBack, Flag, X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useProviders } from "@/lib/useProviders";
@@ -219,7 +219,11 @@ export default function IframePlayer({
   const [anyDropdownOpen, setAnyDropdownOpen] = useState(false);
   const [sandboxMode, setSandboxMode] = useState<SandboxMode>(initialSandbox ?? "balanced");
   const [reported, setReported] = useState(false);
+  const [noticeDismissed, setNoticeDismissed] = useState(false);
   const initializedRef = useRef(false);
+  // True once the user manually cycles the sandbox — stops us from auto-syncing
+  // it back to the provider's configured mode.
+  const sandboxTouchedRef = useRef(false);
 
   // Once providers arrive, pick the initial source: an explicit ?source= wins,
   // otherwise fall back to the user's last-used provider, then the admin default.
@@ -231,12 +235,17 @@ export default function IframePlayer({
     })();
     const idx = providerIndexFromKey(providers, initialSourceKey ?? lastKey);
     setSelectedProvider(idx);
-    if (!initialSandbox) {
-      setSandboxMode(providers[idx]?.sandboxMode ?? "balanced");
-    }
   }, [providersLoading, providers, initialSourceKey, initialSandbox]);
 
   const activeProvider = providers[selectedProvider];
+
+  // Keep the sandbox mode in sync with the active provider's configured mode —
+  // unless the URL pinned a mode or the user manually changed it this session.
+  // This re-applies even after a provider refresh (so admin edits take effect).
+  useEffect(() => {
+    if (!activeProvider || initialSandbox || sandboxTouchedRef.current) return;
+    setSandboxMode(activeProvider.sandboxMode);
+  }, [activeProvider, initialSandbox]);
 
   // Build a consistent URL with all persistent query params
   const buildUrl = (opts: { season?: number; episode?: number; source?: number; sandbox?: SandboxMode }) => {
@@ -281,20 +290,21 @@ export default function IframePlayer({
     setSelectedProvider(v);
     // Remember this as the user's base provider for future visits.
     try { if (providers[v]) localStorage.setItem(LAST_PROVIDER_KEY, providers[v].key); } catch { /* storage unavailable */ }
-    // Apply the new provider's configured sandbox mode.
+    // Follow the newly-selected provider's configured sandbox mode.
+    sandboxTouchedRef.current = false;
     const mode = providers[v]?.sandboxMode ?? "balanced";
     setSandboxMode(mode);
     reload();
     router.replace(buildUrl({ source: v, sandbox: mode }), { scroll: false });
   };
 
-  // Cycle sandbox modes: balanced → strict → off → balanced.
-  const handleSandboxToggle = () => {
-    const idx = SANDBOX_MODES.indexOf(sandboxMode);
-    const next = SANDBOX_MODES[(idx + 1) % SANDBOX_MODES.length];
-    setSandboxMode(next);
+  // Direct sandbox-mode pick (manual override — stops auto-sync to provider).
+  const handleSandboxChange = (mode: SandboxMode) => {
+    if (mode === sandboxMode) return;
+    sandboxTouchedRef.current = true;
+    setSandboxMode(mode);
     reload();
-    router.replace(buildUrl({ sandbox: next }), { scroll: false });
+    router.replace(buildUrl({ sandbox: mode }), { scroll: false });
   };
 
   const toggleFullscreen = () => {
@@ -366,7 +376,7 @@ export default function IframePlayer({
           <div className="w-full h-full relative">
             {embedUrl && (
               <iframe
-                key={`${activeProvider?.key}-${currentSeason}-${currentEpisode}`}
+                key={`${activeProvider?.key}-${currentSeason}-${currentEpisode}-${sandboxMode}`}
                 src={embedUrl}
                 className="w-full h-full border-none"
                 allowFullScreen
@@ -413,27 +423,19 @@ export default function IframePlayer({
         {/* ── Controls bar ── */}
         <div className="w-full bg-surface/50 backdrop-blur-xl border border-white/[0.07] border-t border-t-white/[0.04] rounded-b-xl px-2.5 py-2 sm:px-5 sm:py-3 flex flex-wrap items-center justify-center gap-2 sm:flex-nowrap sm:justify-between sm:gap-4 relative overflow-visible">
 
-          {/* Left: Ad-block sandbox mode — cycles Balanced → Strict → No Sandbox */}
-          {(() => {
-            const cfg: Record<SandboxMode, { label: string; cls: string; off?: boolean }> = {
-              balanced: { label: "Balanced", cls: "bg-emerald-500/10 border-emerald-500/25 hover:bg-emerald-500/20 text-emerald-400" },
-              strict: { label: "Strict", cls: "bg-sky-500/10 border-sky-500/25 hover:bg-sky-500/20 text-sky-400" },
-              off: { label: "No Sandbox", cls: "bg-orange-500/10 border-orange-500/25 hover:bg-orange-500/20 text-orange-400", off: true },
-            };
-            const c = cfg[sandboxMode];
-            const Icon = c.off ? ShieldOff : Shield;
-            return (
-              <button
-                onClick={handleSandboxToggle}
-                title={`Ad-block sandbox: ${c.label}. Click to cycle — Balanced (blocks pop-ups & redirects, best compatibility) → Strict (max isolation) → No Sandbox (ads possible).`}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all duration-300 cursor-pointer flex-shrink-0 ${c.cls}`}
-                aria-label="Cycle iframe sandbox mode"
-              >
-                <Icon className="w-3 h-3" />
-                <span className="text-[9px] font-extrabold uppercase tracking-widest hidden sm:inline">{c.label}</span>
-              </button>
-            );
-          })()}
+          {/* Left: Ad-block sandbox mode — direct pick (Balanced / Strict / No Sandbox) */}
+          <CustomDropdown
+            icon={sandboxMode === "off" ? <ShieldOff className="w-3.5 h-3.5" /> : <Shield className="w-3.5 h-3.5" />}
+            label="Sandbox"
+            options={SANDBOX_MODES.map((m, i) => ({
+              value: i,
+              label: m === "off" ? "No Sandbox" : m === "strict" ? "Strict" : "Balanced",
+              sub: m === "off" ? "Ads possible" : m === "strict" ? "Max isolation" : "Blocks ads",
+            }))}
+            value={SANDBOX_MODES.indexOf(sandboxMode)}
+            onChange={(i) => handleSandboxChange(SANDBOX_MODES[i])}
+            onOpenChange={setAnyDropdownOpen}
+          />
 
           {/* Report broken provider */}
           <button
@@ -560,6 +562,24 @@ export default function IframePlayer({
             }
           </div>
         </div>
+
+        {/* No-sandbox advisory — this provider can't be ad-protected */}
+        {sandboxMode === "off" && !noticeDismissed && (
+          <div className="mt-2 flex items-center gap-2.5 rounded-xl border border-orange-500/25 bg-orange-500/[0.08] px-3 py-2 animate-fade-in">
+            <ShieldOff className="w-4 h-4 text-orange-400 flex-shrink-0" />
+            <p className="text-[11px] sm:text-xs text-orange-200/90 leading-snug flex-1">
+              <b className="text-orange-300">No sandbox</b> on {activeProvider?.label ?? "this provider"} — it blocks ad protection, so pop-ups/ads may appear. For a clean experience, use an ad-blocker like{" "}
+              <a href="https://ublockorigin.com" target="_blank" rel="noreferrer" className="underline hover:text-orange-100">uBlock Origin</a>, or pick another provider.
+            </p>
+            <button
+              onClick={() => setNoticeDismissed(true)}
+              aria-label="Dismiss notice"
+              className="flex-shrink-0 text-orange-300/60 hover:text-orange-200 transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
     </>
   );

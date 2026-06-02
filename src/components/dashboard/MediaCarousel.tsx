@@ -78,69 +78,52 @@ export default function MediaCarousel({
   const scrollLeft = useRef(0);
   const dragDistance = useRef(0);
 
-  // Smooth sub-pixel infinite auto-panning (Right-to-Left cards movement)
+  // Pause auto-pan while the user interacts (hover / drag / touch), and for a
+  // short grace window after a programmatic scroll so it doesn't fight it.
+  const pausedRef = useRef(false);
+  const resumeAtRef = useRef(0);
+  const [dragging, setDragging] = useState(false);
+
+  // Smooth sub-pixel infinite auto-panning (right-to-left).
   useEffect(() => {
     const container = carouselRef.current;
     if (!container) return;
-
     let animationId: number;
-    let isHovered = false;
-
-    const handleMouseEnter = () => {
-      isHovered = true;
-    };
-    const handleMouseLeave = () => {
-      isHovered = false;
-    };
-
-    container.addEventListener("mouseenter", handleMouseEnter);
-    container.addEventListener("mouseleave", handleMouseLeave);
-
     const step = () => {
-      if (!isHovered && !isDown.current && !isFullScreen) {
+      if (!isFullScreen && !pausedRef.current && !isDown.current && performance.now() > resumeAtRef.current) {
         container.scrollLeft += 0.4;
-        
-        // Loop back to start if scrolled past boundaries
         if (container.scrollLeft >= container.scrollWidth - container.clientWidth - 2) {
           container.scrollLeft = 0;
         }
       }
       animationId = requestAnimationFrame(step);
     };
-
     animationId = requestAnimationFrame(step);
-
-    return () => {
-      cancelAnimationFrame(animationId);
-      container.removeEventListener("mouseenter", handleMouseEnter);
-      container.removeEventListener("mouseleave", handleMouseLeave);
-    };
+    return () => cancelAnimationFrame(animationId);
   }, [isFullScreen]);
 
   const scroll = (direction: number) => {
-    if (carouselRef.current) {
-      const scrollAmount = direction * 500;
-      carouselRef.current.scrollTo({
-        left: carouselRef.current.scrollLeft + scrollAmount,
-        behavior: "smooth"
-      });
-    }
+    const el = carouselRef.current;
+    if (!el) return;
+    // Hold off the auto-pan so it doesn't cancel this smooth scroll.
+    resumeAtRef.current = performance.now() + 4000;
+    const amount = direction * Math.max(el.clientWidth * 0.8, 300);
+    el.scrollTo({ left: el.scrollLeft + amount, behavior: "smooth" });
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!carouselRef.current) return;
     isDown.current = true;
+    setDragging(true);
     startX.current = e.pageX - carouselRef.current.offsetLeft;
     scrollLeft.current = carouselRef.current.scrollLeft;
     dragDistance.current = 0;
   };
 
-  const handleMouseLeave = () => {
+  const endDrag = () => {
     isDown.current = false;
-  };
-
-  const handleMouseUp = () => {
-    isDown.current = false;
+    setDragging(false);
+    resumeAtRef.current = performance.now() + 2000; // brief grace before auto-pan resumes
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -151,6 +134,10 @@ export default function MediaCarousel({
     carouselRef.current.scrollLeft = scrollLeft.current - walk;
     dragDistance.current = Math.abs(x - startX.current);
   };
+
+  // Touch: pause auto-pan during the gesture so native momentum scrolls smoothly.
+  const handleTouchStart = () => { pausedRef.current = true; };
+  const handleTouchEnd = () => { pausedRef.current = false; resumeAtRef.current = performance.now() + 2500; };
 
   const handleLinkClick = (e: React.MouseEvent) => {
     if (dragDistance.current > 10) {
@@ -183,7 +170,11 @@ export default function MediaCarousel({
       </div>
 
       {/* Carousel Container */}
-      <div className="relative">
+      <div
+        className="relative"
+        onMouseEnter={() => { pausedRef.current = true; }}
+        onMouseLeave={() => { pausedRef.current = false; resumeAtRef.current = performance.now() + 1500; }}
+      >
         {/* Left Arrow */}
         <button 
           onClick={() => scroll(-1)}
@@ -194,13 +185,16 @@ export default function MediaCarousel({
         </button>
 
         {/* Scrollable list */}
-        <div 
+        <div
           ref={carouselRef}
           onMouseDown={handleMouseDown}
-          onMouseLeave={handleMouseLeave}
-          onMouseUp={handleMouseUp}
+          onMouseLeave={endDrag}
+          onMouseUp={endDrag}
           onMouseMove={handleMouseMove}
-          className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x cursor-grab active:cursor-grabbing select-none"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          style={{ WebkitOverflowScrolling: "touch" }}
+          className={`flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x cursor-grab active:cursor-grabbing select-none transition-transform duration-300 ${dragging ? "scale-[0.985]" : "scale-100"}`}
         >
           {items.map((item) => {
             const currentBadge = badge ? badgeConfig[badge] : null;

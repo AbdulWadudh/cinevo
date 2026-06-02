@@ -11,6 +11,7 @@ import {
 } from "@/app/actions/providers";
 import type { PlayerProvider, ProviderInput, SandboxMode } from "@/lib/providers";
 import { SANDBOX_MODES } from "@/lib/providers";
+import { clearProvidersCache } from "@/lib/useProviders";
 
 const emptyForm: ProviderInput = {
   key: "", label: "", sub: "", movieUrl: "", tvUrl: "",
@@ -75,6 +76,7 @@ export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }
           : cleared.map((p) => (p.id === saved.id ? saved : p));
         return merged.sort((a, b) => a.sortOrder - b.sortOrder);
       });
+      clearProvidersCache(); // so the player picks up the change on next load
       closeEditor();
     });
   };
@@ -82,7 +84,7 @@ export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }
   const makeDefault = (id: string) => {
     startTransition(async () => {
       const res = await setDefaultProvider(id);
-      if (res.success && res.data) setProviders(res.data);
+      if (res.success && res.data) { setProviders(res.data); clearProvidersCache(); }
       else setError(res.error || "Failed to set default");
     });
   };
@@ -92,6 +94,7 @@ export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }
       const res = await deleteProvider(id);
       if (res.success) {
         setProviders((prev) => prev.filter((p) => p.id !== id));
+        clearProvidersCache();
         setConfirmDelete(null);
       } else {
         setError(res.error || "Failed to delete");
@@ -107,6 +110,7 @@ export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }
     [reordered[idx], reordered[next]] = [reordered[next], reordered[idx]];
     const withOrder = reordered.map((p, i) => ({ ...p, sortOrder: i }));
     setProviders(withOrder); // optimistic
+    clearProvidersCache();
     startTransition(async () => {
       const res = await reorderProviders(withOrder.map((p) => p.id));
       if (!res.success) {

@@ -25,6 +25,12 @@ function readCache(): PlayerProvider[] | null {
   }
 }
 
+/** Wipe the cached provider list (e.g. after an admin edit) so the next
+ *  player load refetches fresh config from the DB. */
+export function clearProvidersCache() {
+  try { localStorage.removeItem(PROVIDERS_CACHE_KEY); } catch { /* ignore */ }
+}
+
 function writeCache(providers: PlayerProvider[]) {
   try {
     const payload: ProvidersCache = {
