@@ -136,13 +136,23 @@ export default function Nav() {
           )}
         </div>
 
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 text-fg-secondary hover:text-fg hover:bg-white/[0.06] rounded-full transition-all"
-          aria-label="Toggle mobile menu"
-        >
-          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        {/* Mobile: search + menu */}
+        <div className="md:hidden flex items-center gap-1">
+          <button
+            onClick={goSearch}
+            aria-label="Search"
+            className="p-2 text-fg-secondary hover:text-fg hover:bg-white/[0.06] rounded-full transition-all"
+          >
+            <Search className="w-6 h-6" />
+          </button>
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 text-fg-secondary hover:text-fg hover:bg-white/[0.06] rounded-full transition-all"
+            aria-label="Toggle mobile menu"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </nav>
 
       {/* Mobile Menu Panel */}
