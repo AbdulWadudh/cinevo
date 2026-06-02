@@ -120,6 +120,7 @@ export interface DiscoverFilters {
   year?: string;
   minRating?: string;
   sortBy?: string;
+  language?: string; // TMDB original-language code (e.g. "hi", "ta") — industry filter
 }
 
 export interface TMDBReview {
@@ -439,6 +440,12 @@ export const tmdb = {
       "vote_count.gte": "50",
     };
     if (filters.genre) params.with_genres = filters.genre;
+    if (filters.language) {
+      params.with_original_language = filters.language;
+      // Smaller industries have fewer rated titles — relax the vote floor so
+      // the grid isn't near-empty when filtering by language.
+      params["vote_count.gte"] = "20";
+    }
     if (filters.minRating) params["vote_average.gte"] = filters.minRating;
     if (filters.year) {
       if (mediaType === "movie") params.primary_release_year = filters.year;

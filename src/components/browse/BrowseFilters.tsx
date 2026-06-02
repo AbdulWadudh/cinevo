@@ -4,7 +4,7 @@ import React, { useState, useEffect, useTransition, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "motion/react";
-import { Film, Tv2, Star, Play, Loader2, SlidersHorizontal, Tag, CalendarDays, ArrowDownWideNarrow } from "lucide-react";
+import { Film, Tv2, Star, Play, Loader2, SlidersHorizontal, Tag, CalendarDays, ArrowDownWideNarrow, Languages } from "lucide-react";
 import { discoverMediaAction } from "@/app/actions/tmdb-actions";
 import { TMDBMedia, DiscoverFilters } from "@/lib/tmdb";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
@@ -12,6 +12,16 @@ import CustomSelect, { type SelectOption } from "@/components/ui/CustomSelect";
 import { useGenres, toGenreOptions } from "@/lib/genres";
 
 const ALL_GENRES: SelectOption[] = [{ label: "All genres", value: "" }];
+// Film industries mapped to their TMDB original-language codes.
+const LANGUAGES: SelectOption[] = [
+  { label: "All languages", value: "" },
+  { label: "English", value: "en" },
+  { label: "Hindi", value: "hi" },
+  { label: "Telugu", value: "te" },
+  { label: "Tamil", value: "ta" },
+  { label: "Malayalam", value: "ml" },
+  { label: "Kannada", value: "kn" },
+];
 const SORTS: SelectOption[] = [
   { label: "Most Popular", value: "popularity.desc" },
   { label: "Top Rated", value: "vote_average.desc" },
@@ -34,6 +44,7 @@ export default function BrowseFilters() {
   const [genre, setGenre] = useState("");
   const [year, setYear] = useState("");
   const [minRating, setMinRating] = useState("");
+  const [language, setLanguage] = useState("");
   const [sortBy, setSortBy] = useState("popularity.desc");
 
   const [items, setItems] = useState<TMDBMedia[]>([]);
@@ -45,12 +56,12 @@ export default function BrowseFilters() {
   // Genre lists are fetched once and cached in localStorage (see lib/genres).
   const genreCache = useGenres();
 
-  const filters: DiscoverFilters = { mediaType, genre, year, minRating, sortBy };
+  const filters: DiscoverFilters = { mediaType, genre, year, minRating, language, sortBy };
 
   // Reset + fetch first page whenever a filter changes.
   useEffect(() => {
     startTransition(async () => {
-      const res = await discoverMediaAction({ mediaType, genre, year, minRating, sortBy }, 1);
+      const res = await discoverMediaAction({ mediaType, genre, year, minRating, language, sortBy }, 1);
       if (res.success) {
         setItems(res.data);
         setTotalPages(res.totalPages);
@@ -58,7 +69,7 @@ export default function BrowseFilters() {
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mediaType, genre, year, minRating, sortBy]);
+  }, [mediaType, genre, year, minRating, language, sortBy]);
 
   const loadMore = useCallback(async () => {
     if (loadingMore || page >= totalPages) return;
@@ -94,6 +105,7 @@ export default function BrowseFilters() {
         </div>
 
         <CustomSelect value={genre} options={genres} onChange={setGenre} ariaLabel="Genre" icon={<Tag className="w-3.5 h-3.5" />} />
+        <CustomSelect value={language} options={LANGUAGES} onChange={setLanguage} ariaLabel="Language / industry" icon={<Languages className="w-3.5 h-3.5" />} />
         <CustomSelect value={year} options={YEARS} onChange={setYear} ariaLabel="Year" icon={<CalendarDays className="w-3.5 h-3.5" />} />
         <CustomSelect value={minRating} options={RATINGS} onChange={setMinRating} ariaLabel="Minimum rating" icon={<Star className="w-3.5 h-3.5" />} />
         <CustomSelect value={sortBy} options={SORTS} onChange={setSortBy} ariaLabel="Sort by" icon={<ArrowDownWideNarrow className="w-3.5 h-3.5" />} />
