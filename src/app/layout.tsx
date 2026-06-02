@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Geist } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import WishlistProvider from "@/components/wishlist/WishlistProvider";
+import TrailerProvider from "@/components/TrailerProvider";
 import WatchSync from "@/components/watch/WatchSync";
 import PwaRegister from "@/components/PwaRegister";
 import Toaster from "@/components/ui/Toaster";
@@ -60,7 +61,9 @@ export default function RootLayout({
       className={`${plusJakarta.variable} ${geistSans.variable} h-full antialiased`}
     >
       <body className="bg-bg text-fg min-h-full flex flex-col font-sans">
-        <WishlistProvider>{children}</WishlistProvider>
+        <WishlistProvider>
+          <TrailerProvider>{children}</TrailerProvider>
+        </WishlistProvider>
         <WatchSync />
         <PwaRegister />
         <Toaster />

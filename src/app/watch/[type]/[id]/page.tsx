@@ -110,11 +110,17 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
   const savedProgress = progressRes.success && progressRes.data ? progressRes.data.progress : 0;
   const initialTime = queryTime !== undefined ? queryTime : savedProgress;
 
-  const releaseYear = details.release_date
-    ? details.release_date.split("-")[0]
-    : details.first_air_date
-      ? details.first_air_date.split("-")[0]
-      : "";
+  // Full release date in moment's "ll" style (e.g. "Jun 2, 2026"); falls back
+  // to just the year, then empty. Formatted in UTC to avoid off-by-one shifts.
+  const rawReleaseDate = details.release_date || details.first_air_date || "";
+  const releaseDateText = rawReleaseDate
+    ? new Date(rawReleaseDate).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        timeZone: "UTC",
+      })
+    : "";
 
   const durationText = isTV
     ? `${details.number_of_seasons} Seasons`
@@ -174,7 +180,7 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
               <Star className="w-3.5 h-3.5 fill-black stroke-black" />
               {details.vote_average ? details.vote_average.toFixed(1) : "N/A"}
             </span>
-            <span className="text-fg-secondary">{releaseYear}</span>
+            <span className="text-fg-secondary">{releaseDateText}</span>
             <span>&bull;</span>
             <span className="text-fg-secondary">{durationText}</span>
           </div>

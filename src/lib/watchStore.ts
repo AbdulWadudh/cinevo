@@ -118,7 +118,7 @@ export function markSynced(stamped: { key: string; updatedAt: number }[]) {
 }
 
 /** Merge the DB copy in (last-write-wins). Newer DB rows overwrite local. */
-export function mergeFromDb(rows: Array<Omit<WatchEntry, "dirty"> >) {
+export function mergeFromDb(rows: Array<Omit<WatchEntry, "dirty">>) {
   const store = ensure();
   let changed = false;
   for (const row of rows) {
@@ -141,8 +141,11 @@ export function getSnapshot(): WatchEntry[] {
   ensure();
   return snapshot;
 }
+
+const EMPTY: WatchEntry[] = [];
+
 export function getServerSnapshot(): WatchEntry[] {
-  return [];
+  return EMPTY;
 }
 
 /** Reactive, newest-first list of all local watch entries. */

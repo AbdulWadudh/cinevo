@@ -3,8 +3,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Star, Play, ChevronLeft, ChevronRight } from "lucide-react";
+import { Star, Play, ChevronLeft, ChevronRight, Clapperboard } from "lucide-react";
 import { TMDBMedia } from "@/lib/tmdb";
+import { useTrailer } from "@/components/TrailerProvider";
 
 interface HeroCarouselProps {
   items: TMDBMedia[];
@@ -13,6 +14,7 @@ interface HeroCarouselProps {
 }
 
 export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps) {
+  const { openTrailer } = useTrailer();
   const [activeIndex, setActiveIndex] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const hoveredRef = useRef(false);
@@ -150,6 +152,22 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
                 >
                   <Play className="w-4 h-4 fill-white" /> Play Now
                 </Link>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    openTrailer({
+                      id: String(item.id),
+                      mediaType: (item.media_type as "movie" | "tv") || "movie",
+                      title: item.title || item.name || "",
+                      rating: item.vote_average,
+                      date: item.release_date || item.first_air_date,
+                      key: trailers[item.id],
+                    });
+                  }}
+                  className="relative z-20 inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold bg-white/[0.12] text-white border border-white/20 hover:bg-white/20 backdrop-blur-md transition-all cursor-pointer"
+                >
+                  <Clapperboard className="w-4 h-4" /> Watch Trailer
+                </button>
               </div>
             </div>
           </div>

@@ -19,6 +19,23 @@ export async function discoverMediaAction(
 }
 
 /**
+ * Server Action to fetch the best YouTube trailer key for a title (on demand,
+ * e.g. when a "Watch Trailer" button is clicked).
+ */
+export async function getTrailerKeyAction(
+  mediaId: string,
+  mediaType: "movie" | "tv"
+): Promise<{ success: boolean; key: string | null }> {
+  try {
+    const key = await tmdb.getVideos(mediaId, mediaType);
+    return { success: true, key };
+  } catch (error) {
+    console.error("Failed to fetch trailer key:", error);
+    return { success: false, key: null };
+  }
+}
+
+/**
  * Server Action to search or discover movies dynamically by TMDb genre ID
  */
 export async function getMoviesByGenreAction(genreId: string): Promise<{ success: boolean; data: TMDBMedia[] }> {

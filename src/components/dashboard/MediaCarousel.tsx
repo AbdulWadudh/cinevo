@@ -3,10 +3,11 @@
 import React, { useRef, useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Play, Star, X, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, Star, X, Loader2, Clapperboard } from "lucide-react";
 import { TMDBMedia, MediaSource } from "@/lib/tmdb";
 import { loadMediaPageAction } from "@/app/actions/tmdb-actions";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
+import { useTrailer } from "@/components/TrailerProvider";
 
 interface MediaCarouselProps {
   title: string;
@@ -24,6 +25,7 @@ export default function MediaCarousel({
   badge,
   source
 }: MediaCarouselProps) {
+  const { openTrailer } = useTrailer();
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   // "See All" grid state — starts from the row's items, then pages the source.
@@ -223,11 +225,19 @@ export default function MediaCarousel({
 
                     <WishlistHeart item={item} mediaType={mediaType} />
 
-                    {/* Centered Play Button Hover Overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity duration-300 z-20">
-                      <div className="w-12 h-12 bg-accent text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(229,62,79,0.45)] transform scale-75 group-hover:scale-100 transition-transform duration-300">
-                        <Play className="w-5 h-5 fill-white translate-x-0.5" />
-                      </div>
+                    {/* Hover preview: Play + Watch Trailer actions */}
+                    <div className="absolute inset-0 flex items-center justify-center gap-2.5 opacity-0 group-hover:opacity-100 bg-black/55 transition-opacity duration-300 z-20">
+                      <span className="w-11 h-11 bg-accent text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(229,62,79,0.45)] transform scale-75 group-hover:scale-100 transition-transform duration-300" title="Play">
+                        <Play className="w-4.5 h-4.5 fill-white translate-x-0.5" />
+                      </span>
+                      <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); openTrailer({ id: String(item.id), mediaType: (item.media_type as "movie" | "tv") || mediaType, title: item.title || item.name || "", rating: item.vote_average, date: item.release_date || item.first_air_date }); }}
+                        title="Watch trailer"
+                        aria-label="Watch trailer"
+                        className="w-11 h-11 bg-white/15 text-white border border-white/30 rounded-full flex items-center justify-center backdrop-blur-md hover:bg-white/25 transform scale-75 group-hover:scale-100 transition-all duration-300 cursor-pointer"
+                      >
+                        <Clapperboard className="w-4 h-4" />
+                      </button>
                     </div>
 
                     {/* Bottom Metadata Hover Overlay */}
@@ -315,11 +325,19 @@ export default function MediaCarousel({
 
                         <WishlistHeart item={item} mediaType={mediaType} />
 
-                        {/* Centered Play Button Hover Overlay */}
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity duration-300 z-20">
-                          <div className="w-12 h-12 bg-accent text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(229,62,79,0.45)] transform scale-75 group-hover:scale-100 transition-transform duration-300">
-                            <Play className="w-5 h-5 fill-white translate-x-0.5" />
-                          </div>
+                        {/* Hover preview: Play + Watch Trailer actions */}
+                        <div className="absolute inset-0 flex items-center justify-center gap-2.5 opacity-0 group-hover:opacity-100 bg-black/55 transition-opacity duration-300 z-20">
+                          <span className="w-11 h-11 bg-accent text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(229,62,79,0.45)] transform scale-75 group-hover:scale-100 transition-transform duration-300" title="Play">
+                            <Play className="w-4.5 h-4.5 fill-white translate-x-0.5" />
+                          </span>
+                          <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); openTrailer({ id: String(item.id), mediaType: (item.media_type as "movie" | "tv") || mediaType, title: item.title || item.name || "", rating: item.vote_average, date: item.release_date || item.first_air_date }); }}
+                            title="Watch trailer"
+                            aria-label="Watch trailer"
+                            className="w-11 h-11 bg-white/15 text-white border border-white/30 rounded-full flex items-center justify-center backdrop-blur-md hover:bg-white/25 transform scale-75 group-hover:scale-100 transition-all duration-300 cursor-pointer"
+                          >
+                            <Clapperboard className="w-4 h-4" />
+                          </button>
                         </div>
 
                         {/* Bottom Metadata Hover Overlay */}
