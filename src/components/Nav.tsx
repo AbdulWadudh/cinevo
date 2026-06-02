@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Search, Bell, Menu, X, Heart } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
+import { FocusSection, FocusableLink, FocusableButton } from "@/components/tv/Focusable";
 import { createClient } from "@/lib/supabase/client";
 import { getProfileBrief } from "@/app/actions/auth";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
@@ -79,37 +80,37 @@ export default function Nav() {
             {/* eslint-disable-next-line @next/next/no-img-element -- static logo, variable width */}
             <img src="/full_logo.png" alt="Cinevo" className="h-8 w-auto" />
           </Link>
-          <div className="hidden md:flex items-center gap-6">
+          <FocusSection className="hidden md:flex items-center gap-6" focusKey="NAV_LINKS">
             {navLinks.map((link) => {
               const active = pathname === link.href;
               return (
-                <Link
+                <FocusableLink
                   key={link.href}
                   href={link.href}
-                  className={`text-sm font-medium tracking-wide transition-colors relative py-1 ${
+                  className={`text-sm font-medium tracking-wide transition-colors relative py-1 px-1.5 rounded ${
                     active ? "text-fg" : "text-fg-secondary hover:text-fg"
                   }`}
                 >
                   {link.name}
-                  {active && <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-accent rounded-full" />}
-                </Link>
+                  {active && <span className="absolute bottom-0 left-1.5 right-1.5 h-[2px] bg-accent rounded-full" />}
+                </FocusableLink>
               );
             })}
-          </div>
+          </FocusSection>
         </div>
 
-        <div className="hidden md:flex items-center gap-4">
-          <button
-            onClick={goSearch}
-            aria-label="Search"
+        <FocusSection className="hidden md:flex items-center gap-4" focusKey="NAV_ACTIONS">
+          <FocusableButton
+            onPress={goSearch}
+            ariaLabel="Search"
             className="p-2 text-fg-secondary hover:text-fg hover:bg-white/[0.06] rounded-full transition-all cursor-pointer"
           >
             <Search className="w-5 h-5" />
-          </button>
+          </FocusableButton>
           <NotificationBell />
-          <Link href="/wishlist" aria-label="Wishlist Dashboard" className="p-2 text-fg-secondary hover:text-fg hover:bg-white/[0.06] rounded-full transition-all">
+          <FocusableLink href="/wishlist" className="p-2 text-fg-secondary hover:text-fg hover:bg-white/[0.06] rounded-full transition-all block">
             <Heart className="w-5 h-5" />
-          </Link>
+          </FocusableLink>
           {authUser ? (
             <Link href="/profile" aria-label="Profile" className="block">
               {authUser.avatarUrl ? (
@@ -134,7 +135,7 @@ export default function Nav() {
               Sign In
             </Link>
           )}
-        </div>
+        </FocusSection>
 
         {/* Mobile: search + menu */}
         <div className="md:hidden flex items-center gap-1">

@@ -7,6 +7,7 @@ import TrailerProvider from "@/components/TrailerProvider";
 import WatchSync from "@/components/watch/WatchSync";
 import PwaRegister from "@/components/PwaRegister";
 import Toaster from "@/components/ui/Toaster";
+import SpatialNavProvider from "@/components/tv/SpatialNavProvider";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-display",
@@ -66,6 +67,7 @@ export default function RootLayout({
         </WishlistProvider>
         <WatchSync />
         <PwaRegister />
+        <SpatialNavProvider />
         <Toaster />
         <Analytics />
       </body>

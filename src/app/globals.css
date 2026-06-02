@@ -30,6 +30,22 @@ html {
   scroll-behavior: smooth;
 }
 
+/* ── TV / D-pad focus ──────────────────────────────────────────
+   Norigin focuses elements that carry `.tv-focusable`; the `.tv-focused`
+   class (set from the `focused` flag) draws a clear 10-foot focus ring.
+   Native :focus-visible is kept as a fallback for keyboard users. */
+.tv-focused {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-accent), 0 0 22px rgba(229, 62, 79, 0.45);
+  border-radius: 12px;
+  position: relative;
+  z-index: 5;
+}
+.tv-focusable:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-accent), 0 0 22px rgba(229, 62, 79, 0.45);
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);
