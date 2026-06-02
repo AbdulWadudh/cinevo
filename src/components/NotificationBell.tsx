@@ -8,15 +8,16 @@ import { Bell, BellRing, BellOff, Sparkles, CalendarClock, Check } from "lucide-
 import { getNewEpisodeNotifications } from "@/app/actions/notifications";
 import type { EpisodeNotification } from "@/lib/episodeNotifications";
 import { getPushState, enablePush, disablePush, type PushState } from "@/lib/pushClient";
+import { safeStorage } from "@/lib/safeStorage";
 import { toast } from "sonner";
 
 const DISMISS_KEY = "cinevo:notifDismissed";
 
 function readDismissed(): Set<string> {
-  try { return new Set(JSON.parse(localStorage.getItem(DISMISS_KEY) || "[]")); } catch { return new Set(); }
+  try { return new Set(JSON.parse(safeStorage.get(DISMISS_KEY) || "[]")); } catch { return new Set(); }
 }
 function writeDismissed(ids: string[]) {
-  try { localStorage.setItem(DISMISS_KEY, JSON.stringify(ids)); } catch { /* ignore */ }
+  safeStorage.set(DISMISS_KEY, JSON.stringify(ids));
 }
 
 export default function NotificationBell() {

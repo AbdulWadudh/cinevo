@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { getPublicProviders } from "@/app/actions/providers";
+import { safeStorage } from "@/lib/safeStorage";
 import {
   PROVIDERS_CACHE_KEY,
   PROVIDERS_CACHE_TTL_MS,
@@ -13,7 +14,7 @@ import {
 /** Read a still-valid (matching version, not past TTL) cache, or null. */
 function readCache(): PlayerProvider[] | null {
   try {
-    const raw = localStorage.getItem(PROVIDERS_CACHE_KEY);
+    const raw = safeStorage.get(PROVIDERS_CACHE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as ProvidersCache;
     if (parsed.version !== PROVIDERS_CACHE_VERSION) return null;
@@ -28,7 +29,7 @@ function readCache(): PlayerProvider[] | null {
 /** Wipe the cached provider list (e.g. after an admin edit) so the next
  *  player load refetches fresh config from the DB. */
 export function clearProvidersCache() {
-  try { localStorage.removeItem(PROVIDERS_CACHE_KEY); } catch { /* ignore */ }
+  safeStorage.remove(PROVIDERS_CACHE_KEY);
 }
 
 function writeCache(providers: PlayerProvider[]) {
@@ -38,7 +39,7 @@ function writeCache(providers: PlayerProvider[]) {
       fetchedAt: Date.now(),
       providers,
     };
-    localStorage.setItem(PROVIDERS_CACHE_KEY, JSON.stringify(payload));
+    safeStorage.set(PROVIDERS_CACHE_KEY, JSON.stringify(payload));
   } catch {
     /* storage full / unavailable — ignore, we'll just refetch next time */
   }
@@ -83,7 +84,7 @@ export function useProviders(): UseProviders {
   const refresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      localStorage.removeItem(PROVIDERS_CACHE_KEY);
+      safeStorage.remove(PROVIDERS_CACHE_KEY);
       await fetchFromDb();
     } finally {
       setRefreshing(false);

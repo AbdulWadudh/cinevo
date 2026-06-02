@@ -14,6 +14,7 @@ import {
   sandboxTokens, SANDBOX_MODES, type SandboxMode,
 } from "@/lib/providers";
 import { reportProvider } from "@/app/actions/reports";
+import { safeStorage } from "@/lib/safeStorage";
 import { toast } from "sonner";
 
 interface SeasonInfo {
@@ -232,7 +233,7 @@ export default function IframePlayer({
     if (providersLoading || providers.length === 0 || initializedRef.current) return;
     initializedRef.current = true;
     const lastKey = (() => {
-      try { return localStorage.getItem(LAST_PROVIDER_KEY) ?? undefined; } catch { return undefined; }
+      return safeStorage.get(LAST_PROVIDER_KEY) ?? undefined;
     })();
     const idx = providerIndexFromKey(providers, initialSourceKey ?? lastKey);
     setSelectedProvider(idx);
@@ -290,7 +291,7 @@ export default function IframePlayer({
   const handleProviderChange = (v: number) => {
     setSelectedProvider(v);
     // Remember this as the user's base provider for future visits.
-    try { if (providers[v]) localStorage.setItem(LAST_PROVIDER_KEY, providers[v].key); } catch { /* storage unavailable */ }
+    if (providers[v]) safeStorage.set(LAST_PROVIDER_KEY, providers[v].key);
     // Follow the newly-selected provider's configured sandbox mode.
     sandboxTouchedRef.current = false;
     const mode = providers[v]?.sandboxMode ?? "balanced";

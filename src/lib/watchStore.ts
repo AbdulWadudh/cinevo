@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { safeStorage } from "@/lib/safeStorage";
 
 // Local-first watch store. All reads/writes hit localStorage immediately (so
 // Continue Watching / History are instant and work offline / signed-out). A
@@ -44,7 +45,7 @@ const listeners = new Set<() => void>();
 function ensure(): StoreMap {
   if (map) return map;
   try {
-    const raw = typeof localStorage !== "undefined" ? localStorage.getItem(KEY) : null;
+    const raw = safeStorage.get(KEY);
     map = raw ? (JSON.parse(raw) as StoreMap) : {};
   } catch {
     map = {};
@@ -59,7 +60,7 @@ function recompute() {
 
 function commit() {
   recompute();
-  try { localStorage.setItem(KEY, JSON.stringify(map ?? {})); } catch { /* quota / unavailable */ }
+  safeStorage.set(KEY, JSON.stringify(map ?? {}));
   listeners.forEach((l) => l());
 }
 
