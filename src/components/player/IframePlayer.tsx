@@ -135,12 +135,13 @@ function CustomDropdown({ icon, label, options, value, onChange, onOpenChange, d
           </>
         ) : (
           <div className="flex flex-col items-start leading-none">
-            <span className="text-[9px] font-extrabold uppercase tracking-widest text-muted">{label}</span>
-            <span className="text-xs font-bold text-white mt-0.5 max-w-[96px] truncate">{selected?.label ?? "—"}</span>
+            {/* tiny label hidden on mobile to keep the trigger short */}
+            <span className="hidden sm:block text-[9px] font-extrabold uppercase tracking-widest text-muted">{label}</span>
+            <span className="text-xs font-bold text-white sm:mt-0.5 max-w-[72px] sm:max-w-[96px] truncate">{selected?.label ?? "—"}</span>
           </div>
         )}
         <ChevronDown
-          className={`w-3.5 h-3.5 text-muted ml-1 transition-transform duration-300 ${open ? "rotate-180 text-accent" : ""}`}
+          className={`w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted ml-0.5 sm:ml-1 transition-transform duration-300 ${open ? "rotate-180 text-accent" : ""}`}
         />
       </button>
 
@@ -421,7 +422,7 @@ export default function IframePlayer({
         </div>
 
         {/* ── Controls bar ── */}
-        <div className="w-full bg-surface/50 backdrop-blur-xl border border-white/[0.07] border-t border-t-white/[0.04] rounded-b-xl px-2.5 py-2 sm:px-5 sm:py-3 flex flex-wrap items-center justify-center gap-2 sm:flex-nowrap sm:justify-between sm:gap-4 relative overflow-visible">
+        <div className="w-full bg-surface/50 backdrop-blur-xl border border-white/[0.07] border-t border-t-white/[0.04] rounded-b-xl px-2 py-1.5 sm:px-5 sm:py-3 flex flex-wrap items-center justify-center gap-1.5 sm:flex-nowrap sm:justify-between sm:gap-4 relative overflow-visible">
 
           {/* Left: Ad-block sandbox mode — direct pick (Balanced / Strict / No Sandbox) */}
           <CustomDropdown
@@ -456,7 +457,7 @@ export default function IframePlayer({
             disabled={reported || !activeProvider}
             title={reported ? "Thanks — reported" : "Report this provider as not working"}
             aria-label="Report broken provider"
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all duration-300 cursor-pointer flex-shrink-0 ${reported
+            className={`flex items-center gap-1.5 px-2 py-1.5 sm:px-2.5 rounded-lg border transition-all duration-300 cursor-pointer flex-shrink-0 ${reported
               ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
               : "bg-white/[0.04] border-white/[0.08] text-muted hover:text-accent hover:border-accent/40"
               }`}
@@ -565,9 +566,9 @@ export default function IframePlayer({
 
         {/* No-sandbox advisory — this provider can't be ad-protected */}
         {sandboxMode === "off" && !noticeDismissed && (
-          <div className="mt-2 flex items-center gap-2.5 rounded-xl border border-orange-500/25 bg-orange-500/[0.08] px-3 py-2 animate-fade-in">
-            <ShieldOff className="w-4 h-4 text-orange-400 flex-shrink-0" />
-            <p className="text-[11px] sm:text-xs text-orange-200/90 leading-snug flex-1">
+          <div className="mt-2 flex items-center gap-2 rounded-xl border border-orange-500/25 bg-orange-500/[0.08] px-2.5 py-1.5 sm:px-3 sm:py-2 animate-fade-in">
+            <ShieldOff className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-400 flex-shrink-0" />
+            <p className="text-[10px] sm:text-xs text-orange-200/90 leading-snug flex-1">
               <b className="text-orange-300">No sandbox</b> on {activeProvider?.label ?? "this provider"} — it blocks ad protection, so pop-ups/ads may appear. For a clean experience, use an ad-blocker like{" "}
               <a href="https://ublockorigin.com" target="_blank" rel="noreferrer" className="underline hover:text-orange-100">uBlock Origin</a>, or pick another provider.
             </p>
