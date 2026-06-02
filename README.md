@@ -195,7 +195,7 @@ public/
 ## 🗄️ Data Models
 
 - **Profile** — synced with the Supabase auth user ID; `role` of `user`/`admin`; owns the relations below.
-- **Provider** — embeddable video provider (key, label, movie/tv URL templates with `{id}`/`{season}`/`{episode}`/`{progress}` placeholders, `sandboxEnabled`, `enabled`, `isDefault`, `sortOrder`).
+- **Provider** — embeddable video provider (key, label, movie/tv URL templates with `{id}`/`{season}`/`{episode}`/`{progress}` placeholders, `sandboxMode` (`strict`/`balanced`/`off`), `enabled`, `isDefault`, `sortOrder`).
 - **WatchProgress** — per-title (and per season/episode for TV) watch record.
 - **Wishlist** — saved titles with rating + release date.
 - **Rating** — personal 1–10 rating per title.
@@ -207,7 +207,7 @@ public/
 
 ## ⚠️ Notes
 
-- The embed player streams from third-party providers for demonstration purposes. **Sandbox is OFF by default**; enable it per-provider in the admin UI for the ones that need it.
+- The embed player streams from third-party providers for demonstration purposes. Each provider has a **sandbox mode** (`balanced` default / `strict` / `off`): `balanced` and `strict` block pop-up & redirect ads via the iframe `sandbox` attribute (no `allow-popups`/`allow-top-navigation`), while `off` removes the sandbox for providers that refuse to run sandboxed. Viewers can also cycle the mode per-session from the player. For full ad-blocking, a browser ad-blocker (e.g. uBlock Origin) is still the most effective option.
 - TMDB responses are cached for 1 hour via Next.js fetch revalidation.
 - Watch history is **local-first**: it lives in `localStorage` and syncs to the DB on a schedule — exact second-by-second playback position is not tracked (the providers are cross-origin iframes).
 

@@ -9,12 +9,15 @@ import {
 import {
   createProvider, updateProvider, deleteProvider, reorderProviders, setDefaultProvider,
 } from "@/app/actions/providers";
-import type { PlayerProvider, ProviderInput } from "@/lib/providers";
+import type { PlayerProvider, ProviderInput, SandboxMode } from "@/lib/providers";
+import { SANDBOX_MODES } from "@/lib/providers";
 
 const emptyForm: ProviderInput = {
   key: "", label: "", sub: "", movieUrl: "", tvUrl: "",
-  sandboxEnabled: false, enabled: true, isDefault: false, sortOrder: 0,
+  sandboxMode: "balanced", enabled: true, isDefault: false, sortOrder: 0,
 };
+
+const SB_LABEL: Record<SandboxMode, string> = { balanced: "Balanced", strict: "Strict", off: "No Sandbox" };
 
 const inputCls =
   "w-full bg-bg/60 border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-fg placeholder-muted outline-none focus:border-accent/60 transition-colors";
@@ -37,7 +40,7 @@ export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }
   const openEdit = (p: PlayerProvider) => {
     setForm({
       key: p.key, label: p.label, sub: p.sub ?? "", movieUrl: p.movieUrl,
-      tvUrl: p.tvUrl, sandboxEnabled: p.sandboxEnabled, enabled: p.enabled,
+      tvUrl: p.tvUrl, sandboxMode: p.sandboxMode, enabled: p.enabled,
       isDefault: p.isDefault, sortOrder: p.sortOrder,
     });
     setError(null);
@@ -148,7 +151,7 @@ export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }
             <input className={inputCls} value={form.tvUrl} placeholder="https://host/tv/{id}/{season}/{episode}"
               onChange={(e) => set("tvUrl", e.target.value)} />
             <p className="text-[10px] text-muted mt-1.5">
-              Placeholders: <code className="text-accent">{"{id}"}</code>, <code className="text-accent">{"{season}"}</code>, <code className="text-accent">{"{episode}"}</code>. To disable sandbox by default for this provider, toggle the shield below.
+              Placeholders: <code className="text-accent">{"{id}"}</code>, <code className="text-accent">{"{season}"}</code>, <code className="text-accent">{"{episode}"}</code>, <code className="text-accent">{"{progress}"}</code>. Pick a sandbox mode below — <b>Balanced</b> blocks pop-ups/redirects while playing on most providers; <b>No Sandbox</b> only if it refuses to load.
             </p>
           </div>
           <div>
@@ -156,14 +159,25 @@ export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }
             <input type="number" className={inputCls} value={form.sortOrder}
               onChange={(e) => set("sortOrder", parseInt(e.target.value) || 0)} />
           </div>
+          <div className="sm:col-span-2">
+            <label className={labelCls}>Sandbox mode (ad-blocking)</label>
+            <div className="inline-flex items-center rounded-lg border border-white/[0.1] overflow-hidden">
+              {SANDBOX_MODES.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => set("sandboxMode", m)}
+                  className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold transition-all cursor-pointer ${form.sandboxMode === m
+                    ? (m === "off" ? "bg-orange-500/20 text-orange-300" : m === "strict" ? "bg-sky-500/20 text-sky-300" : "bg-emerald-500/20 text-emerald-300")
+                    : "text-muted hover:text-fg hover:bg-white/[0.04]"}`}
+                >
+                  {m === "off" ? <ShieldOff className="w-3.5 h-3.5" /> : <Shield className="w-3.5 h-3.5" />}
+                  {SB_LABEL[m]}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="flex items-end gap-4 pb-1">
-            <button type="button" onClick={() => set("sandboxEnabled", !form.sandboxEnabled)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-bold transition-all cursor-pointer ${form.sandboxEnabled
-                ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
-                : "bg-orange-500/10 border-orange-500/25 text-orange-400"}`}>
-              {form.sandboxEnabled ? <Shield className="w-3.5 h-3.5" /> : <ShieldOff className="w-3.5 h-3.5" />}
-              {form.sandboxEnabled ? "Sandbox ON" : "Sandbox OFF"}
-            </button>
             <button type="button" onClick={() => set("enabled", !form.enabled)}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-bold transition-all cursor-pointer ${form.enabled
                 ? "bg-accent/10 border-accent/25 text-accent"
@@ -265,9 +279,10 @@ export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }
 
                   {/* badges */}
                   <div className="hidden sm:flex items-center gap-1.5 flex-none">
-                    <span title={p.sandboxEnabled ? "Sandbox ON" : "Sandbox OFF"}
-                      className={`flex items-center justify-center w-7 h-7 rounded-lg border ${p.sandboxEnabled ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-orange-500/10 border-orange-500/20 text-orange-400"}`}>
-                      {p.sandboxEnabled ? <Shield className="w-3.5 h-3.5" /> : <ShieldOff className="w-3.5 h-3.5" />}
+                    <span title={`Sandbox: ${SB_LABEL[p.sandboxMode]}`}
+                      className={`flex items-center gap-1 px-2 h-7 rounded-lg border text-[9px] font-extrabold uppercase tracking-wider ${p.sandboxMode === "off" ? "bg-orange-500/10 border-orange-500/20 text-orange-400" : p.sandboxMode === "strict" ? "bg-sky-500/10 border-sky-500/20 text-sky-400" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"}`}>
+                      {p.sandboxMode === "off" ? <ShieldOff className="w-3.5 h-3.5" /> : <Shield className="w-3.5 h-3.5" />}
+                      <span className="hidden md:inline">{SB_LABEL[p.sandboxMode]}</span>
                     </span>
                     <span title={p.enabled ? "Visible" : "Hidden"}
                       className={`flex items-center justify-center w-7 h-7 rounded-lg border ${p.enabled ? "bg-accent/10 border-accent/20 text-accent" : "bg-white/[0.04] border-white/[0.08] text-muted"}`}>

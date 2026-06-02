@@ -97,8 +97,8 @@ export default function TrailerProvider({ children }: { children: React.ReactNod
                 transition={{ duration: 0.22, ease: "easeOut" }}
                 onClick={(e) => e.stopPropagation()}
               >
-                {/* Header: title + meta + close */}
-                <div className="flex items-start justify-between gap-4 mb-3">
+                {/* Header: title + meta on the left, Play + close on the right */}
+                <div className="flex items-center justify-between gap-4 mb-3">
                   <div className="min-w-0">
                     <h3 className="font-display text-lg sm:text-2xl font-extrabold text-white truncate">
                       {media.title}
@@ -114,13 +114,23 @@ export default function TrailerProvider({ children }: { children: React.ReactNod
                       <span className="text-[10px] font-extrabold uppercase tracking-widest text-accent">Trailer</span>
                     </div>
                   </div>
-                  <button
-                    onClick={close}
-                    aria-label="Close trailer"
-                    className="flex-none w-9 h-9 rounded-full bg-surface hover:bg-accent text-fg-secondary hover:text-white border border-white/[0.1] flex items-center justify-center transition-all cursor-pointer"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
+                  <div className="flex items-center gap-2 flex-none">
+                    <Link
+                      href={`/watch/${media.mediaType}/${media.id}`}
+                      onClick={close}
+                      className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-sm font-bold bg-accent text-white hover:bg-accent-hover hover:shadow-[0_6px_20px_rgba(229,62,79,0.35)] transition-all cursor-pointer"
+                    >
+                      <Play className="w-4 h-4 fill-white" />
+                      <span className="hidden sm:inline">Play {media.mediaType === "tv" ? "Show" : "Movie"}</span>
+                    </Link>
+                    <button
+                      onClick={close}
+                      aria-label="Close trailer"
+                      className="w-10 h-10 rounded-full bg-surface hover:bg-accent text-fg-secondary hover:text-white border border-white/[0.1] flex items-center justify-center transition-all cursor-pointer"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Video */}
@@ -143,17 +153,6 @@ export default function TrailerProvider({ children }: { children: React.ReactNod
                       <p className="text-sm">No trailer available for this title.</p>
                     </div>
                   )}
-                </div>
-
-                {/* Footer: play the actual title */}
-                <div className="flex items-center justify-end mt-4">
-                  <Link
-                    href={`/watch/${media.mediaType}/${media.id}`}
-                    onClick={close}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-accent text-white hover:bg-accent-hover hover:shadow-[0_6px_20px_rgba(229,62,79,0.35)] transition-all cursor-pointer"
-                  >
-                    <Play className="w-4 h-4 fill-white" /> Play {media.mediaType === "tv" ? "Show" : "Movie"}
-                  </Link>
                 </div>
               </motion.div>
             </motion.div>

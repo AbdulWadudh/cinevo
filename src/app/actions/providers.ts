@@ -5,11 +5,12 @@ import { getOrCreateProfile } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import {
   DEFAULT_PROVIDERS,
+  normalizeSandboxMode,
   type PlayerProvider,
   type ProviderInput,
 } from "@/lib/providers";
 
-/** Map a Prisma Source row to the serializable PlayerProvider shape. */
+/** Map a Prisma Provider row to the serializable PlayerProvider shape. */
 function toProvider(s: {
   id: string;
   key: string;
@@ -17,7 +18,7 @@ function toProvider(s: {
   sub: string | null;
   movieUrl: string;
   tvUrl: string;
-  sandboxEnabled: boolean;
+  sandboxMode: string;
   enabled: boolean;
   isDefault: boolean;
   sortOrder: number;
@@ -29,7 +30,7 @@ function toProvider(s: {
     sub: s.sub,
     movieUrl: s.movieUrl,
     tvUrl: s.tvUrl,
-    sandboxEnabled: s.sandboxEnabled,
+    sandboxMode: normalizeSandboxMode(s.sandboxMode),
     enabled: s.enabled,
     isDefault: s.isDefault,
     sortOrder: s.sortOrder,
@@ -92,7 +93,7 @@ function normalize(input: ProviderInput) {
     sub: input.sub?.trim() || null,
     movieUrl: input.movieUrl.trim(),
     tvUrl: input.tvUrl.trim(),
-    sandboxEnabled: !!input.sandboxEnabled,
+    sandboxMode: normalizeSandboxMode(input.sandboxMode),
     enabled: !!input.enabled,
     isDefault: !!input.isDefault,
     sortOrder: Number.isFinite(input.sortOrder) ? input.sortOrder : 0,

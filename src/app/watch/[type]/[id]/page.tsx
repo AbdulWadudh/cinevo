@@ -68,7 +68,14 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
   // provider list loads (from localStorage / DB). We just forward the raw
   // ?source= key and explicit ?sandbox= preference (if any).
   const initialSourceKey = search.source;
-  const initialSandbox = search.sandbox === "off" ? "off" : search.sandbox === "on" ? "on" : undefined;
+  // Sandbox mode from the URL, with backward-compat for old on/off links.
+  const sb = search.sandbox;
+  const initialSandbox: "strict" | "balanced" | "off" | undefined =
+    sb === "strict" || sb === "balanced" || sb === "off"
+      ? sb
+      : sb === "on"
+        ? "strict"
+        : undefined;
 
   // Verify parameters
   const isTV = type === "tv";

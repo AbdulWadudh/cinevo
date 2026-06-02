@@ -4,12 +4,15 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import {
-  Maximize, RefreshCw, Shield, Tv2, Film,
+  Maximize, RefreshCw, Shield, ShieldOff, Tv2, Film,
   ChevronDown, Check, Server, Layers, ListOrdered, SkipForward, SkipBack, Flag,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useProviders } from "@/lib/useProviders";
-import { buildEmbedUrl, providerIndexFromKey, LAST_PROVIDER_KEY } from "@/lib/providers";
+import {
+  buildEmbedUrl, providerIndexFromKey, LAST_PROVIDER_KEY,
+  sandboxTokens, SANDBOX_MODES, type SandboxMode,
+} from "@/lib/providers";
 import { reportProvider } from "@/app/actions/reports";
 import { toast } from "sonner";
 
@@ -29,8 +32,8 @@ interface IframePlayerProps {
   initialProgress?: number;
   /** `?source=` key — resolved against the loaded provider list. */
   initialSourceKey?: string;
-  /** Explicit `?sandbox=` value; when absent we use the provider's default. */
-  initialSandbox?: "on" | "off";
+  /** Explicit `?sandbox=` mode; when absent we use the provider's configured mode. */
+  initialSandbox?: SandboxMode;
   seasons?: SeasonInfo[];
 }
 
@@ -214,7 +217,7 @@ export default function IframePlayer({
   const [currentSeason, setCurrentSeason] = useState(initialSeason);
   const [currentEpisode, setCurrentEpisode] = useState(initialEpisode);
   const [anyDropdownOpen, setAnyDropdownOpen] = useState(false);
-  const [sandboxEnabled, setSandboxEnabled] = useState(initialSandbox === "on");
+  const [sandboxMode, setSandboxMode] = useState<SandboxMode>(initialSandbox ?? "balanced");
   const [reported, setReported] = useState(false);
   const initializedRef = useRef(false);
 
@@ -229,24 +232,24 @@ export default function IframePlayer({
     const idx = providerIndexFromKey(providers, initialSourceKey ?? lastKey);
     setSelectedProvider(idx);
     if (!initialSandbox) {
-      setSandboxEnabled(providers[idx]?.sandboxEnabled ?? false);
+      setSandboxMode(providers[idx]?.sandboxMode ?? "balanced");
     }
   }, [providersLoading, providers, initialSourceKey, initialSandbox]);
 
   const activeProvider = providers[selectedProvider];
 
   // Build a consistent URL with all persistent query params
-  const buildUrl = (opts: { season?: number; episode?: number; source?: number; sandbox?: boolean }) => {
+  const buildUrl = (opts: { season?: number; episode?: number; source?: number; sandbox?: SandboxMode }) => {
     const s = opts.season ?? currentSeason;
     const e = opts.episode ?? currentEpisode;
     const src = opts.source ?? selectedProvider;
-    const sb = opts.sandbox ?? sandboxEnabled;
+    const sb = opts.sandbox ?? sandboxMode;
     const srcKey = providers[src]?.key ?? providers[0]?.key ?? "";
     const base = mediaType === "tv"
       ? `/watch/tv/${mediaId}?season=${s}&episode=${e}&source=${srcKey}`
       : `/watch/movie/${mediaId}?source=${srcKey}`;
-    // Always persist the explicit sandbox state so a manual toggle survives navigation.
-    return `${base}&sandbox=${sb ? "on" : "off"}`;
+    // Always persist the explicit sandbox mode so a manual change survives navigation.
+    return `${base}&sandbox=${sb}`;
   };
 
   const validSeasons = seasons
@@ -278,16 +281,18 @@ export default function IframePlayer({
     setSelectedProvider(v);
     // Remember this as the user's base provider for future visits.
     try { if (providers[v]) localStorage.setItem(LAST_PROVIDER_KEY, providers[v].key); } catch { /* storage unavailable */ }
-    // Apply the new provider's configured default sandbox state.
-    const sb = providers[v]?.sandboxEnabled ?? true;
-    setSandboxEnabled(sb);
+    // Apply the new provider's configured sandbox mode.
+    const mode = providers[v]?.sandboxMode ?? "balanced";
+    setSandboxMode(mode);
     reload();
-    router.replace(buildUrl({ source: v, sandbox: sb }), { scroll: false });
+    router.replace(buildUrl({ source: v, sandbox: mode }), { scroll: false });
   };
 
+  // Cycle sandbox modes: balanced → strict → off → balanced.
   const handleSandboxToggle = () => {
-    const next = !sandboxEnabled;
-    setSandboxEnabled(next);
+    const idx = SANDBOX_MODES.indexOf(sandboxMode);
+    const next = SANDBOX_MODES[(idx + 1) % SANDBOX_MODES.length];
+    setSandboxMode(next);
     reload();
     router.replace(buildUrl({ sandbox: next }), { scroll: false });
   };
@@ -366,7 +371,8 @@ export default function IframePlayer({
                 className="w-full h-full border-none"
                 allowFullScreen
                 allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                {...(sandboxEnabled ? { sandbox: "allow-scripts allow-same-origin allow-forms" as any } : {})}
+                referrerPolicy="no-referrer"
+                {...(sandboxTokens(sandboxMode) ? { sandbox: sandboxTokens(sandboxMode) as string } : {})}
                 title={title}
               />
             )}
@@ -407,23 +413,27 @@ export default function IframePlayer({
         {/* ── Controls bar ── */}
         <div className="w-full bg-surface/50 backdrop-blur-xl border border-white/[0.07] border-t border-t-white/[0.04] rounded-b-xl px-2.5 py-2 sm:px-5 sm:py-3 flex flex-wrap items-center justify-center gap-2 sm:flex-nowrap sm:justify-between sm:gap-4 relative overflow-visible">
 
-          {/* Left: Sandbox toggle */}
-          <button
-            onClick={handleSandboxToggle}
-            title={sandboxEnabled ? "Sandbox ON — click to disable (allows full player features)" : "Sandbox OFF — click to enable (blocks ads/popups)"}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all duration-300 cursor-pointer flex-shrink-0 ${sandboxEnabled
-              ? "bg-emerald-500/10 border-emerald-500/25 hover:bg-emerald-500/20"
-              : "bg-orange-500/10 border-orange-500/25 hover:bg-orange-500/20"
-              }`}
-            aria-label="Toggle iframe sandbox"
-          >
-            <Shield className={`w-3 h-3 transition-colors duration-300 ${sandboxEnabled ? "text-emerald-400" : "text-orange-400"
-              }`} />
-            <span className={`text-[9px] font-extrabold uppercase tracking-widest hidden sm:inline transition-colors duration-300 ${sandboxEnabled ? "text-emerald-400" : "text-orange-400"
-              }`}>
-              {sandboxEnabled ? "Sandbox ON" : "Sandbox OFF"}
-            </span>
-          </button>
+          {/* Left: Ad-block sandbox mode — cycles Balanced → Strict → No Sandbox */}
+          {(() => {
+            const cfg: Record<SandboxMode, { label: string; cls: string; off?: boolean }> = {
+              balanced: { label: "Balanced", cls: "bg-emerald-500/10 border-emerald-500/25 hover:bg-emerald-500/20 text-emerald-400" },
+              strict: { label: "Strict", cls: "bg-sky-500/10 border-sky-500/25 hover:bg-sky-500/20 text-sky-400" },
+              off: { label: "No Sandbox", cls: "bg-orange-500/10 border-orange-500/25 hover:bg-orange-500/20 text-orange-400", off: true },
+            };
+            const c = cfg[sandboxMode];
+            const Icon = c.off ? ShieldOff : Shield;
+            return (
+              <button
+                onClick={handleSandboxToggle}
+                title={`Ad-block sandbox: ${c.label}. Click to cycle — Balanced (blocks pop-ups & redirects, best compatibility) → Strict (max isolation) → No Sandbox (ads possible).`}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all duration-300 cursor-pointer flex-shrink-0 ${c.cls}`}
+                aria-label="Cycle iframe sandbox mode"
+              >
+                <Icon className="w-3 h-3" />
+                <span className="text-[9px] font-extrabold uppercase tracking-widest hidden sm:inline">{c.label}</span>
+              </button>
+            );
+          })()}
 
           {/* Report broken provider */}
           <button
