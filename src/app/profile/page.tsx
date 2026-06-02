@@ -117,8 +117,8 @@ export default async function ProfilePage() {
           <div className="border-t border-white/[0.06] mt-8 pt-6">
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div>
-                <h3 className="text-sm font-bold text-fg">Local cache</h3>
-                <p className="text-xs text-muted mt-0.5">Push any pending changes to your account, then clear cached genre lists so they refetch fresh from TMDB.</p>
+                <h3 className="text-sm font-bold text-fg">Reset &amp; resync</h3>
+                <p className="text-xs text-muted mt-0.5">Push any pending changes to your account, clear the local cache, and reload so everything is re-fetched fresh from the database and TMDB.</p>
               </div>
               <ClearCacheButton />
             </div>

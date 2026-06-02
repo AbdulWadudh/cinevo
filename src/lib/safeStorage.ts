@@ -48,4 +48,20 @@ export const safeStorage = {
       /* ignore */
     }
   },
+  /** Remove every key starting with `prefix` (e.g. "cinevo:") from both stores. */
+  removeByPrefix(prefix: string): void {
+    for (const k of Object.keys(memory)) if (k.startsWith(prefix)) delete memory[k];
+    const store = ls();
+    if (!store) return;
+    try {
+      const toRemove: string[] = [];
+      for (let i = 0; i < store.length; i++) {
+        const k = store.key(i);
+        if (k && k.startsWith(prefix)) toRemove.push(k);
+      }
+      toRemove.forEach((k) => store.removeItem(k));
+    } catch {
+      /* ignore */
+    }
+  },
 };
