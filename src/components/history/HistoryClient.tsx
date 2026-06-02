@@ -98,7 +98,7 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
     });
     startTransition(async () => {
       const res = await deleteWatchEntries(
-        entries.map((e) => ({ mediaId: e.mediaId, mediaType: e.mediaType, season: e.season, episode: e.episode }))
+        entries.map((e) => ({ mediaId: e.mediaId, mediaType: e.mediaType, season: e.season }))
       );
       if (!res.success) setError(res.error || "Failed to delete");
     });

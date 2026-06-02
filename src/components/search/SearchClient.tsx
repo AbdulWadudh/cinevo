@@ -1,17 +1,21 @@
 "use client";
 
-import React, { useState, useEffect, useTransition } from "react";
+import React, { useState, useEffect, useTransition, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
-import { Search, ArrowLeft, Loader2, Film, User, Star, Play } from "lucide-react";
+import { Search, ArrowLeft, Loader2, Film, Tag, User, Star, Play } from "lucide-react";
 import { searchMediaAction, getPersonCreditsAction } from "@/app/actions/tmdb-actions";
 import { TMDBMedia } from "@/lib/tmdb";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
+import CustomSelect, { type SelectOption } from "@/components/ui/CustomSelect";
+import { useGenres } from "@/lib/genres";
 
 const gridClasses =
   "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-5";
+
+const ALL_GENRES: SelectOption[] = [{ label: "All genres", value: "" }];
 
 export default function SearchClient() {
   const router = useRouter();
@@ -21,6 +25,12 @@ export default function SearchClient() {
   const [searchResults, setSearchResults] = useState<TMDBMedia[]>([]);
   const [includePeople, setIncludePeople] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  // Genre filter — narrows the search results by genre. Genre lists are cached
+  // in localStorage (see lib/genres); movie + TV lists are merged by name so a
+  // single dropdown works without a media-type toggle (that lives in Browse).
+  const genreCache = useGenres();
+  const [genre, setGenre] = useState("");
 
   // Selected actor credits state
   const [selectedActor, setSelectedActor] = useState<any | null>(null);
@@ -91,7 +101,37 @@ export default function SearchClient() {
     setIsActorLoading(false);
   };
 
-  const filteredResults = searchResults.filter((item) => includePeople || item.media_type !== "person");
+  // Merge movie + TV genres by name → one dropdown. Each name maps to the set
+  // of TMDB ids it covers (movie + TV can differ), used to filter results.
+  const { genreOptions, genreIdsByName } = useMemo(() => {
+    const idsByName = new Map<string, Set<number>>();
+    for (const g of [...genreCache.movie, ...genreCache.tv]) {
+      const key = g.name.toLowerCase();
+      if (!idsByName.has(key)) idsByName.set(key, new Set());
+      idsByName.get(key)!.add(g.id);
+    }
+    const names = [...idsByName.keys()].sort();
+    const options: SelectOption[] = [
+      { label: "All genres", value: "" },
+      ...names.map((n) => ({
+        // Title-case the merged name for display; value is the lowercase key.
+        label: n.replace(/\b\w/g, (c) => c.toUpperCase()),
+        value: n,
+      })),
+    ];
+    return { genreOptions: options, genreIdsByName: idsByName };
+  }, [genreCache]);
+
+  const selectedGenreIds = genre ? genreIdsByName.get(genre) : undefined;
+
+  const filteredResults = searchResults
+    .filter((item) => includePeople || item.media_type !== "person")
+    .filter((item) => {
+      if (!selectedGenreIds) return true;
+      // People have no genres — drop them when a genre filter is active.
+      if (item.media_type === "person") return false;
+      return (item.genre_ids || []).some((id) => selectedGenreIds.has(id));
+    });
 
   return (
     <section className="min-h-screen w-full px-6 md:px-12 pt-[88px] pb-16">
@@ -124,8 +164,16 @@ export default function SearchClient() {
           </Link>
         </div>
 
-        <div className="flex items-center gap-2 mt-4 px-1 text-xs select-none">
-          <label className="inline-flex items-center gap-2 text-fg-secondary hover:text-fg transition-colors cursor-pointer">
+        <div className="flex flex-wrap items-center gap-2.5 mt-4 px-1 text-xs select-none">
+          <CustomSelect
+            value={genre}
+            options={genreOptions.length > 1 ? genreOptions : ALL_GENRES}
+            onChange={setGenre}
+            ariaLabel="Filter by genre"
+            icon={<Tag className="w-3.5 h-3.5" />}
+          />
+
+          <label className="inline-flex items-center gap-2 text-fg-secondary hover:text-fg transition-colors cursor-pointer ml-1">
             <input
               type="checkbox"
               checked={includePeople}

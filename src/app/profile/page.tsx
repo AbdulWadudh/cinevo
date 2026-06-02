@@ -14,6 +14,7 @@ import { db } from "@/lib/db";
 import ProviderAdmin from "@/components/admin/ProviderAdmin";
 import ProviderReportsAdmin from "@/components/admin/ProviderReportsAdmin";
 import ForceSyncButton from "@/components/watch/ForceSyncButton";
+import ClearCacheButton from "@/components/settings/ClearCacheButton";
 
 export default async function ProfilePage() {
   const profile = await getOrCreateProfile();
@@ -109,6 +110,17 @@ export default async function ProfilePage() {
                 <p className="text-xs text-muted mt-0.5">History saves locally and syncs every 10 min. Force a sync to push/pull now.</p>
               </div>
               <ForceSyncButton />
+            </div>
+          </div>
+
+          {/* Clear cached data + sync */}
+          <div className="border-t border-white/[0.06] mt-8 pt-6">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div>
+                <h3 className="text-sm font-bold text-fg">Local cache</h3>
+                <p className="text-xs text-muted mt-0.5">Push any pending changes to your account, then clear cached genre lists so they refetch fresh from TMDB.</p>
+              </div>
+              <ClearCacheButton />
             </div>
           </div>
 

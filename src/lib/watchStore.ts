@@ -32,8 +32,10 @@ export interface WatchMeta {
 
 const KEY = "cinevo:watchHistory:v1";
 
-export function entryKey(e: { mediaType: string; mediaId: string; season: number; episode: number }): string {
-  return `${e.mediaType}:${e.mediaId}:${e.season}:${e.episode}`;
+// Identity is one record PER SEASON (movies use season 0). Episode is not part
+// of the key — watching a new episode updates the season's record in place.
+export function entryKey(e: { mediaType: string; mediaId: string; season: number }): string {
+  return `${e.mediaType}:${e.mediaId}:${e.season}`;
 }
 
 type StoreMap = Record<string, WatchEntry>;
@@ -42,11 +44,38 @@ let map: StoreMap | null = null;
 let snapshot: WatchEntry[] = [];
 const listeners = new Set<() => void>();
 
+// Re-key a persisted map to the current entryKey format and collapse any
+// collisions (newest updatedAt wins). Migrates older per-episode keys
+// (mediaType:mediaId:season:episode) into per-season records in place.
+function normalize(raw: StoreMap): StoreMap {
+  const out: StoreMap = {};
+  let changed = false;
+  for (const [oldKey, entry] of Object.entries(raw)) {
+    if (!entry || !entry.mediaType || !entry.mediaId) { changed = true; continue; }
+    const season = entry.season ?? 0;
+    const key = entryKey({ mediaType: entry.mediaType, mediaId: entry.mediaId, season });
+    if (key !== oldKey) changed = true;
+    const existing = out[key];
+    if (!existing) {
+      out[key] = { ...entry, season, episode: entry.episode ?? 0 };
+    } else {
+      changed = true; // collapsing a duplicate
+      if (entry.updatedAt > existing.updatedAt) {
+        out[key] = { ...entry, season, episode: entry.episode ?? 0 };
+      }
+    }
+  }
+  if (changed) {
+    try { safeStorage.set(KEY, JSON.stringify(out)); } catch { /* ignore */ }
+  }
+  return out;
+}
+
 function ensure(): StoreMap {
   if (map) return map;
   try {
     const raw = safeStorage.get(KEY);
-    map = raw ? (JSON.parse(raw) as StoreMap) : {};
+    map = normalize(raw ? (JSON.parse(raw) as StoreMap) : {});
   } catch {
     map = {};
   }
@@ -73,8 +102,11 @@ const norm = (m: WatchMeta) => ({
 export function touchWatch(m: WatchMeta) {
   const store = ensure();
   const { season, episode } = norm(m);
-  const key = entryKey({ mediaType: m.mediaType, mediaId: m.mediaId, season, episode });
+  const key = entryKey({ mediaType: m.mediaType, mediaId: m.mediaId, season });
   const existing = store[key];
+  // Preserve progress only when re-opening the same episode; a different
+  // episode of the same season starts fresh (it overwrites the season record).
+  const sameEpisode = existing?.episode === episode;
   store[key] = {
     mediaId: m.mediaId,
     mediaType: m.mediaType,
@@ -82,8 +114,8 @@ export function touchWatch(m: WatchMeta) {
     posterPath: m.posterPath ?? existing?.posterPath ?? null,
     season,
     episode,
-    progress: existing?.progress ?? 0,
-    duration: existing?.duration ?? 0,
+    progress: sameEpisode ? existing!.progress : 0,
+    duration: sameEpisode ? existing!.duration : 0,
     updatedAt: Date.now(),
     dirty: true,
   };

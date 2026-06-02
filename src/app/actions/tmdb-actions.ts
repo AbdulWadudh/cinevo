@@ -1,6 +1,22 @@
 "use server";
 
-import { tmdb, TMDBMedia, MediaSource, DiscoverFilters } from "@/lib/tmdb";
+import { tmdb, TMDBMedia, MediaSource, DiscoverFilters, TMDBGenre } from "@/lib/tmdb";
+
+/**
+ * Server Action to fetch the official TMDB genre list for a media type.
+ * The result is cached client-side in localStorage (see lib/genres).
+ */
+export async function getGenresAction(
+  type: "movie" | "tv"
+): Promise<{ success: boolean; data: TMDBGenre[] }> {
+  try {
+    const data = await tmdb.getGenres(type);
+    return { success: true, data };
+  } catch (error) {
+    console.error("Failed to fetch genres:", error);
+    return { success: false, data: [] };
+  }
+}
 
 /**
  * Server Action for the /browse discover grid — filtered + paginated.

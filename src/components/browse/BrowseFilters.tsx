@@ -9,20 +9,9 @@ import { discoverMediaAction } from "@/app/actions/tmdb-actions";
 import { TMDBMedia, DiscoverFilters } from "@/lib/tmdb";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
 import CustomSelect, { type SelectOption } from "@/components/ui/CustomSelect";
+import { useGenres, toGenreOptions } from "@/lib/genres";
 
-const GENRES_MOVIE: SelectOption[] = [
-  { label: "All genres", value: "" }, { label: "Action", value: "28" }, { label: "Adventure", value: "12" },
-  { label: "Animation", value: "16" }, { label: "Comedy", value: "35" }, { label: "Crime", value: "80" },
-  { label: "Documentary", value: "99" }, { label: "Drama", value: "18" }, { label: "Fantasy", value: "14" },
-  { label: "Horror", value: "27" }, { label: "Mystery", value: "9648" }, { label: "Romance", value: "10749" },
-  { label: "Sci-Fi", value: "878" }, { label: "Thriller", value: "53" }, { label: "War", value: "10752" },
-];
-const GENRES_TV: SelectOption[] = [
-  { label: "All genres", value: "" }, { label: "Action & Adventure", value: "10759" }, { label: "Animation", value: "16" },
-  { label: "Comedy", value: "35" }, { label: "Crime", value: "80" }, { label: "Documentary", value: "99" },
-  { label: "Drama", value: "18" }, { label: "Kids", value: "10762" }, { label: "Mystery", value: "9648" },
-  { label: "Sci-Fi & Fantasy", value: "10765" }, { label: "Reality", value: "10764" },
-];
+const ALL_GENRES: SelectOption[] = [{ label: "All genres", value: "" }];
 const SORTS: SelectOption[] = [
   { label: "Most Popular", value: "popularity.desc" },
   { label: "Top Rated", value: "vote_average.desc" },
@@ -53,6 +42,9 @@ export default function BrowseFilters() {
   const [pending, startTransition] = useTransition();
   const [loadingMore, setLoadingMore] = useState(false);
 
+  // Genre lists are fetched once and cached in localStorage (see lib/genres).
+  const genreCache = useGenres();
+
   const filters: DiscoverFilters = { mediaType, genre, year, minRating, sortBy };
 
   // Reset + fetch first page whenever a filter changes.
@@ -80,7 +72,8 @@ export default function BrowseFilters() {
     setLoadingMore(false);
   }, [loadingMore, page, totalPages, filters]);
 
-  const genres = mediaType === "tv" ? GENRES_TV : GENRES_MOVIE;
+  const genreList = mediaType === "tv" ? genreCache.tv : genreCache.movie;
+  const genres = genreList.length ? toGenreOptions(genreList) : ALL_GENRES;
 
   return (
     <div className="w-full">

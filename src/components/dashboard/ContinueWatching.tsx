@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Play } from "lucide-react";
+import { Play, ChevronRight } from "lucide-react";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
 import { TMDBMedia } from "@/lib/tmdb";
 import { useWatchHistory } from "@/lib/watchStore";
@@ -29,6 +29,13 @@ export default function ContinueWatching() {
         <h2 className="font-display text-xl md:text-2xl font-bold tracking-tight">
           Continue Watching
         </h2>
+        <Link
+          href="/history"
+          className="group inline-flex items-center gap-1 text-xs sm:text-sm font-semibold text-muted hover:text-accent transition-colors active:scale-95 duration-200"
+        >
+          See all
+          <ChevronRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+        </Link>
       </div>
 
       <div className="relative">

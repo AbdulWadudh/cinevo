@@ -29,17 +29,19 @@ export async function updateWatchProgress(input: WatchProgressInput) {
 
     const progress = await db.watchProgress.upsert({
       where: {
-        profileId_mediaId_mediaType_season_episode: {
+        profileId_mediaId_mediaType_season: {
           profileId: profile.id,
           mediaId: input.mediaId,
           mediaType: input.mediaType,
           season,
-          episode,
         },
       },
       update: {
+        episode,
         progress: input.progress,
         duration: input.duration,
+        title: input.title,
+        posterPath: input.posterPath || null,
         updatedAt: new Date(),
       },
       create: {
@@ -103,15 +105,20 @@ export async function getSingleWatchProgress(
 
     const record = await db.watchProgress.findUnique({
       where: {
-        profileId_mediaId_mediaType_season_episode: {
+        profileId_mediaId_mediaType_season: {
           profileId: profile.id,
           mediaId,
           mediaType,
           season: s,
-          episode: e,
         },
       },
     });
+
+    // The season holds a single record for its last-watched episode. Only resume
+    // progress when the requested episode is the one we have progress for.
+    if (record && record.episode !== e) {
+      return { success: true, data: { ...record, progress: 0 } };
+    }
 
     return { success: true, data: record };
   } catch (error) {
@@ -126,23 +133,20 @@ export async function getSingleWatchProgress(
 export async function deleteWatchProgress(
   mediaId: string,
   mediaType: "movie" | "tv",
-  season?: number,
-  episode?: number
+  season?: number
 ) {
   try {
     const profile = await getOrCreateProfile();
     if (!profile) return { success: false, requiresAuth: true };
     const s = season || 0;
-    const e = episode || 0;
 
     await db.watchProgress.delete({
       where: {
-        profileId_mediaId_mediaType_season_episode: {
+        profileId_mediaId_mediaType_season: {
           profileId: profile.id,
           mediaId,
           mediaType,
           season: s,
-          episode: e,
         },
       },
     });
@@ -172,15 +176,14 @@ export async function syncWatchProgress(entries: WatchProgressInput[]) {
         const episode = input.episode || 0;
         return db.watchProgress.upsert({
           where: {
-            profileId_mediaId_mediaType_season_episode: {
+            profileId_mediaId_mediaType_season: {
               profileId: profile.id,
               mediaId: input.mediaId,
               mediaType: input.mediaType,
               season,
-              episode,
             },
           },
-          update: { progress: input.progress, duration: input.duration, title: input.title, posterPath: input.posterPath || null, updatedAt: new Date() },
+          update: { episode, progress: input.progress, duration: input.duration, title: input.title, posterPath: input.posterPath || null, updatedAt: new Date() },
           create: {
             profileId: profile.id,
             mediaId: input.mediaId,
@@ -210,7 +213,7 @@ export async function syncWatchProgress(entries: WatchProgressInput[]) {
  * has been synced yet). Used for single + batch removal on the history page.
  */
 export async function deleteWatchEntries(
-  entries: { mediaId: string; mediaType: string; season: number; episode: number }[]
+  entries: { mediaId: string; mediaType: string; season: number }[]
 ) {
   try {
     const profile = await getOrCreateProfile();
@@ -224,7 +227,6 @@ export async function deleteWatchEntries(
           mediaId: e.mediaId,
           mediaType: e.mediaType,
           season: e.season,
-          episode: e.episode,
         })),
       },
     });

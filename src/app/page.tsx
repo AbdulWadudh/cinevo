@@ -84,21 +84,17 @@ export default async function Home({ searchParams }: HomeProps) {
   const [
     trendingMovies,
     trendingTV,
-    newReleases,
-    topRated,
+    airingToday,
     marvel,
     dc,
-    bollywood,
-    tollywood
+    bollywood
   ] = await Promise.all([
     tmdb.getTrending("movie"),
     tmdb.getTrending("tv"),
-    tmdb.getNewReleases("movie"),
-    tmdb.getTopRated("movie"),
+    tmdb.getAiringToday(),                          // TV series airing today
     tmdb.getByCompany("420|7505", "movie"),       // Marvel Studios / Marvel Entertainment
     tmdb.getByCompany("9993|429|128064", "movie"), // DC Entertainment / DC Comics / DC Films
-    tmdb.getByLanguage("hi", "movie"),             // Bollywood (Hindi)
-    tmdb.getByLanguage("te", "movie")              // Tollywood (Telugu)
+    tmdb.getByLanguage("hi", "movie")              // Bollywood (Hindi)
   ]);
 
   // Fetch trailer keys for the hero slides so the banner can play them inline.
@@ -125,29 +121,26 @@ export default async function Home({ searchParams }: HomeProps) {
         <BecauseYouWatched />
       </Suspense>
 
-      {/* TMDb-powered dynamic carousels */}
-      <MediaCarousel title="Trending Now" items={trendingMovies} mediaType="movie" badge="trend" source={{ kind: "trending", mediaType: "movie" }} />
-      <MediaCarousel title="New Releases" items={newReleases} mediaType="movie" badge="new" source={{ kind: "newReleases", mediaType: "movie" }} />
-      <MediaCarousel title="Popular TV Series" items={trendingTV} mediaType="tv" source={{ kind: "trending", mediaType: "tv" }} />
-      <MediaCarousel title="Top Rated of All Time" items={topRated} mediaType="movie" badge="top" source={{ kind: "topRated", mediaType: "movie" }} />
-
-      {/* Studio collections & regional cinema */}
-      <MediaCarousel title="Marvel Universe" items={marvel} mediaType="movie" source={{ kind: "company", value: "420|7505", mediaType: "movie" }} />
-      <MediaCarousel title="DC Universe" items={dc} mediaType="movie" source={{ kind: "company", value: "9993|429|128064", mediaType: "movie" }} />
-      <MediaCarousel title="Bollywood" items={bollywood} mediaType="movie" source={{ kind: "language", value: "hi", mediaType: "movie" }} />
-      <MediaCarousel title="Tollywood" items={tollywood} mediaType="movie" source={{ kind: "language", value: "te", mediaType: "movie" }} />
-
-      {/* Stateful Filter Browse Grid */}
-      <div className="w-full mt-10">
+      {/* Interactive Explore (genre chips + carousel) — replaces the old Trending row */}
+      <div className="w-full">
         <div className="px-6 md:px-12 mb-2">
           <h2 className="font-display text-lg md:text-xl font-bold tracking-tight text-fg">
             Explore Categories
           </h2>
         </div>
-        <Suspense fallback={<div className="h-[300px] bg-surface/50 animate-pulse rounded-2xl mx-6 md:mx-12 animate-pulse" />}>
+        <Suspense fallback={<div className="h-[300px] bg-surface/50 animate-pulse rounded-2xl mx-6 md:mx-12" />}>
           <BrowseSection initialTrending={trendingMovies} />
         </Suspense>
       </div>
+
+      {/* TMDb-powered dynamic carousels */}
+      <MediaCarousel title="Airing Today" items={airingToday} mediaType="tv" badge="new" source={{ kind: "airingToday", mediaType: "tv" }} />
+      <MediaCarousel title="Popular TV Series" items={trendingTV} mediaType="tv" source={{ kind: "trending", mediaType: "tv" }} />
+
+      {/* Studio collections & regional cinema */}
+      <MediaCarousel title="Marvel Universe" items={marvel} mediaType="movie" source={{ kind: "company", value: "420|7505", mediaType: "movie" }} />
+      <MediaCarousel title="DC Universe" items={dc} mediaType="movie" source={{ kind: "company", value: "9993|429|128064", mediaType: "movie" }} />
+      <MediaCarousel title="Bollywood" items={bollywood} mediaType="movie" source={{ kind: "language", value: "hi", mediaType: "movie" }} />
 
       {/* Sleek Footer */}
       <footer className="px-6 md:px-12 py-5 border-t border-border mt-12">

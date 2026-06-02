@@ -1,24 +1,12 @@
 "use client";
 
 import React from "react";
+import { useGenres } from "@/lib/genres";
 
 export interface Genre {
   name: string;
   id: string;
 }
-
-const GENRES: Genre[] = [
-  { name: "All", id: "" },
-  { name: "Action", id: "28" },
-  { name: "Sci-Fi", id: "878" },
-  { name: "Drama", id: "18" },
-  { name: "Thriller", id: "53" },
-  { name: "Comedy", id: "35" },
-  { name: "Horror", id: "27" },
-  { name: "Romance", id: "10749" },
-  { name: "Crime", id: "80" },
-  { name: "Fantasy", id: "14" }
-];
 
 interface GenreBarProps {
   selectedGenreId: string;
@@ -31,9 +19,14 @@ export default function GenreBar({
   onGenreSelect,
   customGenre
 }: GenreBarProps) {
-  // Combine hardcoded genres with any dynamic custom genre passed via query params
-  const displayGenres = [...GENRES];
-  if (customGenre && !GENRES.some((g) => g.id === customGenre.id)) {
+  // Live movie genres (cached in localStorage — see lib/genres). The Explore
+  // carousel discovers movies, so we use the movie list here.
+  const { movie } = useGenres();
+  const displayGenres: Genre[] = [
+    { name: "All", id: "" },
+    ...movie.map((g) => ({ name: g.name, id: String(g.id) })),
+  ];
+  if (customGenre && !displayGenres.some((g) => g.id === customGenre.id)) {
     displayGenres.push(customGenre);
   }
 

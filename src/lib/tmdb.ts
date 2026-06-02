@@ -74,7 +74,13 @@ export type MediaSource =
   | { kind: "newReleases"; mediaType: "movie" | "tv" }
   | { kind: "genre"; value: string; mediaType: "movie" | "tv" }
   | { kind: "company"; value: string; mediaType: "movie" | "tv" }
-  | { kind: "language"; value: string; mediaType: "movie" | "tv" };
+  | { kind: "language"; value: string; mediaType: "movie" | "tv" }
+  | { kind: "airingToday"; mediaType: "tv" };
+
+export interface TMDBGenre {
+  id: number;
+  name: string;
+}
 
 interface TMDBVideo {
   key: string;
@@ -220,6 +226,27 @@ export const tmdb = {
     }
   },
 
+  // Fetch the official TMDB genre list for movies or TV. Cached client-side in
+  // localStorage (see lib/genres) so the dropdowns don't re-request every time.
+  getGenres: async (type: "movie" | "tv" = "movie"): Promise<TMDBGenre[]> => {
+    try {
+      const data = await tmdbFetch<{ genres: TMDBGenre[] }>(`/genre/${type}/list`);
+      return data.genres;
+    } catch {
+      return [];
+    }
+  },
+
+  // Fetch TV series airing today
+  getAiringToday: async (): Promise<TMDBMedia[]> => {
+    try {
+      const data = await tmdbFetch<TMDBResponse>("/tv/airing_today");
+      return data.results;
+    } catch {
+      return [];
+    }
+  },
+
   // Fetch media by genre (first page only — used by the inline browse filter)
   getByGenre: async (genreId: string, type: "movie" | "tv" = "movie"): Promise<TMDBMedia[]> => {
     try {
@@ -331,6 +358,9 @@ export const tmdb = {
         params.with_original_language = source.value;
         params.sort_by = "popularity.desc";
         params["vote_count.gte"] = "30";
+        break;
+      case "airingToday":
+        endpoint = "/tv/airing_today";
         break;
     }
 

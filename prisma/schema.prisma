@@ -105,12 +105,14 @@ model WatchProgress {
   title       String
   posterPath  String?
   season      Int?     // For TV Shows (optional)
-  episode     Int?     // For TV Shows (optional)
+  episode     Int?     // Last-watched episode for the season (TV); updated in place
   progress    Int      // Progress in seconds
   duration    Int      // Total duration in seconds
   updatedAt   DateTime @default(now()) @updatedAt
 
-  @@unique([profileId, mediaId, mediaType, season, episode])
+  // One record per season (movies use season 0). Episode is a mutable column,
+  // not part of the identity — a new episode updates the season's row.
+  @@unique([profileId, mediaId, mediaType, season])
   @@index([profileId, updatedAt(sort: Desc)])
 }
 
