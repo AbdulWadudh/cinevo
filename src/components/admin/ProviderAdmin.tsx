@@ -18,7 +18,7 @@ const emptyForm: ProviderInput = {
   sandboxMode: "balanced", enabled: true, isDefault: false, sortOrder: 0,
 };
 
-const SB_LABEL: Record<SandboxMode, string> = { balanced: "Balanced", strict: "Strict", off: "No Sandbox" };
+const SB_LABEL: Record<SandboxMode, string> = { balanced: "Balanced", strict: "Strict", off: "Off" };
 
 const inputCls =
   "w-full bg-bg/60 border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-fg placeholder-muted outline-none focus:border-accent/60 transition-colors";
@@ -155,7 +155,7 @@ export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }
             <input className={inputCls} value={form.tvUrl} placeholder="https://host/tv/{id}/{season}/{episode}"
               onChange={(e) => set("tvUrl", e.target.value)} />
             <p className="text-[10px] text-muted mt-1.5">
-              Placeholders: <code className="text-accent">{"{id}"}</code>, <code className="text-accent">{"{season}"}</code>, <code className="text-accent">{"{episode}"}</code>, <code className="text-accent">{"{progress}"}</code>. Pick a sandbox mode below — <b>Balanced</b> blocks pop-ups/redirects while playing on most providers; <b>No Sandbox</b> only if it refuses to load.
+              Placeholders: <code className="text-accent">{"{id}"}</code>, <code className="text-accent">{"{season}"}</code>, <code className="text-accent">{"{episode}"}</code>, <code className="text-accent">{"{progress}"}</code>. Pick an ad-block mode below — <b>Balanced</b> blocks pop-ups/redirects while playing on most providers; <b>Off</b> only if the provider refuses to load.
             </p>
           </div>
           <div>
@@ -164,7 +164,7 @@ export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }
               onChange={(e) => set("sortOrder", parseInt(e.target.value) || 0)} />
           </div>
           <div className="sm:col-span-2">
-            <label className={labelCls}>Sandbox mode (ad-blocking)</label>
+            <label className={labelCls}>Ad-block mode</label>
             <div className="inline-flex items-center rounded-lg border border-white/[0.1] overflow-hidden">
               {SANDBOX_MODES.map((m) => (
                 <button

@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import {
-  Maximize, RefreshCw, Shield, ShieldOff, Tv2, Film,
+  Maximize, RefreshCw, Shield, ShieldOff,
   ChevronDown, Check, Server, Layers, ListOrdered, SkipForward, SkipBack, Flag, X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -125,19 +125,19 @@ function CustomDropdown({ icon, label, options, value, onChange, onOpenChange, d
         </span>
         {shortLabel ? (
           <>
-            {/* Mobile: compact e.g. "S1" / "E1" */}
-            <span className="sm:hidden text-sm font-bold text-white">{shortLabel}{value}</span>
+            {/* Mobile + tablet: compact e.g. "S1" / "E1" */}
+            <span className="lg:hidden text-sm font-bold text-white">{shortLabel}{value}</span>
             {/* Desktop: full label + value */}
-            <div className="hidden sm:flex flex-col items-start leading-none">
+            <div className="hidden lg:flex flex-col items-start leading-none">
               <span className="text-[9px] font-extrabold uppercase tracking-widest text-muted">{label}</span>
               <span className="text-xs font-bold text-white mt-0.5 max-w-[96px] truncate">{selected?.label ?? "—"}</span>
             </div>
           </>
         ) : (
           <div className="flex flex-col items-start leading-none">
-            {/* tiny label hidden on mobile to keep the trigger short */}
-            <span className="hidden sm:block text-[9px] font-extrabold uppercase tracking-widest text-muted">{label}</span>
-            <span className="text-xs font-bold text-white sm:mt-0.5 max-w-[72px] sm:max-w-[96px] truncate">{selected?.label ?? "—"}</span>
+            {/* tiny label hidden until desktop to keep the trigger short */}
+            <span className="hidden lg:block text-[9px] font-extrabold uppercase tracking-widest text-muted">{label}</span>
+            <span className="text-xs font-bold text-white lg:mt-0.5 max-w-[72px] lg:max-w-[96px] truncate">{selected?.label ?? "—"}</span>
           </div>
         )}
         <ChevronDown
@@ -424,21 +424,22 @@ export default function IframePlayer({
         {/* ── Controls bar ── */}
         <div className="w-full bg-surface/50 backdrop-blur-xl border border-white/[0.07] border-t border-t-white/[0.04] rounded-b-xl px-2 py-1.5 sm:px-5 sm:py-3 flex flex-wrap items-center justify-center gap-1.5 sm:flex-nowrap sm:justify-between sm:gap-4 relative overflow-visible">
 
-          {/* Left: Ad-block sandbox mode — direct pick (Balanced / Strict / No Sandbox) */}
+          {/* Left: Ad-block mode — direct pick (Balanced / Strict / Off) */}
           <CustomDropdown
             icon={sandboxMode === "off" ? <ShieldOff className="w-3.5 h-3.5" /> : <Shield className="w-3.5 h-3.5" />}
-            label="Sandbox"
+            label="Ad Block"
             options={SANDBOX_MODES.map((m, i) => ({
               value: i,
-              label: m === "off" ? "No Sandbox" : m === "strict" ? "Strict" : "Balanced",
-              sub: m === "off" ? "Ads possible" : m === "strict" ? "Max isolation" : "Blocks ads",
+              label: m === "off" ? "Off" : m === "strict" ? "Strict" : "Balanced",
+              sub: m === "off" ? "Ads possible" : m === "strict" ? "Max protection" : "Blocks ads",
             }))}
             value={SANDBOX_MODES.indexOf(sandboxMode)}
             onChange={(i) => handleSandboxChange(SANDBOX_MODES[i])}
             onOpenChange={setAnyDropdownOpen}
           />
 
-          {/* Report broken provider */}
+          {/* Report broken provider — hidden for now */}
+          {false && (
           <button
             onClick={() => {
               if (reported || !activeProvider) return;
@@ -467,6 +468,7 @@ export default function IframePlayer({
               {reported ? "Reported" : "Report"}
             </span>
           </button>
+          )}
 
           {/* Center: the dropdowns stay on one line together (Provider/Season/Episode).
               On mobile this group drops to its own full-width row; on desktop it
@@ -555,13 +557,6 @@ export default function IframePlayer({
             )}
           </div>
 
-          {/* Right: media type badge */}
-          <div className="flex items-center gap-1.5 bg-white/[0.04] border border-white/[0.07] px-2.5 py-1.5 rounded-lg flex-shrink-0">
-            {mediaType === "tv"
-              ? <><Tv2 className="w-3.5 h-3.5 text-accent" /><span className="text-[9px] font-extrabold text-muted uppercase tracking-widest hidden sm:inline">Series</span></>
-              : <><Film className="w-3.5 h-3.5 text-fg-secondary" /><span className="text-[9px] font-extrabold text-muted uppercase tracking-widest hidden sm:inline">Movie</span></>
-            }
-          </div>
         </div>
 
         {/* No-sandbox advisory — this provider can't be ad-protected */}
@@ -569,7 +564,7 @@ export default function IframePlayer({
           <div className="mt-2 flex items-center gap-2 rounded-xl border border-orange-500/25 bg-orange-500/[0.08] px-2.5 py-1.5 sm:px-3 sm:py-2 animate-fade-in">
             <ShieldOff className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-400 flex-shrink-0" />
             <p className="text-[10px] sm:text-xs text-orange-200/90 leading-snug flex-1">
-              <b className="text-orange-300">No sandbox</b> on {activeProvider?.label ?? "this provider"} — it blocks ad protection, so pop-ups/ads may appear. For a clean experience, use an ad-blocker like{" "}
+              <b className="text-orange-300">Ad protection off</b> on {activeProvider?.label ?? "this provider"} — it doesn&apos;t allow blocking, so pop-ups/ads may appear. For a clean experience, use an ad-blocker like{" "}
               <a href="https://ublockorigin.com" target="_blank" rel="noreferrer" className="underline hover:text-orange-100">uBlock Origin</a>, or pick another provider.
             </p>
             <button
