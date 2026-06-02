@@ -3,9 +3,9 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "space.k79.cinevo",
+      "package_name": "space.k79.cinevo.twa",
       "sha256_cert_fingerprints": [
-        "REPLACE_WITH_YOUR_APP_SIGNING_SHA256_FINGERPRINT"
+        "F3:5B:EA:7C:A1:AB:46:C9:20:79:B1:BB:42:8E:4A:CB:5A:89:D8:50:46:CE:60:F3:18:87:D0:B9:DF:4B:A9:46"
       ]
     }
   }

@@ -19,13 +19,21 @@ Test it first in a desktop browser: load the site and navigate using only the **
 
 ## 2. Build the TWA APK
 
+The generated Android project lives in **`android-twa/`** — build from there:
+
 ```bash
 npm i -g @bubblewrap/cli
+cd android-twa            # all TWA/Gradle files + the signing keystore live here
 
-# Fill in host / *.cinevo.k79.space URLs in ../twa-manifest.json first, then:
-bubblewrap init --manifest ./twa-manifest.json
-bubblewrap build            # produces app-release-signed.apk (+ creates a keystore on first run)
+# (Already initialised — re-run only if you wipe the project.)
+# `--manifest` takes the URL of the LIVE Web App Manifest, NOT the local
+# twa-manifest.json. The local file is the saved config Bubblewrap reuses.
+# bubblewrap init --manifest https://cinevo.k79.space/manifest.webmanifest
+
+bubblewrap build          # → android-twa/app-release-signed.apk
 ```
+
+> The leanback manifest edits (§3) live in `android-twa/app/src/main/AndroidManifest.xml` and are already applied. `bubblewrap update` would regenerate that file — re-apply them if you run it.
 
 Bubblewrap also prints an **assetlinks.json** fingerprint — host it at
 `https://cinevo.k79.space/.well-known/assetlinks.json` so the TWA opens **without a browser URL bar**.
@@ -62,7 +70,7 @@ Add a **`res/drawable/banner.png`** (320×180) — this is the icon shown in the
 Then rebuild:
 
 ```bash
-cd <bubblewrap-project>
+cd android-twa
 ./gradlew assembleRelease
 ```
 

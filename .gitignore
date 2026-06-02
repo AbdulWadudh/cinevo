@@ -41,3 +41,19 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# ── Android TWA (Bubblewrap) ──
+# Signing key — NEVER commit. Losing or leaking it means you can't update the app.
+*.keystore
+*.jks
+android.keystore
+# Build outputs & local Gradle/SDK state (under android-twa/)
+.gradle/
+build/
+android-twa/app/build/
+*.apk
+*.aab
+*.idsig
+local.properties
+# Bubblewrap may persist signing-key passwords here:
+android-signing-key-info.json
