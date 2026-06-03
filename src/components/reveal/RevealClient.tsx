@@ -1,15 +1,18 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useTransition } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
-import { Shuffle, Sparkles, X, Star, Play, Clapperboard } from "lucide-react";
-import HoloCard, { type RevealItem } from "./HoloCard";
+import { Shuffle, Sparkles, X, Star, Play, Clapperboard, SlidersHorizontal } from "lucide-react";
+import HoloCard from "./HoloCard";
+import type { RevealItem, RevealPreference } from "./types";
 import PackCard from "./PackCard";
+import PreferencePanel from "./PreferencePanel";
 import { useTrailer } from "@/components/TrailerProvider";
 import { useRevealEffect } from "./revealEffectStore";
+import { pickWithPreferenceAction } from "@/app/actions/tmdb-actions";
 
-const PACK_SIZE = 5;
+const DEFAULT_COUNT = 5;
 
 function pickRandom(pool: RevealItem[], n: number): RevealItem[] {
   const copy = [...pool];
@@ -20,23 +23,55 @@ function pickRandom(pool: RevealItem[], n: number): RevealItem[] {
   return copy.slice(0, n);
 }
 
-export default function RevealClient({ pool }: { pool: RevealItem[] }) {
+export default function RevealClient({ pool: initialPool }: { pool: RevealItem[] }) {
   // Pick on the client after mount so the secret isn't in the SSR HTML and the
   // face-down covers hydrate identically.
+  const [pool, setPool] = useState<RevealItem[]>(initialPool);
+  const [count, setCount] = useState(DEFAULT_COUNT);
   const [picks, setPicks] = useState<RevealItem[]>([]);
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [openRect, setOpenRect] = useState<DOMRect | null>(null);
+  const [showPrefs, setShowPrefs] = useState(false);
+  const [prefError, setPrefError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
   const { openTrailer } = useTrailer();
   const effectKey = useRevealEffect();
 
-  const deal = useCallback(() => {
-    setPicks(pickRandom(pool, PACK_SIZE));
+  const dealFrom = useCallback((src: RevealItem[], n: number) => {
+    setPicks(pickRandom(src, Math.min(n, src.length || n)));
     setRevealed(new Set());
     setOpenIndex(null);
-  }, [pool]);
+  }, []);
 
-  useEffect(() => { deal(); }, [deal]);
+  const deal = useCallback(() => dealFrom(pool, count), [dealFrom, pool, count]);
+
+  // Initial deal from the default (trending/top) pool.
+  useEffect(() => { dealFrom(initialPool, DEFAULT_COUNT); }, [dealFrom, initialPool]);
+
+  const generateFromPrefs = (prefs: RevealPreference[], n: number) => {
+    setPrefError(null);
+    startTransition(async () => {
+      const results = await Promise.all(prefs.map((p) => pickWithPreferenceAction(p)));
+      const seen = new Set<string>();
+      const merged: RevealItem[] = [];
+      for (const r of results) {
+        if (!r.success) continue;
+        for (const it of r.data) {
+          const k = `${it.mediaType}:${it.id}`;
+          if (!seen.has(k)) { seen.add(k); merged.push(it); }
+        }
+      }
+      if (merged.length === 0) {
+        setPrefError("No titles matched those preferences — try widening them.");
+        return;
+      }
+      setPool(merged);
+      setCount(n);
+      dealFrom(merged, n);
+      setShowPrefs(false);
+    });
+  };
 
   // Lock body scroll + close on Escape while the stage is open.
   useEffect(() => {
@@ -67,8 +102,8 @@ export default function RevealClient({ pool }: { pool: RevealItem[] }) {
     }
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const cardH = Math.min(vh * 0.86, 820); // matches .holo-stage-card height
-    const cardW = cardH * 0.718;            // matches --card-aspect
+    // matches .holo-stage-card { width: min(92vw, 56vh) }
+    const cardW = Math.min(vw * 0.92, vh * 0.56);
     return {
       x: openRect.left + openRect.width / 2 - vw / 2,
       y: openRect.top + openRect.height / 2 - vh / 2,
@@ -89,32 +124,59 @@ export default function RevealClient({ pool }: { pool: RevealItem[] }) {
           <Sparkles className="w-3.5 h-3.5" /> Secret pack
         </span>
         <h1 className="font-display text-3xl sm:text-5xl font-extrabold tracking-tight leading-[1.05]">
-          Your 5 mystery picks
+          Your {picks.length || count} mystery {(picks.length || count) === 1 ? "pick" : "picks"}
         </h1>
         <p className="text-sm text-fg-secondary mt-3 max-w-md mx-auto">
-          Five hidden titles, chosen at random. Tap a card to open it full-screen.
+          Hidden titles, chosen at random. Tap a card to open it full-screen.
         </p>
 
-        <div className="flex items-center justify-center mt-6">
+        <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
           <button
             onClick={deal}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-accent text-white hover:bg-accent-hover active:scale-95 transition-all shadow-[0_8px_30px_rgba(229,62,79,0.35)] cursor-pointer"
           >
             <Shuffle className="w-4 h-4" /> New pack
           </button>
+          <button
+            onClick={() => setShowPrefs((s) => !s)}
+            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold border transition-all active:scale-95 cursor-pointer ${showPrefs ? "bg-accent/15 border-accent/40 text-accent" : "bg-white/[0.06] border-white/[0.12] text-fg hover:bg-white/[0.12]"}`}
+          >
+            <SlidersHorizontal className="w-4 h-4" /> Pick with Preference
+          </button>
         </div>
       </motion.div>
 
-      {/* Face-down pack grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5 sm:gap-7 lg:gap-8">
-        {Array.from({ length: PACK_SIZE }).map((_, i) => (
-          <PackCard
-            key={`${picks[i]?.id ?? "empty"}-${i}`}
-            item={picks[i]}
-            revealed={revealed.has(i)}
-            index={i}
-            onOpen={(rect) => open(i, rect)}
-          />
+      {/* Preference panel */}
+      <AnimatePresence initial={false}>
+        {showPrefs && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden max-w-3xl mx-auto"
+          >
+            {prefError && (
+              <div className="mb-3 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 text-center">
+                {prefError}
+              </div>
+            )}
+            <PreferencePanel loading={pending} onGenerate={generateFromPrefs} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Face-down pack grid — flex-wrap + center so any count stays centered */}
+      <div className="flex flex-wrap justify-center gap-4 sm:gap-6 lg:gap-8">
+        {Array.from({ length: picks.length || count }).map((_, i) => (
+          <div key={`${picks[i]?.id ?? "empty"}-${i}`} className="w-[140px] sm:w-[170px] lg:w-[190px]">
+            <PackCard
+              item={picks[i]}
+              revealed={revealed.has(i)}
+              index={i}
+              onOpen={(rect) => open(i, rect)}
+            />
+          </div>
         ))}
       </div>
 

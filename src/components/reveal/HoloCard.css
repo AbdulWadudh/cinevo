@@ -7,13 +7,14 @@
 */
 
 /* ── Full-screen / demo card sizing ─────────────────────────── */
+/* Width-based so the card never overflows on phones; capping width at 56vh
+   keeps the height (≈ width × 1.39) within the viewport on desktop too. */
 .holo-stage-card {
-  height: min(86vh, 820px);
+  width: min(92vw, 56vh);
   aspect-ratio: 0.718;
-  max-width: 92vw;
 }
 .holo-stage-card.holo-stage-card--demo {
-  height: min(60vh, 460px);
+  width: min(72vw, 300px);
 }
 
 .holo-stage-card .card,
@@ -22,6 +23,9 @@
   width: 100%;
   height: 100%;
 }
+
+/* Let touch-drag tilt the card instead of scrolling the page */
+.holo-stage-card .card__rotator { touch-action: none; }
 
 /* Interaction-var defaults (useHolo updates these every frame) */
 .holo-stage-card .card {

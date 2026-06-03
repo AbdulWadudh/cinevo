@@ -1,6 +1,37 @@
 "use server";
 
 import { tmdb, TMDBMedia, MediaSource, DiscoverFilters, TMDBGenre } from "@/lib/tmdb";
+import type { RevealItem, RevealPreference } from "@/components/reveal/types";
+
+/**
+ * Server Action for the "Pick with Preference" reveal — discovers a pool of
+ * titles matching the chosen media type, genres, language and year range.
+ */
+export async function pickWithPreferenceAction(
+  prefs: RevealPreference
+): Promise<{ success: boolean; data: RevealItem[] }> {
+  try {
+    const results = await tmdb.discoverByPreference(prefs);
+    const seen = new Set<number>();
+    const items: RevealItem[] = [];
+    for (const m of results) {
+      if (!m.poster_path || seen.has(m.id)) continue;
+      seen.add(m.id);
+      items.push({
+        id: m.id,
+        mediaType: prefs.mediaType,
+        title: m.title || m.name || "Untitled",
+        poster: m.poster_path,
+        rating: m.vote_average ?? 0,
+        year: (m.release_date || m.first_air_date || "").split("-")[0] ?? "",
+      });
+    }
+    return { success: true, data: items };
+  } catch (error) {
+    console.error("Failed to pick with preference:", error);
+    return { success: false, data: [] };
+  }
+}
 
 /**
  * Server Action to fetch the official TMDB genre list for a media type.

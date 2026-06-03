@@ -6,14 +6,8 @@ import { getEffect } from "./effects";
 import "./revealing-cards.css"; // ported effect styles (MIT, simeydotme)
 import "./HoloCard.css";        // Cinevo wrappers + card back
 
-export interface RevealItem {
-  id: number;
-  mediaType: "movie" | "tv";
-  title: string;
-  poster: string | null;
-  rating: number;
-  year: string;
-}
+export type { RevealItem } from "./types";
+import type { RevealItem } from "./types";
 
 /** Holographic card using the ported pokemon-cards-css effects (MIT).
  *  Renders the repo's exact .card structure; the chosen effect's data-attrs

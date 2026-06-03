@@ -431,6 +431,39 @@ export const tmdb = {
     }
   },
 
+  // Discover a pool for the "Pick with Preference" reveal: media type, multiple
+  // genres (OR), original language, and a release-year range. Pulls a few pages
+  // so there's variety to randomise from.
+  discoverByPreference: async (
+    p: {
+      mediaType: "movie" | "tv";
+      genres?: string[];
+      language?: string;
+      yearFrom?: string;
+      yearTo?: string;
+    },
+    pages = 3
+  ): Promise<TMDBMedia[]> => {
+    const base: Record<string, string> = { sort_by: "popularity.desc", "vote_count.gte": "20" };
+    if (p.genres && p.genres.length) base.with_genres = p.genres.join("|"); // OR
+    if (p.language) base.with_original_language = p.language;
+    const gte = p.mediaType === "movie" ? "primary_release_date.gte" : "first_air_date.gte";
+    const lte = p.mediaType === "movie" ? "primary_release_date.lte" : "first_air_date.lte";
+    if (p.yearFrom) base[gte] = `${p.yearFrom}-01-01`;
+    if (p.yearTo) base[lte] = `${p.yearTo}-12-31`;
+    try {
+      const out: TMDBMedia[] = [];
+      for (let pg = 1; pg <= pages; pg++) {
+        const data = await tmdbFetch<TMDBResponse>(`/discover/${p.mediaType}`, { ...base, page: String(pg) });
+        out.push(...data.results);
+        if (data.total_pages && pg >= data.total_pages) break;
+      }
+      return out;
+    } catch {
+      return [];
+    }
+  },
+
   // Discover with arbitrary filters (genre, year, rating, sort) — powers /browse
   discover: async (filters: DiscoverFilters, page: number = 1): Promise<TMDBPagedResult> => {
     const { mediaType } = filters;

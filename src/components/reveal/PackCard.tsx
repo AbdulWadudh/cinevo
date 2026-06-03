@@ -41,7 +41,6 @@ export default function PackCard({
               alt={item.title}
               draggable={false}
             />
-            <div className="pack-card__thumb-veil">Tap to view</div>
             {/* Holographic layers — only on revealed cards */}
             <div className="pack-card__shine" />
             <div className="pack-card__glare" />
