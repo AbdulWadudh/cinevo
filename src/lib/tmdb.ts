@@ -82,6 +82,27 @@ export interface TMDBGenre {
   name: string;
 }
 
+export interface TMDBProvider {
+  provider_id: number;
+  provider_name: string;
+  logo_path: string | null;
+  display_priority?: number;
+}
+
+export interface TMDBProviderRegion {
+  link?: string;
+  flatrate?: TMDBProvider[];
+  rent?: TMDBProvider[];
+  buy?: TMDBProvider[];
+  ads?: TMDBProvider[];
+  free?: TMDBProvider[];
+}
+
+export interface TMDBWatchProviders {
+  id: number;
+  results: Record<string, TMDBProviderRegion>;
+}
+
 interface TMDBVideo {
   key: string;
   site: string;
@@ -401,6 +422,24 @@ export const tmdb = {
       return sortedCast;
     } catch {
       return [];
+    }
+  },
+
+  // Where to watch (stream/rent/buy) by region, powered by JustWatch via TMDB.
+  // For TV a season number narrows it to that season's availability.
+  getWatchProviders: async (
+    id: string,
+    type: "movie" | "tv" = "movie",
+    season?: number
+  ): Promise<TMDBWatchProviders | null> => {
+    const endpoint =
+      type === "tv" && season != null
+        ? `/tv/${id}/season/${season}/watch/providers`
+        : `/${type}/${id}/watch/providers`;
+    try {
+      return await tmdbFetch<TMDBWatchProviders>(endpoint);
+    } catch {
+      return null;
     }
   },
 

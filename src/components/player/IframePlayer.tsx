@@ -5,10 +5,11 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import {
   Maximize, RefreshCw, Shield, ShieldOff,
-  ChevronDown, Check, Server, Layers, ListOrdered, SkipForward, SkipBack, Flag, X,
+  ChevronDown, Check, Server, Layers, ListOrdered, SkipForward, SkipBack, Flag, X, Clapperboard,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useProviders } from "@/lib/useProviders";
+import { useTrailer } from "@/components/TrailerProvider";
 import {
   buildEmbedUrl, providerIndexFromKey, LAST_PROVIDER_KEY,
   sandboxTokens, SANDBOX_MODES, type SandboxMode,
@@ -214,6 +215,7 @@ export default function IframePlayer({
 
   // Providers are loaded from localStorage (version + TTL) then the DB.
   const { providers, loading: providersLoading, refreshing, refresh } = useProviders();
+  const { openTrailer } = useTrailer();
   const [selectedProvider, setSelectedProvider] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [currentSeason, setCurrentSeason] = useState(initialSeason);
@@ -438,6 +440,17 @@ export default function IframePlayer({
             onChange={(i) => handleSandboxChange(SANDBOX_MODES[i])}
             onOpenChange={setAnyDropdownOpen}
           />
+
+          {/* Watch Trailer — matches the Ad-Block control's size (self-stretch). */}
+          <button
+            onClick={() => openTrailer({ id: mediaId, mediaType, title })}
+            title="Watch trailer"
+            aria-label="Watch trailer"
+            className="flex items-center gap-1.5 sm:gap-2 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl border bg-white/[0.04] border-white/[0.08] text-muted hover:text-accent hover:border-accent/40 transition-all duration-200 cursor-pointer flex-shrink-0 self-stretch"
+          >
+            <Clapperboard className="w-3.5 h-3.5" />
+            <span className="text-xs font-bold text-white hidden sm:inline">Trailer</span>
+          </button>
 
           {/* Report broken provider — hidden for now */}
           {false && (

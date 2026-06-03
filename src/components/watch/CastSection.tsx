@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { Film, ChevronDown, ChevronUp } from "lucide-react";
 import { TMDBCast } from "@/lib/tmdb";
@@ -11,16 +11,10 @@ interface CastSectionProps {
 }
 
 export default function CastSection({ cast }: CastSectionProps) {
-  const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const INITIAL_LIMIT = 20;
   const visibleCast = isExpanded ? cast : cast.slice(0, INITIAL_LIMIT);
-
-  const handleActorClick = (actor: TMDBCast) => {
-    // Open the actor's dedicated profile + filmography page.
-    router.push(`/person/${actor.id}`);
-  };
 
   return (
     <div className="w-full flex flex-col gap-6">
@@ -34,10 +28,10 @@ export default function CastSection({ cast }: CastSectionProps) {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-5 sm:gap-6">
             {visibleCast.map((c) => {
               return (
-                <div 
-                  key={c.id} 
-                  onClick={() => handleActorClick(c)}
-                  className="text-center group cursor-pointer hover:scale-105 transition-all duration-350 p-2 rounded-2xl border border-transparent hover:bg-accent/5 hover:border-accent/20"
+                <Link
+                  key={c.id}
+                  href={`/person/${c.id}`}
+                  className="block text-center group cursor-pointer hover:scale-105 transition-all duration-350 p-2 rounded-2xl border border-transparent hover:bg-accent/5 hover:border-accent/20"
                 >
                   {/* Portrait photo */}
                   <div className="w-full aspect-[3/4] mb-3 rounded-xl overflow-hidden bg-surface border-2 border-border group-hover:border-accent transition-all shadow-md relative group-hover:shadow-[0_0_15px_rgba(229,62,79,0.25)]">
@@ -60,7 +54,7 @@ export default function CastSection({ cast }: CastSectionProps) {
                   <div className="text-[10px] md:text-xs text-muted mt-0.5 truncate leading-tight px-0.5">
                     {c.character}
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>

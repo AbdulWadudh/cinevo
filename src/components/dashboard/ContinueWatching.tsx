@@ -1,15 +1,17 @@
 "use client";
 
-import React from "react";
+import React, { useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Play, ChevronRight } from "lucide-react";
+import { Play, ChevronRight, Trash2 } from "lucide-react";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
 import { TMDBMedia } from "@/lib/tmdb";
-import { useWatchHistory } from "@/lib/watchStore";
+import { useWatchHistory, removeEntries, entryKey, type WatchEntry } from "@/lib/watchStore";
+import { deleteWatchEntries } from "@/app/actions/progress";
 
 export default function ContinueWatching() {
   const history = useWatchHistory();
+  const [, startTransition] = useTransition();
 
   // Collapse a TV series to a single card (its most recent episode). The list
   // is already newest-first, so keep the first occurrence per title.
@@ -20,6 +22,15 @@ export default function ContinueWatching() {
     seen.add(key);
     return true;
   });
+
+  // Remove every stored entry for a title (all seasons) — local + DB.
+  const removeFromHistory = (item: WatchEntry) => {
+    const entries = history.filter((e) => e.mediaType === item.mediaType && e.mediaId === item.mediaId);
+    removeEntries(entries.map(entryKey)); // optimistic local removal
+    startTransition(async () => {
+      await deleteWatchEntries(entries.map((e) => ({ mediaId: e.mediaId, mediaType: e.mediaType, season: e.season })));
+    });
+  };
 
   if (progressList.length === 0) return null;
 
@@ -83,10 +94,20 @@ export default function ContinueWatching() {
 
                     {/* Remaining Time Overlay (only when there's real progress) */}
                     {percent > 0 && (
-                      <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-semibold text-fg-secondary">
+                      <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded text-[10px] font-semibold text-fg-secondary">
                         {percent}% watched
                       </div>
                     )}
+
+                    {/* Remove from history (hover) */}
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeFromHistory(item); }}
+                      title="Remove from history"
+                      aria-label="Remove from history"
+                      className="absolute top-2 right-2 z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-red-500/80 border border-white/10 hover:border-red-400 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
 
                     <WishlistHeart
                       corner="left"

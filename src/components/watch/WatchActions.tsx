@@ -14,10 +14,11 @@ interface WatchActionsProps {
   season?: number;
   episode?: number;
   initialRating: number;
+  showRating?: boolean;
 }
 
 export default function WatchActions({
-  mediaId, mediaType, title, posterPath, season, episode, initialRating,
+  mediaId, mediaType, title, posterPath, season, episode, initialRating, showRating = true,
 }: WatchActionsProps) {
   const [rating, setRatingState] = useState(initialRating);
   const [hover, setHover] = useState(0);
@@ -44,23 +45,25 @@ export default function WatchActions({
   return (
     <div className="flex flex-col gap-3">
       {/* Personal rating */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[10px] font-extrabold uppercase tracking-widest text-muted">Your rating</span>
-        <div className="flex items-center gap-0.5" onMouseLeave={() => setHover(0)}>
-          {Array.from({ length: 10 }, (_, i) => i + 1).map((v) => (
-            <button
-              key={v}
-              onMouseEnter={() => setHover(v)}
-              onClick={() => choose(v)}
-              aria-label={`Rate ${v} of 10`}
-              className="p-0.5 cursor-pointer transition-transform hover:scale-125"
-            >
-              <Star className={`w-4 h-4 transition-colors ${v <= display ? "fill-gold stroke-gold" : "stroke-muted"}`} />
-            </button>
-          ))}
+      {showRating && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-muted">Your rating</span>
+          <div className="flex items-center gap-0.5" onMouseLeave={() => setHover(0)}>
+            {Array.from({ length: 10 }, (_, i) => i + 1).map((v) => (
+              <button
+                key={v}
+                onMouseEnter={() => setHover(v)}
+                onClick={() => choose(v)}
+                aria-label={`Rate ${v} of 10`}
+                className="p-0.5 cursor-pointer transition-transform hover:scale-125"
+              >
+                <Star className={`w-4 h-4 transition-colors ${v <= display ? "fill-gold stroke-gold" : "stroke-muted"}`} />
+              </button>
+            ))}
+          </div>
+          {rating > 0 && <span className="text-xs font-bold text-gold">{rating}/10</span>}
         </div>
-        {rating > 0 && <span className="text-xs font-bold text-gold">{rating}/10</span>}
-      </div>
+      )}
 
       {/* Mark watched */}
       <button

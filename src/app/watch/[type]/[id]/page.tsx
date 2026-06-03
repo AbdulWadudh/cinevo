@@ -2,20 +2,19 @@ import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { Star, ArrowLeft, Film } from "lucide-react";
+import { Star, Film } from "lucide-react";
 import { tmdb } from "@/lib/tmdb";
 import Nav from "@/components/Nav";
+import BackButton from "@/components/BackButton";
+import WatchProviders from "@/components/watch/WatchProviders";
 import IframePlayer from "@/components/player/IframePlayer";
 import TrackWatch from "@/components/watch/TrackWatch";
 import CollectionRow from "@/components/watch/CollectionRow";
-import WatchActions from "@/components/watch/WatchActions";
-import { getRating } from "@/app/actions/ratings";
 import WishlistButton from "@/components/wishlist/WishlistButton";
 import { getSingleWatchProgress } from "@/app/actions/progress";
 import { checkWishlistStatus } from "@/app/actions/wishlist";
 import CastSection from "@/components/watch/CastSection";
 import ShareButton from "@/components/watch/ShareButton";
-import TrailerPlayer from "@/components/watch/TrailerPlayer";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
 import SeasonList from "@/components/watch/SeasonList";
 import { site } from "@/config";
@@ -90,16 +89,14 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
     similar,
     progressRes,
     wishlistRes,
-    trailerKey,
-    userRating
+    watchProviders
   ] = await Promise.all([
     tmdb.getDetails(id, mediaType),
     tmdb.getCast(id, mediaType),
     tmdb.getSimilar(id, mediaType),
     getSingleWatchProgress(id, mediaType, isTV ? season : undefined, isTV ? episode : undefined),
     checkWishlistStatus(id, mediaType),
-    tmdb.getVideos(id, mediaType),
-    getRating(id, mediaType)
+    tmdb.getWatchProviders(id, mediaType, isTV ? season : undefined)
   ]);
 
   if (!details) {
@@ -145,11 +142,8 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
       {/* Embedded Iframe Player Container (relative z-20 so the player's source/season/
           episode dropdowns render above the metadata section below) */}
       <section className="relative z-20 pt-[72px] w-full px-3 sm:px-6 md:px-12">
-        <div className="mb-4 hidden sm:flex items-center gap-2">
-          <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-fg-secondary bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] hover:text-fg px-3.5 py-2 rounded-lg transition-all">
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Browse</span>
-          </Link>
+        <div className="mb-4 flex items-center gap-2">
+          <BackButton label="Back" fallback="/browse" />
         </div>
 
         {/* Records this view into the user's watch history (no-op when signed out) */}
@@ -178,76 +172,51 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
       </section>
 
       {/* Content & Metadata Layout */}
-      <main className="px-6 md:px-12 pt-8 grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8 lg:gap-12">
-        <div>
-          <h1 className="font-display text-3xl md:text-5xl font-extrabold leading-tight tracking-tight mb-4">
-            {details.title || details.name}
-          </h1>
+      <main className="px-6 md:px-12 pt-8">
+        <h1 className="font-display text-3xl md:text-5xl font-extrabold leading-tight tracking-tight mb-4">
+          {details.title || details.name}
+        </h1>
 
-          <div className="flex items-center gap-2.5 flex-wrap mb-4 text-xs sm:text-sm font-medium">
-            <span className="bg-gold text-black font-extrabold px-2.5 py-[3px] rounded flex items-center gap-1 shadow-sm">
-              <Star className="w-3.5 h-3.5 fill-black stroke-black" />
-              {details.vote_average ? details.vote_average.toFixed(1) : "N/A"}
-            </span>
-            <span className="text-fg-secondary">{releaseDateText}</span>
-            <span>&bull;</span>
-            <span className="text-fg-secondary">{durationText}</span>
-          </div>
-
-          {/* Genres Tags */}
-          <div className="flex gap-2 flex-wrap mb-6">
-            {details.genres.map((g) => (
-              <Link
-                key={g.id}
-                href={`/?genre=${g.id}&genreName=${encodeURIComponent(g.name)}`}
-                className="px-3.5 py-1 rounded-full text-xs font-semibold bg-surface border border-border text-fg-secondary hover:border-accent hover:text-accent transition-colors cursor-pointer"
-              >
-                {g.name}
-              </Link>
-            ))}
-          </div>
-
-          <p className="text-sm md:text-base text-fg-secondary leading-relaxed mb-6 max-w-2xl">
-            {details.overview}
-          </p>
-
-          {/* Action buttons (Optimistic Wishlist + Download/Share) */}
-          <div className="flex gap-2.5 flex-wrap mb-10">
-            <WishlistButton
-              mediaId={id}
-              mediaType={mediaType}
-              title={details.title || details.name || ""}
-              posterPath={details.poster_path || undefined}
-              rating={details.vote_average}
-              releaseDate={details.release_date || details.first_air_date || undefined}
-              initialExists={wishlistRes.exists}
-            />
-
-            <ShareButton title={details.title || details.name || ""} />
-          </div>
-
-          {/* Personal rating + mark-watched */}
-          <div className="mb-10">
-            <WatchActions
-              mediaId={id}
-              mediaType={mediaType}
-              title={details.title || details.name || ""}
-              posterPath={details.poster_path || details.backdrop_path || undefined}
-              season={isTV ? season : undefined}
-              episode={isTV ? episode : undefined}
-              initialRating={userRating}
-            />
-          </div>
+        <div className="flex items-center gap-2.5 flex-wrap mb-4 text-xs sm:text-sm font-medium">
+          <span className="bg-gold text-black font-extrabold px-2.5 py-[3px] rounded flex items-center gap-1 shadow-sm">
+            <Star className="w-3.5 h-3.5 fill-black stroke-black" />
+            {details.vote_average ? details.vote_average.toFixed(1) : "N/A"}
+          </span>
+          <span className="text-fg-secondary">{releaseDateText}</span>
+          <span>&bull;</span>
+          <span className="text-fg-secondary">{durationText}</span>
         </div>
 
-        {/* Sidebar: Trailer */}
-        <div className="pt-2 border-t lg:border-t-0 lg:border-l border-border lg:pl-8">
-          <div className="text-[10px] font-bold uppercase tracking-widest text-muted mb-2.5">Trailer</div>
-          <TrailerPlayer
-            trailerKey={trailerKey}
-            poster={details.backdrop_path ? `https://image.tmdb.org/t/p/w780${details.backdrop_path}` : undefined}
+        {/* Genres Tags */}
+        <div className="flex gap-2 flex-wrap mb-6">
+          {details.genres.map((g) => (
+            <Link
+              key={g.id}
+              href={`/?genre=${g.id}&genreName=${encodeURIComponent(g.name)}`}
+              className="px-3.5 py-1 rounded-full text-xs font-semibold bg-surface border border-border text-fg-secondary hover:border-accent hover:text-accent transition-colors cursor-pointer"
+            >
+              {g.name}
+            </Link>
+          ))}
+        </div>
+
+        <p className="text-sm md:text-base text-fg-secondary leading-relaxed max-w-3xl mb-6">
+          {details.overview}
+        </p>
+
+        {/* My List, Share and Where to watch — all inline */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <WishlistButton
+            mediaId={id}
+            mediaType={mediaType}
             title={details.title || details.name || ""}
+            posterPath={details.poster_path || undefined}
+            rating={details.vote_average}
+            releaseDate={details.release_date || details.first_air_date || undefined}
+            initialExists={wishlistRes.exists}
           />
+          <ShareButton title={details.title || details.name || ""} />
+          <WatchProviders providers={watchProviders} bare />
         </div>
       </main>
 
