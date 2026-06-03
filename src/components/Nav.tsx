@@ -64,6 +64,7 @@ export default function Nav() {
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "Browse", href: "/browse" },
+    { name: "Gallery", href: "/gallery" },
     { name: "Wishlist", href: "/wishlist" },
     { name: "History", href: "/history" },
   ];
@@ -71,9 +72,8 @@ export default function Nav() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 md:px-12 py-4 transition-all duration-300 ${
-          scrolled ? "bg-bg/95 backdrop-blur-xl border-b border-white/[0.04] shadow-lg" : "bg-gradient-to-b from-bg/90 to-transparent"
-        }`}
+        className={`fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 md:px-12 py-4 transition-all duration-300 ${scrolled ? "bg-bg/95 backdrop-blur-xl border-b border-white/[0.04] shadow-lg" : "bg-gradient-to-b from-bg/90 to-transparent"
+          }`}
       >
         <div className="flex items-center gap-10">
           <Link href="/" className="flex items-center hover:scale-105 transition-transform duration-200">
@@ -87,9 +87,8 @@ export default function Nav() {
                 <FocusableLink
                   key={link.href}
                   href={link.href}
-                  className={`text-sm font-medium tracking-wide transition-colors relative py-1 px-1.5 rounded ${
-                    active ? "text-fg" : "text-fg-secondary hover:text-fg"
-                  }`}
+                  className={`text-sm font-medium tracking-wide transition-colors relative py-1 px-1.5 rounded ${active ? "text-fg" : "text-fg-secondary hover:text-fg"
+                    }`}
                 >
                   {link.name}
                   {active && <span className="absolute bottom-0 left-1.5 right-1.5 h-[2px] bg-accent rounded-full" />}
@@ -158,9 +157,8 @@ export default function Nav() {
 
       {/* Mobile Menu Panel */}
       <div
-        className={`fixed inset-0 bg-bg/98 z-50 flex flex-col justify-center p-8 transition-all duration-300 md:hidden ${
-          mobileMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-full pointer-events-none"
-        }`}
+        className={`fixed inset-0 bg-bg/98 z-50 flex flex-col justify-center p-8 transition-all duration-300 md:hidden ${mobileMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-full pointer-events-none"
+          }`}
       >
         <button
           onClick={() => setMobileMenuOpen(false)}
