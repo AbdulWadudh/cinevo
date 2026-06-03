@@ -51,9 +51,9 @@ android.keystore
 .gradle/
 build/
 android-twa/app/build/
-*.apk
 *.aab
 *.idsig
 local.properties
 # Bubblewrap may persist signing-key passwords here:
 android-signing-key-info.json
+app-release-unsigned-aligned.apk
