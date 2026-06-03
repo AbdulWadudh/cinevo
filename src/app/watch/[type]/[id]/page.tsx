@@ -18,21 +18,23 @@ import ShareButton from "@/components/watch/ShareButton";
 import TrailerPlayer from "@/components/watch/TrailerPlayer";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
 import SeasonList from "@/components/watch/SeasonList";
+import { site } from "@/config";
 
 interface PageProps {
   params: Promise<{ type: string; id: string }>;
   searchParams: Promise<{ season?: string; episode?: string; t?: string; source?: string; sandbox?: string }>;
 }
 
-// Sets the browser tab title to "{Title} - Cinevo" (getDetails is cached).
+// Sets the browser tab title to "{Title} · <app>" via the layout template
+// (getDetails is cached).
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { type, id } = await params;
   const mediaType: "movie" | "tv" = type === "tv" ? "tv" : "movie";
   const details = await tmdb.getDetails(id, mediaType);
   const title = details?.title || details?.name;
-  if (!title) return { title: "Cinevo" };
+  if (!title) return { title: { absolute: site.name } };
 
-  const description = details?.overview?.slice(0, 200) || "Stream on Cinevo.";
+  const description = details?.overview?.slice(0, 200) || `Stream on ${site.name}.`;
   const image = details?.backdrop_path
     ? `https://image.tmdb.org/t/p/w1280${details.backdrop_path}`
     : details?.poster_path
@@ -43,14 +45,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     openGraph: {
-      title: `${title} · Cinevo`,
+      title: `${title} · ${site.name}`,
       description,
       type: mediaType === "tv" ? "video.tv_show" : "video.movie",
       images: image ? [image] : undefined,
     },
     twitter: {
       card: "summary_large_image",
-      title: `${title} · Cinevo`,
+      title: `${title} · ${site.name}`,
       description,
       images: image ? [image] : undefined,
     },

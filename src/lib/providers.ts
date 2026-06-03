@@ -2,6 +2,8 @@
 // {id}, {season}, {episode}. Keep this free of server-only imports so both the
 // client player and server code can use it.
 
+import { storageKey } from "@/config";
+
 /* ─── Sandbox modes ──────────────────────────────────────────────
    Ad vectors in third-party embeds are popups (popunders) and top-window
    redirects — the browser blocks both unless the sandbox grants them. These
@@ -63,12 +65,12 @@ export type ProviderInput = {
    discarded automatically. Entries older than CACHE_TTL_MS are treated as
    stale and re-fetched. The in-app "refresh" button clears the cache
    regardless of age. */
-export const PROVIDERS_CACHE_KEY = "cinevo:providers:v1";
+export const PROVIDERS_CACHE_KEY = storageKey("providers:v1");
 export const PROVIDERS_CACHE_VERSION = 3;
 export const PROVIDERS_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
 /** Remembers the provider key the user last played on (their personal base). */
-export const LAST_PROVIDER_KEY = "cinevo:lastProvider";
+export const LAST_PROVIDER_KEY = storageKey("lastProvider");
 
 export interface ProvidersCache {
   version: number;

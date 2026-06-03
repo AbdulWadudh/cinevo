@@ -5,7 +5,7 @@ import TrendingDome, { type DomeImage } from "@/components/trending/TrendingDome
 import { tmdb } from "@/lib/tmdb";
 
 export const metadata: Metadata = {
-  title: "Gallery - Cinevo",
+  title: "Gallery",
   description: "Spin through the most popular movies and TV series in an interactive 3D gallery.",
 };
 

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/lib/db";
+import { site } from "@/config";
 import type { User } from "@supabase/supabase-js";
 
 /** Returns the currently authenticated Supabase user, or null. */
@@ -19,10 +20,10 @@ export async function getOrCreateProfile() {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const email = user.email ?? `${user.id}@cinevo.local`;
+  const email = user.email ?? `${user.id}@${site.localEmailDomain}`;
   const meta = user.user_metadata ?? {};
   const username =
-    meta.full_name || meta.name || user.email?.split("@")[0] || "Cinevo User";
+    meta.full_name || meta.name || user.email?.split("@")[0] || site.defaultUsername;
   const avatarUrl = meta.avatar_url || meta.picture || null;
 
   return db.profile.upsert({

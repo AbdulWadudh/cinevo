@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { safeStorage } from "@/lib/safeStorage";
+import { storageKey } from "@/config";
 
 // Local-first watch store. All reads/writes hit localStorage immediately (so
 // Continue Watching / History are instant and work offline / signed-out). A
@@ -30,7 +31,7 @@ export interface WatchMeta {
   episode?: number;
 }
 
-const KEY = "cinevo:watchHistory:v1";
+const KEY = storageKey("watchHistory:v1");
 
 // Identity is one record PER SEASON (movies use season 0). Episode is not part
 // of the key — watching a new episode updates the season's record in place.

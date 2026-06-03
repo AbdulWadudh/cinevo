@@ -9,6 +9,7 @@ import { FocusSection, FocusableLink, FocusableButton } from "@/components/tv/Fo
 import { createClient } from "@/lib/supabase/client";
 import { getProfileBrief } from "@/app/actions/auth";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { site } from "@/config";
 
 export default function Nav() {
   const router = useRouter();
@@ -79,7 +80,7 @@ export default function Nav() {
         <div className="flex items-center gap-10">
           <Link href="/" className="flex items-center hover:scale-105 transition-transform duration-200">
             {/* eslint-disable-next-line @next/next/no-img-element -- static logo, variable width */}
-            <img src="/full_logo.png" alt="Cinevo" className="h-8 w-auto" />
+            <img src={site.logo.full} alt={site.name} className="h-8 w-auto" />
           </Link>
           <FocusSection className="hidden md:flex items-center gap-6" focusKey="NAV_LINKS">
             {navLinks.map((link) => {

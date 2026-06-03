@@ -8,6 +8,7 @@ import {
   signInWithGoogle,
   type AuthState,
 } from "@/app/actions/auth";
+import { site } from "@/config";
 
 const initialState: AuthState = {};
 
@@ -25,7 +26,7 @@ export default function AuthForm({ redirect = "/" }: { redirect?: string }) {
     <div className="w-full max-w-md">
       {/* Brand */}
       <div className="text-center mb-8">
-        <span className="font-display text-3xl font-extrabold text-accent tracking-wider uppercase">Cinevo</span>
+        <span className="font-display text-3xl font-extrabold text-accent tracking-wider uppercase">{site.name}</span>
         <p className="text-sm text-fg-secondary mt-2">
           {isSignIn ? "Welcome back — sign in to continue" : "Create an account to start streaming"}
         </p>

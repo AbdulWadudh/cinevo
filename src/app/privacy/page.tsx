@@ -2,10 +2,11 @@ import React from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import Nav from "@/components/Nav";
+import { site } from "@/config";
 
 export const metadata = {
-  title: "Privacy Policy — Cinevo",
-  description: "How Cinevo collects, uses, and protects your information.",
+  title: "Privacy Policy",
+  description: `How ${site.name} collects, uses, and protects your information.`,
 };
 
 export default function PrivacyPage() {
@@ -28,8 +29,8 @@ export default function PrivacyPage() {
           <section>
             <h2 className="font-display text-xl font-bold text-fg mb-2">Overview</h2>
             <p>
-              Cinevo (&quot;we&quot;, &quot;us&quot;) provides a movie and TV discovery experience. This policy explains
-              what information we collect, how we use it, and the choices you have. Cinevo is a personal,
+              {site.name} (&quot;we&quot;, &quot;us&quot;) provides a movie and TV discovery experience. This policy explains
+              what information we collect, how we use it, and the choices you have. {site.name} is a personal,
               non-commercial project.
             </p>
           </section>
@@ -71,7 +72,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="font-display text-xl font-bold text-fg mb-2">Contact</h2>
-            <p>Questions about this policy? Reach us at <span className="text-accent">support@cinevo.app</span>.</p>
+            <p>Questions about this policy? Reach us at <span className="text-accent">{site.emails.support}</span>.</p>
           </section>
         </div>
       </main>

@@ -4,7 +4,7 @@ import WishlistGrid from "@/components/wishlist/WishlistGrid";
 import { Heart } from "lucide-react";
 
 export const metadata = {
-  title: "My List — Cinevo",
+  title: "My List",
   description: "Manage your bookmarked movies and TV shows with immediate optimistic playlist UI syncing.",
 };
 

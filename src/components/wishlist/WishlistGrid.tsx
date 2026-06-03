@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Play, Heart, Trash2, Star, Film } from "lucide-react";
 import { toggleWishlist, getWishlist } from "@/app/actions/wishlist";
+import { site } from "@/config";
 
 interface WishlistItem {
   id: string;
@@ -69,7 +70,7 @@ export default function WishlistGrid() {
         <Film className="w-14 h-14 text-accent/50 mb-4 animate-pulse" />
         <h3 className="font-display text-xl font-bold mb-1">Your List is Empty</h3>
         <p className="text-sm text-fg-secondary mb-6 max-w-[85%]">
-          Explore movies and shows on Cinevo and heart them to add them to your personalized playlist.
+          Explore movies and shows on {site.name} and heart them to add them to your personalized playlist.
         </p>
         <Link 
           href="/" 

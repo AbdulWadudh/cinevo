@@ -11,6 +11,7 @@ import { TMDBMedia } from "@/lib/tmdb";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
 import CustomSelect, { type SelectOption } from "@/components/ui/CustomSelect";
 import { useGenres } from "@/lib/genres";
+import { site } from "@/config";
 
 const gridClasses =
   "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-5";
@@ -197,7 +198,7 @@ export default function SearchClient() {
         {!isPending && searchQuery.trim() === "" && (
           <div className="text-center py-24 text-muted">
             <Search className="w-12 h-12 mx-auto mb-4 opacity-30 text-accent" />
-            <h3 className="text-lg font-bold text-fg mb-1">Search Cinevo</h3>
+            <h3 className="text-lg font-bold text-fg mb-1">Search {site.name}</h3>
             <p className="text-sm max-w-xs mx-auto">Find any movie, TV show, actor or director.</p>
           </div>
         )}

@@ -5,13 +5,14 @@ import { safeStorage } from "@/lib/safeStorage";
 import { getGenresAction } from "@/app/actions/tmdb-actions";
 import type { TMDBGenre } from "@/lib/tmdb";
 import type { SelectOption } from "@/components/ui/CustomSelect";
+import { storageKey } from "@/config";
 
 // The official TMDB genre lists rarely change, so we fetch them once and cache
 // them in localStorage — the dropdowns in Browse/Search then read from the
 // cache instead of hitting TMDB on every visit. Clearing the cache (see the
 // sync button) forces a fresh fetch on the next read.
 
-const KEY = "cinevo:genres:v1";
+const KEY = storageKey("genres:v1");
 
 export interface GenreCache {
   movie: TMDBGenre[];

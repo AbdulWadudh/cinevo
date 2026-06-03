@@ -7,8 +7,9 @@ import { createClient } from "@/lib/supabase/client";
 import { flushWatch } from "@/lib/watchSyncClient";
 import { getDirty } from "@/lib/watchStore";
 import { safeStorage } from "@/lib/safeStorage";
+import { STORAGE_PREFIX, storageKey } from "@/config";
 
-const APP_CACHE_PREFIX = "cinevo:";
+const APP_CACHE_PREFIX = STORAGE_PREFIX;
 
 /**
  * Full reset & resync: pushes any pending watch-history changes to the DB,
@@ -45,7 +46,7 @@ export default function ClearCacheButton() {
         toast.success("Resyncing from your account…");
       } else {
         // Signed out: the only copy of history is local — don't wipe it.
-        safeStorage.remove(`${APP_CACHE_PREFIX}genres:v1`);
+        safeStorage.remove(storageKey("genres:v1"));
         toast.success("Refreshing cached data…");
       }
 

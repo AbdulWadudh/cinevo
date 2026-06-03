@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 import Nav from "@/components/Nav";
 import SearchClient from "@/components/search/SearchClient";
 
-export const metadata: Metadata = { title: "Search - Cinevo" };
+export const metadata: Metadata = { title: "Search" };
 
 export default function SearchPage() {
   return (

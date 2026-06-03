@@ -6,7 +6,7 @@ import type { RevealItem } from "@/components/reveal/HoloCard";
 import { tmdb } from "@/lib/tmdb";
 
 export const metadata: Metadata = {
-  title: "Mystery Pack - Cinevo",
+  title: "Mystery Pack",
   description: "Reveal 5 random movies and TV series, one holographic card at a time.",
 };
 

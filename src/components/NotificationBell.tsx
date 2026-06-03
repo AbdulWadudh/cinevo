@@ -9,9 +9,10 @@ import { getNewEpisodeNotifications } from "@/app/actions/notifications";
 import type { EpisodeNotification } from "@/lib/episodeNotifications";
 import { getPushState, enablePush, disablePush, type PushState } from "@/lib/pushClient";
 import { safeStorage } from "@/lib/safeStorage";
+import { storageKey } from "@/config";
 import { toast } from "sonner";
 
-const DISMISS_KEY = "cinevo:notifDismissed";
+const DISMISS_KEY = storageKey("notifDismissed");
 
 function readDismissed(): Set<string> {
   try { return new Set(JSON.parse(safeStorage.get(DISMISS_KEY) || "[]")); } catch { return new Set(); }

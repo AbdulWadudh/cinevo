@@ -9,6 +9,7 @@ import BrowseSection from "@/components/dashboard/BrowseSection";
 import GenreSection from "@/components/dashboard/GenreSection";
 import HeroCarousel from "@/components/dashboard/HeroCarousel";
 import { tmdb } from "@/lib/tmdb";
+import { site } from "@/config";
 
 interface HomeProps {
   searchParams: Promise<{ genre?: string; genreName?: string }>;
@@ -146,12 +147,12 @@ export default async function Home({ searchParams }: HomeProps) {
       <footer className="px-6 md:px-12 py-5 border-t border-border mt-12">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-4">
-            <span className="text-[11px] text-muted">&copy; 2026 Cinevo. All rights reserved.</span>
+            <span className="text-[11px] text-muted">{site.copyright}</span>
             <Link href="/privacy" className="text-[11px] text-muted hover:text-fg-secondary transition-colors">Privacy</Link>
             <Link href="/terms" className="text-[11px] text-muted hover:text-fg-secondary transition-colors">Terms</Link>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element -- static logo, variable width */}
-          <img src="/full_logo.png" alt="Cinevo" className="h-6 w-auto opacity-90" />
+          <img src={site.logo.full} alt={site.name} className="h-6 w-auto opacity-90" />
         </div>
       </footer>
     </div>

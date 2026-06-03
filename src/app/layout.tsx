@@ -8,6 +8,7 @@ import WatchSync from "@/components/watch/WatchSync";
 import PwaRegister from "@/components/PwaRegister";
 import Toaster from "@/components/ui/Toaster";
 import SpatialNavProvider from "@/components/tv/SpatialNavProvider";
+import { site } from "@/config";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-display",
@@ -25,29 +26,29 @@ const siteUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || "htt
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Cinevo — Stream Movies & TV Shows",
-    template: "%s · Cinevo",
+    default: site.title,
+    template: site.titleTemplate,
   },
-  description: "Experience premium, ad-free streaming of your favorite movies and TV series with restricted ad suppression sandboxing.",
-  applicationName: "Cinevo",
-  appleWebApp: { capable: true, title: "Cinevo", statusBarStyle: "black-translucent" },
+  description: site.description.long,
+  applicationName: site.name,
+  appleWebApp: { capable: true, title: site.name, statusBarStyle: "black-translucent" },
   icons: {
-    icon: "/logo.png",
-    shortcut: "/logo.png",
-    apple: "/logo.png",
+    icon: site.logo.mark,
+    shortcut: site.logo.mark,
+    apple: site.logo.mark,
   },
   openGraph: {
     type: "website",
-    siteName: "Cinevo",
-    title: "Cinevo — Stream Movies & TV Shows",
-    description: "Premium, ad-suppressed streaming of movies and TV series.",
-    images: ["/full_logo.png"],
+    siteName: site.name,
+    title: site.title,
+    description: site.description.short,
+    images: [site.logo.full],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Cinevo — Stream Movies & TV Shows",
-    description: "Premium, ad-suppressed streaming of movies and TV series.",
-    images: ["/full_logo.png"],
+    title: site.title,
+    description: site.description.short,
+    images: [site.logo.full],
   },
 };
 

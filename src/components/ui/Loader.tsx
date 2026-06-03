@@ -1,6 +1,7 @@
 import React from "react";
+import { site } from "@/config";
 
-/** Branded full-screen loader — spinning accent ring with the Cinevo mark. */
+/** Branded full-screen loader — spinning accent ring with the app mark. */
 export function FullScreenLoader() {
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-bg animate-fade-in">
@@ -8,8 +9,8 @@ export function FullScreenLoader() {
         <div className="w-20 h-20 rounded-full border-2 border-white/10 border-t-accent animate-spin" />
         {/* eslint-disable-next-line @next/next/no-img-element -- tiny static logo mark */}
         <img
-          src="/logo.png"
-          alt="Cinevo"
+          src={site.logo.mark}
+          alt={site.name}
           className="absolute w-9 h-9 animate-pulse"
         />
       </div>

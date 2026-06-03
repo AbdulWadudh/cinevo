@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { getOrCreateProfile } from "@/lib/auth";
 import { sendPush } from "@/lib/push";
+import { site } from "@/config";
 
 export interface BrowserSubscription {
   endpoint: string;
@@ -48,7 +49,7 @@ export async function sendTestPush() {
       subs.map(async (s) => {
         const res = await sendPush(
           { endpoint: s.endpoint, p256dh: s.p256dh, auth: s.auth },
-          { title: "Cinevo", body: "Push notifications are working 🎉", url: "/" }
+          { title: site.name, body: "Push notifications are working 🎉", url: "/" }
         );
         if (res === "gone") await db.pushSubscription.delete({ where: { id: s.id } });
       })

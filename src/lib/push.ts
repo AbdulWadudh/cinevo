@@ -1,4 +1,5 @@
 import webpush from "web-push";
+import { site } from "@/config";
 
 // Configure VAPID lazily so a missing key doesn't crash unrelated imports.
 let configured = false;
@@ -6,7 +7,7 @@ function ensure(): boolean {
   if (configured) return true;
   const pub = process.env.VAPID_PUBLIC_KEY;
   const priv = process.env.VAPID_PRIVATE_KEY;
-  const subject = process.env.VAPID_SUBJECT || "mailto:admin@cinevo.app";
+  const subject = process.env.VAPID_SUBJECT || site.pushSubject;
   if (!pub || !priv) return false;
   webpush.setVapidDetails(subject, pub, priv);
   configured = true;

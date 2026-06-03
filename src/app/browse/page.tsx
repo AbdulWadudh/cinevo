@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Nav from "@/components/Nav";
 import BrowseFilters from "@/components/browse/BrowseFilters";
 
-export const metadata: Metadata = { title: "Browse - Cinevo" };
+export const metadata: Metadata = { title: "Browse" };
 
 export default function BrowsePage() {
   return (

@@ -6,7 +6,7 @@ import { getOrCreateProfile } from "@/lib/auth";
 import { getWatchProgressList } from "@/app/actions/progress";
 import HistoryClient, { type HistoryItem } from "@/components/history/HistoryClient";
 
-export const metadata: Metadata = { title: "Watch History - Cinevo" };
+export const metadata: Metadata = { title: "Watch History" };
 
 export default async function HistoryPage() {
   const profile = await getOrCreateProfile();

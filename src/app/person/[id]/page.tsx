@@ -6,13 +6,16 @@ import { ArrowLeft, Star, Play, User } from "lucide-react";
 import Nav from "@/components/Nav";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
 import { tmdb } from "@/lib/tmdb";
+import { site } from "@/config";
 
 interface PageProps { params: Promise<{ id: string }> }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
   const person = await tmdb.getPerson(id);
-  return { title: person?.name ? `${person.name} - Cinevo` : "Cinevo" };
+  // person name uses the layout title template ("%s · <app>"); the fallback is
+  // absolute so it doesn't get doubled into "<app> · <app>".
+  return person?.name ? { title: person.name } : { title: { absolute: site.name } };
 }
 
 function age(birthday: string | null, deathday: string | null): number | null {
