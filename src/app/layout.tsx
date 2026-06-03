@@ -8,6 +8,7 @@ import WatchSync from "@/components/watch/WatchSync";
 import PwaRegister from "@/components/PwaRegister";
 import Toaster from "@/components/ui/Toaster";
 import SpatialNavProvider from "@/components/tv/SpatialNavProvider";
+import ClickSpark from "@/components/reactbits/ClickSpark";
 import { site } from "@/config";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -60,11 +61,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${plusJakarta.variable} ${geistSans.variable} h-full antialiased`}
     >
       <body className="bg-bg text-fg min-h-full flex flex-col font-sans">
         <WishlistProvider>
-          <TrailerProvider>{children}</TrailerProvider>
+          <TrailerProvider>
+            <ClickSpark sparkColor="#e53e4f" sparkSize={12} sparkRadius={18} sparkCount={8} duration={500}>
+              {children}
+            </ClickSpark>
+          </TrailerProvider>
         </WishlistProvider>
         <WatchSync />
         <PwaRegister />

@@ -73,14 +73,17 @@ export default function RevealClient({ pool: initialPool }: { pool: RevealItem[]
     });
   };
 
-  // Lock body scroll + close on Escape while the stage is open.
+  // Lock body scroll + close on Escape while the stage is open. Also flag the
+  // body so the site menu can hide (its toggle sits where the close button is).
   useEffect(() => {
     if (openIndex === null) return;
     document.body.style.overflow = "hidden";
+    document.body.classList.add("reveal-open");
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpenIndex(null); };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = "";
+      document.body.classList.remove("reveal-open");
       window.removeEventListener("keydown", onKey);
     };
   }, [openIndex]);

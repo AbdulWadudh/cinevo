@@ -1,0 +1,108 @@
+/* Cinevo theme for the React Bits StaggeredMenu (scoped to .cinevo-menu) */
+
+/* Icon-only toggle — hide the "Menu / Close" text, keep just the icon */
+.cinevo-menu .sm-toggle-textWrap { display: none; }
+.cinevo-menu .sm-toggle {
+  padding: 9px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(6px);
+}
+.cinevo-menu .sm-toggle:hover { background: rgba(255, 255, 255, 0.12); }
+.cinevo-menu .sm-icon { width: 22px; height: 22px; flex-basis: 22px; }
+.cinevo-menu .sm-icon-glyph { width: 22px; height: 22px; }
+
+/* While a card is revealed full-screen, hide the menu so its toggle doesn't
+   sit on top of the reveal's close button. */
+body.reveal-open .cinevo-menu {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Dark, on-brand panel instead of the default white sheet */
+.cinevo-menu .staggered-menu-panel {
+  background: #0e0e18; /* --color-bg-elevated */
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  align-items: center;
+  justify-content: center;
+}
+[data-position='left'] .cinevo-menu .staggered-menu-panel {
+  border-left: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.cinevo-menu .sm-panel-inner {
+  align-items: center;
+  justify-content: center;
+}
+
+/* Menu list: centered, relaxed spacing */
+.cinevo-menu .sm-panel-list {
+  align-items: center;
+  gap: 1.5rem;
+}
+.cinevo-menu .sm-panel-itemWrap { text-align: center; }
+
+/* Items: smaller, Title Case, centered, light → accent on hover/active */
+.cinevo-menu .sm-panel-item {
+  color: #f4f4f8;
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  text-transform: none;      /* Title Case, not uppercase */
+  padding-right: 0;          /* numbering removed, so no reserved space */
+}
+.cinevo-menu .sm-panel-item:hover,
+.cinevo-menu .sm-panel-item[aria-current="page"] {
+  color: var(--sm-accent, #e53e4f);
+}
+
+/* Bottom footer: divider + centered round icon buttons */
+.cinevo-menu .sm-panel-footer {
+  margin-top: auto;
+  padding-top: 1.5rem;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.cinevo-menu .sm-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+.cinevo-menu .sm-footer-btn {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e9e9ef;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+.cinevo-menu .sm-footer-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--sm-accent, #e53e4f);
+  transform: translateY(-2px);
+}
+/* NotificationBell renders its own button; normalise it inside the round chip */
+.cinevo-menu .sm-footer-btn--bell { padding: 0; }
+.cinevo-menu .sm-footer-btn--bell :is(button, a) {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+
+@media (max-width: 1024px) {
+  .cinevo-menu .staggered-menu-panel { width: min(100%, 420px); }
+}

@@ -21,7 +21,13 @@ function writeDismissed(ids: string[]) {
   safeStorage.set(DISMISS_KEY, JSON.stringify(ids));
 }
 
-export default function NotificationBell() {
+export default function NotificationBell({
+  align = "down",
+  centered = false,
+}: {
+  align?: "down" | "up";
+  centered?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<EpisodeNotification[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
@@ -87,7 +93,7 @@ export default function NotificationBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.97 }}
             transition={{ duration: 0.18 }}
-            className="absolute right-0 mt-2 w-[320px] max-w-[90vw] bg-surface/98 backdrop-blur-2xl border border-white/[0.1] rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.7)] overflow-hidden z-50"
+            className={`absolute w-[320px] max-w-[90vw] bg-surface/98 backdrop-blur-2xl border border-white/[0.1] rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.7)] overflow-hidden z-50 ${align === "up" ? "bottom-full mb-3" : "mt-2"} ${centered ? "left-1/2 -ml-40 right-auto" : "right-0"}`}
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
               <p className="text-[10px] font-extrabold uppercase tracking-widest text-accent">Notifications</p>
