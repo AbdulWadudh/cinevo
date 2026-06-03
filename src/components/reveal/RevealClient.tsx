@@ -65,8 +65,8 @@ export default function RevealClient({ pool }: { pool: RevealItem[] }) {
     }
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const cardH = Math.min(vh * 0.86, 820);
-    const cardW = cardH * 0.718;
+    const cardH = Math.min(vh * 0.86, 820); // matches .holo-stage-card height
+    const cardW = cardH * 0.718;            // matches --card-aspect
     return {
       x: openRect.left + openRect.width / 2 - vw / 2,
       y: openRect.top + openRect.height / 2 - vh / 2,
@@ -116,38 +116,51 @@ export default function RevealClient({ pool }: { pool: RevealItem[] }) {
         ))}
       </div>
 
-      {/* Full-screen reveal stage */}
-      <AnimatePresence>
-        {opened && (
-          <motion.div
-            className="reveal-stage"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            onClick={() => setOpenIndex(null)}
-          >
-            <button className="reveal-close" aria-label="Close" onClick={() => setOpenIndex(null)}>
-              <X className="w-5 h-5" />
-            </button>
+      {/* Full-screen reveal — backdrop and card are separate so the card stays
+          visible and flies back to its grid slot on close (reverse of opening). */}
+      <div className="reveal-portal">
+        <AnimatePresence>
+          {opened && (
             <motion.div
-              style={{ transformStyle: "preserve-3d" }}
+              key="backdrop"
+              className="reveal-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              onClick={() => setOpenIndex(null)}
+            >
+              <button className="reveal-close" aria-label="Close" onClick={() => setOpenIndex(null)}>
+                <X className="w-5 h-5" />
+              </button>
+            </motion.div>
+          )}
+
+          {opened && (
+            <motion.div
+              key="card"
+              className="reveal-card-layer"
               initial={{ opacity: 0, x: flip.x, y: flip.y, scale: flip.scale, rotateY: -360 }}
               animate={{ opacity: 1, x: 0, y: 0, scale: 1, rotateY: 0 }}
               exit={{ opacity: 0, x: flip.x, y: flip.y, scale: flip.scale, rotateY: -360 }}
-              transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-              onClick={(e) => e.stopPropagation()}
+              transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], opacity: { duration: 0.9 } }}
+              onClick={() => setOpenIndex(null)}
             >
-              {/* key forces a fresh reveal each time a card opens */}
-              <HoloCard key={`${opened.mediaType}:${opened.id}`} item={opened} />
+              <div onClick={(e) => e.stopPropagation()}>
+                {/* key forces a fresh reveal each time a card opens */}
+                <HoloCard key={`${opened.mediaType}:${opened.id}`} item={opened} />
+              </div>
             </motion.div>
+          )}
 
-            {/* Caption + actions (kept outside the card so the holo layers stay pure) */}
+          {opened && (
             <motion.div
+              key="caption"
+              className="reveal-caption"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.3 }}
-              className="flex flex-col items-center gap-2 text-center"
+              exit={{ opacity: 0, y: 12 }}
+              transition={{ delay: 0.55, duration: 0.3 }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-fg-secondary">
@@ -176,9 +189,9 @@ export default function RevealClient({ pool }: { pool: RevealItem[] }) {
                 </button>
               </div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
+      </div>
     </section>
   );
 }

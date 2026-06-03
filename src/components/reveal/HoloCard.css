@@ -425,22 +425,50 @@
 }
 
 /* ── Full-screen reveal stage ───────────────────────────────── */
-.reveal-stage {
+/* Portal gives the spin real depth and never blocks pointer except its layers */
+.reveal-portal {
   position: fixed;
   inset: 0;
   z-index: 80;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 22px;
-  padding: 24px;
+  perspective: 1800px;
+  pointer-events: none;
+}
+
+.reveal-backdrop {
+  position: absolute;
+  inset: 0;
   background: rgba(5, 4, 12, 0.86);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  perspective: 1800px;
-  /* gives the open/close rotateY spin real depth */
+  pointer-events: auto;
 }
+
+/* Centred layer that carries the open/close FLIP transform (x/y/scale/rotateY) */
+.reveal-card-layer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.reveal-card-layer > * { pointer-events: auto; }
+
+.reveal-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: clamp(16px, 4vh, 40px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  pointer-events: none;
+}
+.reveal-caption a,
+.reveal-caption button { pointer-events: auto; }
 
 .reveal-close {
   position: absolute;
