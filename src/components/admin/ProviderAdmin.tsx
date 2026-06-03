@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import React, { useState, useTransition, useRef } from "react";
+import { motion, AnimatePresence, Reorder, useDragControls } from "motion/react";
 import {
   Plus, Pencil, Trash2, Check, X, Server, Shield, ShieldOff,
-  Eye, EyeOff, ArrowUp, ArrowDown, Save, Loader2, AlertCircle, Star,
+  Eye, EyeOff, ArrowUp, ArrowDown, Save, Loader2, AlertCircle, Star, GripVertical,
 } from "lucide-react";
 import {
   createProvider, updateProvider, deleteProvider, reorderProviders, setDefaultProvider,
@@ -102,23 +102,34 @@ export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }
     });
   };
 
+  // Persist a given ordering to the DB (shared by the arrow buttons and drag).
+  const persistOrder = (ordered: PlayerProvider[], revertTo: PlayerProvider[]) => {
+    const withOrder = ordered.map((p, i) => ({ ...p, sortOrder: i }));
+    setProviders(withOrder); // optimistic
+    clearProvidersCache();
+    startTransition(async () => {
+      const res = await reorderProviders(withOrder.map((p) => p.id));
+      if (!res.success) {
+        setProviders(revertTo); // revert
+        setError(res.error || "Failed to reorder");
+      }
+    });
+  };
+
   const move = (id: string, dir: -1 | 1) => {
     const idx = providers.findIndex((p) => p.id === id);
     const next = idx + dir;
     if (next < 0 || next >= providers.length) return;
     const reordered = [...providers];
     [reordered[idx], reordered[next]] = [reordered[next], reordered[idx]];
-    const withOrder = reordered.map((p, i) => ({ ...p, sortOrder: i }));
-    setProviders(withOrder); // optimistic
-    clearProvidersCache();
-    startTransition(async () => {
-      const res = await reorderProviders(withOrder.map((p) => p.id));
-      if (!res.success) {
-        setProviders(providers); // revert
-        setError(res.error || "Failed to reorder");
-      }
-    });
+    persistOrder(reordered, providers);
   };
+
+  // Drag-to-reorder: update order live during the drag, commit once on drop.
+  // `providers` here is the post-drag order (the list re-renders as it moves).
+  const preDragOrder = useRef<PlayerProvider[]>(providers);
+  const onDragStart = () => { preDragOrder.current = providers; };
+  const commitOrder = () => persistOrder(providers, preDragOrder.current);
 
   const editor = (
     <motion.div
@@ -242,100 +253,160 @@ export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }
 
       <AnimatePresence>{editingId === "new" && editor}</AnimatePresence>
 
-      <div className="flex flex-col gap-2.5 mt-4">
-        <AnimatePresence initial={false}>
-          {providers.map((p, i) => (
-            <motion.div
-              key={p.id}
-              layout
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.97 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className={`bg-bg/40 border rounded-2xl px-4 py-3 transition-colors ${p.enabled ? "border-white/[0.07]" : "border-white/[0.04] opacity-60"}`}>
-                <div className="flex items-center gap-3">
-                  {/* reorder */}
-                  <div className="flex flex-col gap-0.5">
-                    <button onClick={() => move(p.id, -1)} disabled={i === 0 || pending}
-                      className="p-0.5 text-muted hover:text-accent disabled:opacity-30 transition-colors cursor-pointer" aria-label="Move up">
-                      <ArrowUp className="w-3.5 h-3.5" />
-                    </button>
-                    <button onClick={() => move(p.id, 1)} disabled={i === providers.length - 1 || pending}
-                      className="p-0.5 text-muted hover:text-accent disabled:opacity-30 transition-colors cursor-pointer" aria-label="Move down">
-                      <ArrowDown className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-bold text-fg">{p.label}</span>
-                      <span className="text-[10px] font-mono text-muted bg-white/[0.05] px-1.5 py-0.5 rounded">{p.key}</span>
-                      {p.isDefault && (
-                        <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-widest text-gold bg-gold/10 border border-gold/25 px-1.5 py-0.5 rounded">
-                          <Star className="w-2.5 h-2.5 fill-gold" /> Default
-                        </span>
-                      )}
-                      {p.sub && <span className="text-[10px] text-muted">{p.sub}</span>}
-                    </div>
-                    <p className="text-[11px] text-muted truncate mt-0.5">{p.movieUrl}</p>
-                  </div>
-
-                  {/* badges */}
-                  <div className="hidden sm:flex items-center gap-1.5 flex-none">
-                    <span title={`Sandbox: ${SB_LABEL[p.sandboxMode]}`}
-                      className={`flex items-center gap-1 px-2 h-7 rounded-lg border text-[9px] font-extrabold uppercase tracking-wider ${p.sandboxMode === "off" ? "bg-orange-500/10 border-orange-500/20 text-orange-400" : p.sandboxMode === "strict" ? "bg-sky-500/10 border-sky-500/20 text-sky-400" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"}`}>
-                      {p.sandboxMode === "off" ? <ShieldOff className="w-3.5 h-3.5" /> : <Shield className="w-3.5 h-3.5" />}
-                      <span className="hidden md:inline">{SB_LABEL[p.sandboxMode]}</span>
-                    </span>
-                    <span title={p.enabled ? "Visible" : "Hidden"}
-                      className={`flex items-center justify-center w-7 h-7 rounded-lg border ${p.enabled ? "bg-accent/10 border-accent/20 text-accent" : "bg-white/[0.04] border-white/[0.08] text-muted"}`}>
-                      {p.enabled ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                    </span>
-                  </div>
-
-                  {/* actions */}
-                  <div className="flex items-center gap-1.5 flex-none">
-                    {confirmDelete === p.id ? (
-                      <>
-                        <button onClick={() => remove(p.id)} disabled={pending}
-                          className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-500/15 border border-red-500/30 text-red-400 hover:bg-red-500/25 transition-all cursor-pointer" aria-label="Confirm delete">
-                          {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                        </button>
-                        <button onClick={() => setConfirmDelete(null)}
-                          className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.1] text-muted hover:text-fg transition-all cursor-pointer" aria-label="Cancel delete">
-                          <X className="w-4 h-4" />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button onClick={() => makeDefault(p.id)} disabled={p.isDefault || pending}
-                          title={p.isDefault ? "This is the default provider" : "Set as default provider"}
-                          className={`flex items-center justify-center w-8 h-8 rounded-lg border transition-all cursor-pointer ${p.isDefault
-                            ? "bg-gold/15 border-gold/30 text-gold cursor-default"
-                            : "bg-white/[0.05] border-white/[0.1] text-fg-secondary hover:text-gold hover:border-gold/40"}`}
-                          aria-label="Set as default">
-                          <Star className={`w-3.5 h-3.5 ${p.isDefault ? "fill-gold" : ""}`} />
-                        </button>
-                        <button onClick={() => openEdit(p)}
-                          className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.1] text-fg-secondary hover:text-accent hover:border-accent/40 transition-all cursor-pointer" aria-label="Edit">
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button onClick={() => setConfirmDelete(p.id)}
-                          className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.1] text-fg-secondary hover:text-red-400 hover:border-red-500/40 transition-all cursor-pointer" aria-label="Delete">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <AnimatePresence>{editingId === p.id && editor}</AnimatePresence>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
+      <Reorder.Group
+        as="div"
+        axis="y"
+        values={providers}
+        onReorder={setProviders}
+        className="flex flex-col gap-2.5 mt-4"
+      >
+        {providers.map((p, i) => (
+          <ProviderRow
+            key={p.id}
+            p={p}
+            index={i}
+            total={providers.length}
+            pending={pending}
+            confirmDelete={confirmDelete}
+            expanded={editingId === p.id ? editor : null}
+            onDragStart={onDragStart}
+            onDragEnd={commitOrder}
+            onMove={move}
+            onMakeDefault={makeDefault}
+            onEdit={openEdit}
+            onAskDelete={setConfirmDelete}
+            onConfirmDelete={remove}
+          />
+        ))}
+      </Reorder.Group>
     </div>
+  );
+}
+
+/* ─── Draggable provider row ─────────────────────────────────── */
+function ProviderRow({
+  p, index, total, pending, confirmDelete, expanded,
+  onDragStart, onDragEnd, onMove, onMakeDefault, onEdit, onAskDelete, onConfirmDelete,
+}: {
+  p: PlayerProvider;
+  index: number;
+  total: number;
+  pending: boolean;
+  confirmDelete: string | null;
+  expanded: React.ReactNode;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+  onMove: (id: string, dir: -1 | 1) => void;
+  onMakeDefault: (id: string) => void;
+  onEdit: (p: PlayerProvider) => void;
+  onAskDelete: (id: string | null) => void;
+  onConfirmDelete: (id: string) => void;
+}) {
+  const dragControls = useDragControls();
+
+  return (
+    <Reorder.Item
+      as="div"
+      value={p}
+      dragListener={false}
+      dragControls={dragControls}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.97 }}
+      whileDrag={{ scale: 1.01, boxShadow: "0 12px 30px rgba(0,0,0,0.55)", cursor: "grabbing" }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className={`bg-bg/40 border rounded-2xl px-4 py-3 transition-colors ${p.enabled ? "border-white/[0.07]" : "border-white/[0.04] opacity-60"}`}>
+        <div className="flex items-center gap-3">
+          {/* drag handle */}
+          <button
+            onPointerDown={(e) => dragControls.start(e)}
+            className="flex-none p-1 -ml-1 text-muted hover:text-accent transition-colors cursor-grab active:cursor-grabbing touch-none"
+            aria-label="Drag to reorder"
+            title="Drag to reorder"
+          >
+            <GripVertical className="w-4 h-4" />
+          </button>
+
+          {/* reorder arrows */}
+          <div className="flex flex-col gap-0.5">
+            <button onClick={() => onMove(p.id, -1)} disabled={index === 0 || pending}
+              className="p-0.5 text-muted hover:text-accent disabled:opacity-30 transition-colors cursor-pointer" aria-label="Move up">
+              <ArrowUp className="w-3.5 h-3.5" />
+            </button>
+            <button onClick={() => onMove(p.id, 1)} disabled={index === total - 1 || pending}
+              className="p-0.5 text-muted hover:text-accent disabled:opacity-30 transition-colors cursor-pointer" aria-label="Move down">
+              <ArrowDown className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-bold text-fg">{p.label}</span>
+              <span className="text-[10px] font-mono text-muted bg-white/[0.05] px-1.5 py-0.5 rounded">{p.key}</span>
+              {p.isDefault && (
+                <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-widest text-gold bg-gold/10 border border-gold/25 px-1.5 py-0.5 rounded">
+                  <Star className="w-2.5 h-2.5 fill-gold" /> Default
+                </span>
+              )}
+              {p.sub && <span className="text-[10px] text-muted">{p.sub}</span>}
+            </div>
+            <p className="text-[11px] text-muted truncate mt-0.5">{p.movieUrl}</p>
+          </div>
+
+          {/* badges */}
+          <div className="hidden sm:flex items-center gap-1.5 flex-none">
+            <span title={`Sandbox: ${SB_LABEL[p.sandboxMode]}`}
+              className={`flex items-center gap-1 px-2 h-7 rounded-lg border text-[9px] font-extrabold uppercase tracking-wider ${p.sandboxMode === "off" ? "bg-orange-500/10 border-orange-500/20 text-orange-400" : p.sandboxMode === "strict" ? "bg-sky-500/10 border-sky-500/20 text-sky-400" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"}`}>
+              {p.sandboxMode === "off" ? <ShieldOff className="w-3.5 h-3.5" /> : <Shield className="w-3.5 h-3.5" />}
+              <span className="hidden md:inline">{SB_LABEL[p.sandboxMode]}</span>
+            </span>
+            <span title={p.enabled ? "Visible" : "Hidden"}
+              className={`flex items-center justify-center w-7 h-7 rounded-lg border ${p.enabled ? "bg-accent/10 border-accent/20 text-accent" : "bg-white/[0.04] border-white/[0.08] text-muted"}`}>
+              {p.enabled ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+            </span>
+          </div>
+
+          {/* actions */}
+          <div className="flex items-center gap-1.5 flex-none">
+            {confirmDelete === p.id ? (
+              <>
+                <button onClick={() => onConfirmDelete(p.id)} disabled={pending}
+                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-500/15 border border-red-500/30 text-red-400 hover:bg-red-500/25 transition-all cursor-pointer" aria-label="Confirm delete">
+                  {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                </button>
+                <button onClick={() => onAskDelete(null)}
+                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.1] text-muted hover:text-fg transition-all cursor-pointer" aria-label="Cancel delete">
+                  <X className="w-4 h-4" />
+                </button>
+              </>
+            ) : (
+              <>
+                <button onClick={() => onMakeDefault(p.id)} disabled={p.isDefault || pending}
+                  title={p.isDefault ? "This is the default provider" : "Set as default provider"}
+                  className={`flex items-center justify-center w-8 h-8 rounded-lg border transition-all cursor-pointer ${p.isDefault
+                    ? "bg-gold/15 border-gold/30 text-gold cursor-default"
+                    : "bg-white/[0.05] border-white/[0.1] text-fg-secondary hover:text-gold hover:border-gold/40"}`}
+                  aria-label="Set as default">
+                  <Star className={`w-3.5 h-3.5 ${p.isDefault ? "fill-gold" : ""}`} />
+                </button>
+                <button onClick={() => onEdit(p)}
+                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.1] text-fg-secondary hover:text-accent hover:border-accent/40 transition-all cursor-pointer" aria-label="Edit">
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+                <button onClick={() => onAskDelete(p.id)}
+                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.1] text-fg-secondary hover:text-red-400 hover:border-red-500/40 transition-all cursor-pointer" aria-label="Delete">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        <AnimatePresence>{expanded}</AnimatePresence>
+      </div>
+    </Reorder.Item>
   );
 }
