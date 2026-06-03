@@ -65,6 +65,7 @@ export default function Nav() {
     { name: "Home", href: "/" },
     { name: "Browse", href: "/browse" },
     { name: "Gallery", href: "/gallery" },
+    { name: "Mystery", href: "/reveal" },
     { name: "Wishlist", href: "/wishlist" },
     { name: "History", href: "/history" },
   ];
