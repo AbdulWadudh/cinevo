@@ -1,6 +1,6 @@
 # 🎬 Cinevo
 
-A modern, cinematic movie & TV streaming front-end. Browse trending titles, explore genres and studios, watch, rate and track what you watch, get notified about new episodes, and install it as an app.
+A modern, cinematic movie & TV streaming front-end built with **Next.js 16**, **React 19**, and **TMDB**. Browse trending titles, explore genres and studio collections, watch via DB-managed embed providers, rate and track what you watch, get push notifications for new episodes, and install it as a PWA.
 
 ---
 
