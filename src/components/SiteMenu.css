@@ -1,5 +1,10 @@
 /* Cinevo theme for the React Bits StaggeredMenu (scoped to .cinevo-menu) */
 
+/* Mobile / tablet only — desktop uses the full horizontal navbar. */
+@media (min-width: 768px) {
+  .cinevo-menu { display: none !important; }
+}
+
 /* Icon-only toggle — hide the "Menu / Close" text, keep just the icon */
 .cinevo-menu .sm-toggle-textWrap { display: none; }
 .cinevo-menu .sm-toggle {
@@ -12,6 +17,32 @@
 .cinevo-menu .sm-toggle:hover { background: rgba(255, 255, 255, 0.12); }
 .cinevo-menu .sm-icon { width: 22px; height: 22px; flex-basis: 22px; }
 .cinevo-menu .sm-icon-glyph { width: 22px; height: 22px; }
+
+/* Breathing room around the top bar + clickable logo */
+.cinevo-menu .staggered-menu-header { padding: 1.4em 1.6em; }
+.cinevo-menu .sm-logo-link { display: inline-flex; align-items: center; }
+
+/* Header actions: search + notification + toggle, always visible in the bar */
+.cinevo-menu .sm-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.cinevo-menu .sm-hdr-btn {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e9e9ef;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.cinevo-menu .sm-hdr-btn:hover { background: rgba(255, 255, 255, 0.12); color: var(--sm-accent, #e53e4f); }
+/* The bell renders its own button; keep its icon light in the bar */
+.cinevo-menu .sm-header-actions .sm-icon { color: #e9e9ef; }
 
 /* While a card is revealed full-screen, hide the menu so its toggle doesn't
    sit on top of the reveal's close button. */

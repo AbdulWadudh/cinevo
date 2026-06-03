@@ -23,20 +23,19 @@ export default function SiteMenu() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const footer = (
-    <div className="sm-footer-actions">
+  // Search + notifications live in the top bar (outside the menu), like desktop.
+  const headerExtras = (
+    <>
       <button
         type="button"
         aria-label="Search"
-        className="sm-footer-btn"
+        className="sm-hdr-btn"
         onClick={() => router.push("/search")}
       >
         <Search className="w-5 h-5" />
       </button>
-      <div className="sm-footer-btn sm-footer-btn--bell">
-        <NotificationBell align="up" centered />
-      </div>
-    </div>
+      <NotificationBell />
+    </>
   );
 
   return (
@@ -48,8 +47,9 @@ export default function SiteMenu() {
       displaySocials={false}
       displayItemNumbering={false}
       currentPath={pathname}
-      panelFooter={footer}
+      headerExtras={headerExtras}
       logoUrl="/full_logo.png"
+      logoHref="/"
       menuButtonColor="#ffffff"
       openMenuButtonColor="#ffffff"
       changeMenuColorOnOpen

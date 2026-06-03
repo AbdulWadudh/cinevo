@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { gsap } from "gsap";
 import { Menu, X } from "lucide-react";
 import "./StaggeredMenu.css";
@@ -25,6 +26,8 @@ interface StaggeredMenuProps {
   displayItemNumbering?: boolean;
   className?: string;
   logoUrl?: string;
+  /** If set, the logo links here (e.g. "/" for home). */
+  logoHref?: string;
   menuButtonColor?: string;
   openMenuButtonColor?: string;
   accentColor?: string;
@@ -33,6 +36,8 @@ interface StaggeredMenuProps {
   closeOnClickAway?: boolean;
   /** Custom content pinned to the bottom of the panel (e.g. icon buttons). */
   panelFooter?: React.ReactNode;
+  /** Controls shown in the header next to the toggle (e.g. search, bell). */
+  headerExtras?: React.ReactNode;
   /** Current route — the matching item gets aria-current for active styling. */
   currentPath?: string;
   onMenuOpen?: () => void;
@@ -48,6 +53,7 @@ export const StaggeredMenu = ({
   displayItemNumbering = true,
   className,
   logoUrl = "/src/assets/logos/reactbits-gh-white.svg",
+  logoHref,
   menuButtonColor = "#fff",
   openMenuButtonColor = "#fff",
   accentColor = "#5227FF",
@@ -55,6 +61,7 @@ export const StaggeredMenu = ({
   isFixed = false,
   closeOnClickAway = true,
   panelFooter,
+  headerExtras,
   currentPath,
   onMenuOpen,
   onMenuClose,
@@ -404,15 +411,30 @@ export const StaggeredMenu = ({
       <header className="staggered-menu-header" aria-label="Main navigation header">
         <div className="sm-logo" aria-label="Logo">
           {/* eslint-disable-next-line @next/next/no-img-element -- logo, variable width */}
-          <img
-            src={logoUrl || "/src/assets/logos/reactbits-gh-white.svg"}
-            alt="Logo"
-            className="sm-logo-img"
-            draggable={false}
-            width={110}
-            height={24}
-          />
+          {logoHref ? (
+            <Link href={logoHref} aria-label="Home" className="sm-logo-link" onClick={closeMenu}>
+              <img
+                src={logoUrl || "/src/assets/logos/reactbits-gh-white.svg"}
+                alt="Logo"
+                className="sm-logo-img"
+                draggable={false}
+                width={110}
+                height={24}
+              />
+            </Link>
+          ) : (
+            <img
+              src={logoUrl || "/src/assets/logos/reactbits-gh-white.svg"}
+              alt="Logo"
+              className="sm-logo-img"
+              draggable={false}
+              width={110}
+              height={24}
+            />
+          )}
         </div>
+        <div className="sm-header-actions">
+        {headerExtras}
         <button
           ref={toggleBtnRef}
           className="sm-toggle"
@@ -435,6 +457,7 @@ export const StaggeredMenu = ({
             {open ? <X className="sm-icon-glyph" /> : <Menu className="sm-icon-glyph" />}
           </span>
         </button>
+        </div>
       </header>
 
       <aside id="staggered-menu-panel" ref={panelRef} className="staggered-menu-panel" aria-hidden={!open}>
@@ -443,15 +466,16 @@ export const StaggeredMenu = ({
             {items && items.length ? (
               items.map((it, idx) => (
                 <li className="sm-panel-itemWrap" key={it.label + idx}>
-                  <a
+                  <Link
                     className="sm-panel-item"
                     href={it.link}
                     aria-label={it.ariaLabel}
                     aria-current={currentPath && it.link === currentPath ? "page" : undefined}
                     data-index={idx + 1}
+                    onClick={closeMenu}
                   >
                     <span className="sm-panel-itemLabel">{it.label}</span>
-                  </a>
+                  </Link>
                 </li>
               ))
             ) : (
