@@ -2,8 +2,6 @@
 
 A modern, cinematic movie & TV streaming front-end built with **Next.js 16**, **React 19**, and **TMDB**. Browse trending titles, explore genres and studio collections, watch via DB-managed embed providers, rate and track what you watch, get push notifications for new episodes, and install it as a PWA.
 
-> ⚠️ This project runs on a build of **Next.js 16.2.6** with breaking changes from older versions. See [`AGENTS.md`](./AGENTS.md) — before changing framework code, consult the bundled docs in `node_modules/next/dist/docs/`.
-
 ---
 
 ## ✨ Features
