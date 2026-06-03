@@ -1,268 +1,85 @@
 /*
-  Holographic card — "rare holo V" effect.
-  Ported/adapted from pokemon-cards-css by Simon Goellner (@simeydotme), MIT License
-  (https://github.com/simeydotme/pokemon-cards-css). No Pokémon assets are used:
-  the front is a movie poster and the back is our own cover. Scoped under
-  .holo-stage-card so the generic .card class can't clash with the rest of the app.
+  Cinevo wrappers + layout for the holo cards. All the trading-card EFFECT
+  styling (shine/glare/foil per rarity) comes from ./revealing-cards.css, which is
+  ported verbatim from pokemon-cards-css (Simon Goellner, MIT). This file only
+  sizes the card in our stage and swaps the card back for our own cover — no
+  Pokémon artwork is used (the front is a movie poster).
 */
 
+/* ── Full-screen / demo card sizing ─────────────────────────── */
 .holo-stage-card {
   height: min(86vh, 820px);
   aspect-ratio: 0.718;
   max-width: 92vw;
 }
+.holo-stage-card.holo-stage-card--demo {
+  height: min(60vh, 460px);
+}
 
+.holo-stage-card .card,
+.holo-stage-card .card__translater,
+.holo-stage-card .card__rotator {
+  width: 100%;
+  height: 100%;
+}
+
+/* Interaction-var defaults (useHolo updates these every frame) */
 .holo-stage-card .card {
-  --grain: url("https://raw.githubusercontent.com/simeydotme/pokemon-cards-css/main/public/img/grain.webp");
-  --glitter: url("https://raw.githubusercontent.com/simeydotme/pokemon-cards-css/main/public/img/glitter.png");
-  --space: 5%;
-  --angle: 133deg;
-  --imgsize: cover;
-
-  --card-aspect: 0.718;
-  --card-radius: 4.55% / 3.5%;
-  --card-edge: hsl(47, 100%, 78%);
-  --card-glow: hsl(175, 100%, 90%);
-
-  --sunpillar-1: hsl(2, 100%, 73%);
-  --sunpillar-2: hsl(53, 100%, 69%);
-  --sunpillar-3: hsl(93, 100%, 69%);
-  --sunpillar-4: hsl(176, 100%, 76%);
-  --sunpillar-5: hsl(228, 100%, 74%);
-  --sunpillar-6: hsl(283, 100%, 73%);
-  --sunpillar-clr-1: var(--sunpillar-1);
-  --sunpillar-clr-2: var(--sunpillar-2);
-  --sunpillar-clr-3: var(--sunpillar-3);
-  --sunpillar-clr-4: var(--sunpillar-4);
-  --sunpillar-clr-5: var(--sunpillar-5);
-  --sunpillar-clr-6: var(--sunpillar-6);
-
+  --card-scale: 1;
+  --translate-x: 0px;
+  --translate-y: 0px;
   --pointer-x: 50%;
   --pointer-y: 50%;
   --pointer-from-center: 0;
+  --pointer-from-top: 0;
+  --pointer-from-left: 0;
   --card-opacity: 0;
   --rotate-x: 0deg;
   --rotate-y: 0deg;
   --background-x: 50%;
   --background-y: 50%;
-
-  width: 100%;
-  height: 100%;
-  transform: translate3d(0px, 0px, 0.01px);
-  transform-style: preserve-3d;
 }
 
-.holo-stage-card .card,
-.holo-stage-card .card * {
-  outline: 1px solid transparent;
-}
-
-.holo-stage-card .card,
-.holo-stage-card .card__rotator {
-  aspect-ratio: var(--card-aspect);
-  border-radius: var(--card-radius);
-}
-
-.holo-stage-card .card__translater,
-.holo-stage-card .card__rotator {
-  display: grid;
-  perspective: 600px;
-  transform-origin: center;
-  transform-style: preserve-3d;
-  width: 100%;
-  height: 100%;
-}
-
-.holo-stage-card .card__rotator {
-  transform: rotateY(var(--rotate-x)) rotateX(var(--rotate-y));
-  transform-style: preserve-3d;
-  pointer-events: auto;
-  transition: box-shadow 0.4s ease, opacity 0.33s ease-out;
-  box-shadow:
-    0px 10px 30px -5px black,
-    0 2px 15px -5px black,
-    0 0 12px 2px hsla(0, 0%, 100%, 0);
-}
-
-.holo-stage-card .card.interacting .card__rotator {
-  box-shadow:
-    0 0 3px -1px white,
-    0 0 3px 1px var(--card-edge),
-    0 0 12px 2px var(--card-glow),
-    0px 10px 20px -5px black,
-    0 0 40px -30px var(--card-glow),
-    0 0 50px -20px var(--card-glow);
-}
-
-.holo-stage-card .card__rotator * {
-  width: 100%;
-  display: grid;
-  grid-area: 1/1;
-  aspect-ratio: var(--card-aspect);
-  border-radius: var(--card-radius);
-  transform-style: preserve-3d;
-  pointer-events: none;
-  overflow: hidden;
+/* Neutralise the repo's +150px Z zoom (it assumes a popover layout) */
+.holo-stage-card .card__translater {
+  transform: translate3d(var(--translate-x), var(--translate-y), 0.01px) scale(var(--card-scale));
 }
 
 .holo-stage-card .card__front img {
-  width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: translate3d(0px, 0px, 0.01px);
 }
 
-/* Back = our own cover (no Pokémon art) */
+/* Our own card back (cover) — overrides the repo's Pokéball back image */
 .holo-stage-card .card__back {
-  transform: rotateY(180deg) translateZ(0px);
+  background: radial-gradient(120% 120% at 50% 0%, #2a2150 0%, #140f28 45%, #0a0716 100%);
+  transform: rotateY(180deg);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  background:
-    radial-gradient(120% 120% at 50% 0%, #2a2150 0%, #140f28 45%, #0a0716 100%);
 }
-
-.holo-stage-card .card__back::before {
+.holo-stage-card .card__back::after {
   content: "";
   position: absolute;
   inset: 0;
   background-image: repeating-linear-gradient(115deg,
-      rgba(255, 119, 115, 0.2) 0%, rgba(255, 237, 95, 0.2) 14%, rgba(168, 255, 95, 0.2) 28%,
-      rgba(131, 255, 247, 0.2) 42%, rgba(120, 148, 255, 0.2) 56%, rgba(216, 117, 255, 0.2) 70%,
-      rgba(255, 119, 115, 0.2) 84%);
+    rgba(255, 119, 115, 0.2) 0%, rgba(255, 237, 95, 0.2) 14%, rgba(168, 255, 95, 0.2) 28%,
+    rgba(131, 255, 247, 0.2) 42%, rgba(120, 148, 255, 0.2) 56%, rgba(216, 117, 255, 0.2) 70%,
+    rgba(255, 119, 115, 0.2) 84%);
   background-size: 300% 300%;
   mix-blend-mode: color-dodge;
   animation: coverShimmer 5s linear infinite;
 }
-
-.holo-stage-card .card__front,
-.holo-stage-card .card__front * {
-  backface-visibility: hidden;
-}
-
-.holo-stage-card .card__front {
-  opacity: 1;
-  transition: opacity 0.9s ease-out;
-  /* slower, smoother reveal fade */
-  transform: translate3d(0px, 0px, 0.01px);
-}
-
-/* Reveal: start showing the back, then flip/fade to the poster */
-.holo-stage-card .card.loading .card__front {
-  opacity: 0;
-}
-
-.holo-stage-card .card.loading .card__back {
-  transform: rotateY(0deg);
-}
+.holo-stage-card .card.loading .card__back { transform: rotateY(0deg); }
+.holo-stage-card .card__front { transition: opacity 0.9s ease-out; }
 
 @keyframes coverShimmer {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  100% {
-    background-position: 300% 50%;
-  }
-}
-
-/* ── Shine & glare base ─────────────────────────────────────── */
-.holo-stage-card .card__shine {
-  display: grid;
-  transform: translateZ(1px);
-  overflow: hidden;
-  z-index: 3;
-  background: transparent;
-  background-size: cover;
-  background-position: center;
-  filter: brightness(0.85) contrast(2.75) saturate(0.65);
-  mix-blend-mode: color-dodge;
-  opacity: var(--card-opacity);
-}
-
-.holo-stage-card .card__shine::before,
-.holo-stage-card .card__shine::after {
-  --sunpillar-clr-1: var(--sunpillar-5);
-  --sunpillar-clr-2: var(--sunpillar-6);
-  --sunpillar-clr-3: var(--sunpillar-1);
-  --sunpillar-clr-4: var(--sunpillar-2);
-  --sunpillar-clr-5: var(--sunpillar-3);
-  --sunpillar-clr-6: var(--sunpillar-4);
-  grid-area: 1/1;
-  transform: translateZ(1px);
-  border-radius: var(--card-radius);
-}
-
-.holo-stage-card .card__shine::after {
-  transform: translateZ(1.2px);
-}
-
-.holo-stage-card .card__glare {
-  transform: translateZ(1.41px);
-  overflow: hidden;
-  background-image: radial-gradient(farthest-corner circle at var(--pointer-x) var(--pointer-y),
-      hsla(0, 0%, 100%, 0.8) 10%,
-      hsla(0, 0%, 100%, 0.65) 20%,
-      hsla(0, 0%, 0%, 0.5) 90%);
-  opacity: var(--card-opacity);
-  mix-blend-mode: overlay;
-}
-
-/* ── V REGULAR shine ────────────────────────────────────────── */
-.holo-stage-card .card .card__shine,
-.holo-stage-card .card .card__shine::after {
-  --space: 5%;
-  --angle: 133deg;
-  --imgsize: 500px;
-  background-image:
-    var(--grain),
-    repeating-linear-gradient(0deg,
-      var(--sunpillar-clr-1) calc(var(--space)*1),
-      var(--sunpillar-clr-2) calc(var(--space)*2),
-      var(--sunpillar-clr-3) calc(var(--space)*3),
-      var(--sunpillar-clr-4) calc(var(--space)*4),
-      var(--sunpillar-clr-5) calc(var(--space)*5),
-      var(--sunpillar-clr-6) calc(var(--space)*6),
-      var(--sunpillar-clr-1) calc(var(--space)*7)),
-    repeating-linear-gradient(var(--angle),
-      #0e152e 0%,
-      hsl(180, 10%, 60%) 3.8%,
-      hsl(180, 29%, 66%) 4.5%,
-      hsl(180, 10%, 60%) 5.2%,
-      #0e152e 10%,
-      #0e152e 12%),
-    radial-gradient(farthest-corner circle at var(--pointer-x) var(--pointer-y),
-      hsla(0, 0%, 0%, 0.1) 12%,
-      hsla(0, 0%, 0%, 0.15) 20%,
-      hsla(0, 0%, 0%, 0.25) 120%);
-  background-blend-mode: screen, hue, hard-light;
-  background-size: var(--imgsize) 100%, 200% 700%, 300% 100%, 200% 100%;
-  background-position: center, 0% var(--background-y), var(--background-x) var(--background-y), var(--background-x) var(--background-y);
-  filter: brightness(0.8) contrast(2.95) saturate(0.65);
-}
-
-.holo-stage-card .card .card__shine::after {
-  content: "";
-  background-position: center, 0% var(--background-y), calc(var(--background-x) * -1) calc(var(--background-y) * -1), var(--background-x) var(--background-y);
-  background-size: var(--imgsize) 100%, 200% 400%, 195% 100%, 200% 100%;
-  filter: brightness(1) contrast(2.5) saturate(1.75);
-  mix-blend-mode: soft-light;
-}
-
-/* ── V REGULAR glare ────────────────────────────────────────── */
-.holo-stage-card .card .card__glare {
-  background-image: radial-gradient(farthest-corner circle at var(--pointer-x) var(--pointer-y),
-      hsl(0, 0%, 100%) 0%,
-      hsla(210, 3%, 54%, 0.33) 45%,
-      hsla(0, 0%, 20%, 0.9) 130%);
-  opacity: calc(var(--card-opacity) * 0.5);
-  mix-blend-mode: hard-light;
-  filter: brightness(0.9) contrast(1.75);
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
 }
 
 /* ── Grid (face-down pack) cards ────────────────────────────── */
 .pack-card {
-  /* holo vars shared with the shine/glare layers (defaults = rest state) */
-  --grain: url("https://raw.githubusercontent.com/simeydotme/pokemon-cards-css/main/public/img/grain.webp");
+  --grain: url("/reveal-img/grain.webp");
   --sunpillar-clr-1: hsl(2, 100%, 73%);
   --sunpillar-clr-2: hsl(53, 100%, 69%);
   --sunpillar-clr-3: hsl(93, 100%, 69%);
@@ -292,20 +109,15 @@
   animation-delay: var(--reveal-delay, 0ms);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+.pack-card:hover { transform: translateY(-4px); box-shadow: 0 14px 40px -10px rgba(0, 0, 0, 0.7); }
 
-.pack-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 14px 40px -10px rgba(0, 0, 0, 0.7);
-}
+@keyframes holoEnter { to { opacity: 1; transform: translateY(0) scale(1); } }
 
-/* Tilt + holo layers live on an inner element so they don't fight the
-   entrance animation on .pack-card. */
 .pack-card__tilt {
   position: absolute;
   inset: 0;
   border-radius: inherit;
   overflow: hidden;
-  /* slight overscale so the tilt always covers the card edges (no bg peek) */
   transform: scale(1.08) rotateY(var(--rotate-x)) rotateX(var(--rotate-y));
   transform-style: preserve-3d;
 }
@@ -318,7 +130,6 @@
   pointer-events: none;
   z-index: 4;
 }
-
 .pack-card__shine {
   --space: 5%;
   --angle: 133deg;
@@ -341,35 +152,26 @@
   mix-blend-mode: color-dodge;
   opacity: var(--card-opacity);
 }
-
 .pack-card__glare {
   background-image: radial-gradient(farthest-corner circle at var(--pointer-x) var(--pointer-y),
-      hsl(0, 0%, 100%) 0%, hsla(210, 3%, 54%, 0.33) 45%, hsla(0, 0%, 20%, 0.9) 130%);
+    hsl(0, 0%, 100%) 0%, hsla(210, 3%, 54%, 0.33) 45%, hsla(0, 0%, 20%, 0.9) 130%);
   mix-blend-mode: hard-light;
   filter: brightness(0.9) contrast(1.75);
   opacity: calc(var(--card-opacity) * 0.55);
-}
-
-@keyframes holoEnter {
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 .pack-card__shimmer {
   position: absolute;
   inset: 0;
   background-image: repeating-linear-gradient(115deg,
-      rgba(255, 119, 115, 0.18) 0%, rgba(255, 237, 95, 0.18) 14%, rgba(168, 255, 95, 0.18) 28%,
-      rgba(131, 255, 247, 0.18) 42%, rgba(120, 148, 255, 0.18) 56%, rgba(216, 117, 255, 0.18) 70%,
-      rgba(255, 119, 115, 0.18) 84%);
+    rgba(255, 119, 115, 0.18) 0%, rgba(255, 237, 95, 0.18) 14%, rgba(168, 255, 95, 0.18) 28%,
+    rgba(131, 255, 247, 0.18) 42%, rgba(120, 148, 255, 0.18) 56%, rgba(216, 117, 255, 0.18) 70%,
+    rgba(255, 119, 115, 0.18) 84%);
   background-size: 300% 300%;
   mix-blend-mode: color-dodge;
   opacity: 0.55;
   animation: coverShimmer 6s linear infinite;
 }
-
 .pack-card__center {
   position: absolute;
   inset: 0;
@@ -381,7 +183,6 @@
   gap: 10px;
   color: rgba(255, 255, 255, 0.72);
 }
-
 .pack-card__emblem {
   width: 56px;
   height: 56px;
@@ -392,22 +193,8 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
 }
-
-.pack-card__label {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.pack-card__thumb {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
+.pack-card__label { font-size: 10px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; }
+.pack-card__thumb { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .pack-card__thumb-veil {
   position: absolute;
   inset: 0;
@@ -425,15 +212,7 @@
 }
 
 /* ── Full-screen reveal stage ───────────────────────────────── */
-/* Portal gives the spin real depth and never blocks pointer except its layers */
-.reveal-portal {
-  position: fixed;
-  inset: 0;
-  z-index: 80;
-  perspective: 1800px;
-  pointer-events: none;
-}
-
+.reveal-portal { position: fixed; inset: 0; z-index: 80; perspective: 1800px; pointer-events: none; }
 .reveal-backdrop {
   position: absolute;
   inset: 0;
@@ -442,8 +221,6 @@
   -webkit-backdrop-filter: blur(16px);
   pointer-events: auto;
 }
-
-/* Centred layer that carries the open/close FLIP transform (x/y/scale/rotateY) */
 .reveal-card-layer {
   position: absolute;
   inset: 0;
@@ -454,7 +231,6 @@
   pointer-events: none;
 }
 .reveal-card-layer > * { pointer-events: auto; }
-
 .reveal-caption {
   position: absolute;
   left: 0;
@@ -469,7 +245,6 @@
 }
 .reveal-caption a,
 .reveal-caption button { pointer-events: auto; }
-
 .reveal-close {
   position: absolute;
   top: 20px;
@@ -486,21 +261,9 @@
   transition: all 0.2s ease;
   z-index: 2;
 }
-
-.reveal-close:hover {
-  background: rgba(255, 255, 255, 0.16);
-  transform: scale(1.05);
-}
+.reveal-close:hover { background: rgba(255, 255, 255, 0.16); transform: scale(1.05); }
 
 @media (prefers-reduced-motion: reduce) {
-  .pack-card {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
-
-  .pack-card__shimmer,
-  .holo-stage-card .card__back::before {
-    animation: none;
-  }
+  .pack-card { animation: none; opacity: 1; transform: none; }
+  .pack-card__shimmer, .holo-stage-card .card__back::after { animation: none; }
 }

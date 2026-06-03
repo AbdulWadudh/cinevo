@@ -7,6 +7,7 @@ import { Shuffle, Sparkles, X, Star, Play, Clapperboard } from "lucide-react";
 import HoloCard, { type RevealItem } from "./HoloCard";
 import PackCard from "./PackCard";
 import { useTrailer } from "@/components/TrailerProvider";
+import { useRevealEffect } from "./revealEffectStore";
 
 const PACK_SIZE = 5;
 
@@ -27,6 +28,7 @@ export default function RevealClient({ pool }: { pool: RevealItem[] }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [openRect, setOpenRect] = useState<DOMRect | null>(null);
   const { openTrailer } = useTrailer();
+  const effectKey = useRevealEffect();
 
   const deal = useCallback(() => {
     setPicks(pickRandom(pool, PACK_SIZE));
@@ -148,7 +150,7 @@ export default function RevealClient({ pool }: { pool: RevealItem[] }) {
             >
               <div onClick={(e) => e.stopPropagation()}>
                 {/* key forces a fresh reveal each time a card opens */}
-                <HoloCard key={`${opened.mediaType}:${opened.id}`} item={opened} />
+                <HoloCard key={`${opened.mediaType}:${opened.id}`} item={opened} effectKey={effectKey} />
               </div>
             </motion.div>
           )}

@@ -15,6 +15,7 @@ import ProviderAdmin from "@/components/admin/ProviderAdmin";
 import ProviderReportsAdmin from "@/components/admin/ProviderReportsAdmin";
 import ForceSyncButton from "@/components/watch/ForceSyncButton";
 import ClearCacheButton from "@/components/settings/ClearCacheButton";
+import EffectPlayground from "@/components/reveal/EffectPlayground";
 
 export default async function ProfilePage() {
   const profile = await getOrCreateProfile();
@@ -123,6 +124,9 @@ export default async function ProfilePage() {
               <ClearCacheButton />
             </div>
           </div>
+
+          {/* Holo reveal effect picker + live demo */}
+          <EffectPlayground />
 
           <div className="border-t border-white/[0.06] mt-8 pt-6">
             <form action={signOut}>
