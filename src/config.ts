@@ -1,6 +1,6 @@
 const name = "Cinevo";
 const slug = "cinevo";
-const emailDomain = "cinevo.app";
+const emailDomain = "k79.space";
 const copyrightYear = 2026;
 
 export const site = {
