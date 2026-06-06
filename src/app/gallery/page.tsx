@@ -24,6 +24,7 @@ export default async function GalleryPage() {
     id: m.id,
     mediaType,
     title: m.title || m.name || "",
+    poster: m.poster_path ?? null,
   });
 
   // Mix movies + shows (each list already popularity-ranked) for a varied dome.

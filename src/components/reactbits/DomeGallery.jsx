@@ -80,7 +80,8 @@ function buildItems(pool, seg) {
       alt: image.alt || '',
       id: image.id,
       mediaType: image.mediaType,
-      title: image.title
+      title: image.title,
+      poster: image.poster
     };
   });
 
@@ -105,7 +106,8 @@ function buildItems(pool, seg) {
     alt: usedImages[i].alt,
     id: usedImages[i].id,
     mediaType: usedImages[i].mediaType,
-    title: usedImages[i].title
+    title: usedImages[i].title,
+    poster: usedImages[i].poster
   }));
 }
 
@@ -136,6 +138,11 @@ export default function DomeGallery({
   grayscale = true,
   autoRotate = false,
   autoRotateSpeed = 8,
+  // When true, DomeGallery skips its built-in enlarge overlay and instead hands
+  // the opened tile's poster + on-screen rect to the parent (which renders the
+  // holographic reveal). Close is driven by the parent via `controlsRef.close()`.
+  revealMode = false,
+  controlsRef,
   onOpenItem,
   onCloseItem
 }) {
@@ -388,15 +395,28 @@ export default function DomeGallery({
     { target: mainRef, eventOptions: { passive: true } }
   );
 
-  useEffect(() => {
-    const scrim = scrimRef.current;
-    if (!scrim) return;
-    const close = () => {
-      if (performance.now() - openStartedAtRef.current < 250) return;
-      const el = focusedElRef.current;
-      if (!el) return;
-      onCloseItemRef.current?.();
-      const parent = el.parentElement;
+  const closeItem = useCallback(() => {
+    if (performance.now() - openStartedAtRef.current < 250) return;
+    const el = focusedElRef.current;
+    if (!el) return;
+    onCloseItemRef.current?.();
+    const parent = el.parentElement;
+
+    // Reveal mode: there's no built-in overlay to fly back — the parent owns the
+    // exit animation. Just release the focused tile and unlock scroll.
+    if (revealMode) {
+      parent?.style.setProperty('--rot-y-delta', '0deg');
+      parent?.style.setProperty('--rot-x-delta', '0deg');
+      el.style.visibility = '';
+      el.style.zIndex = 0;
+      focusedElRef.current = null;
+      rootRef.current?.removeAttribute('data-enlarging');
+      openingRef.current = false;
+      unlockScroll();
+      return;
+    }
+
+    {
       const overlay = viewerRef.current?.querySelector('.enlarge');
       if (!overlay) return;
       const refDiv = parent.querySelector('.item__image--reference');
@@ -478,17 +498,34 @@ export default function DomeGallery({
         });
       };
       animatingOverlay.addEventListener('transitionend', cleanup, { once: true });
+    }
+  }, [enlargeTransitionMs, unlockScroll, revealMode]);
+
+  // Expose close() so the parent can drive it (backdrop / button / Escape) in
+  // reveal mode, where DomeGallery doesn't render its own scrim/close handling.
+  useEffect(() => {
+    if (!controlsRef) return;
+    controlsRef.current = { close: closeItem };
+    return () => {
+      if (controlsRef.current?.close === closeItem) controlsRef.current = null;
     };
-    scrim.addEventListener('click', close);
+  }, [controlsRef, closeItem]);
+
+  // Built-in scrim + Escape close the enlarged image when not in reveal mode.
+  useEffect(() => {
+    if (revealMode) return;
+    const scrim = scrimRef.current;
+    if (!scrim) return;
+    scrim.addEventListener('click', closeItem);
     const onKey = e => {
-      if (e.key === 'Escape') close();
+      if (e.key === 'Escape') closeItem();
     };
     window.addEventListener('keydown', onKey);
     return () => {
-      scrim.removeEventListener('click', close);
+      scrim.removeEventListener('click', closeItem);
       window.removeEventListener('keydown', onKey);
     };
-  }, [enlargeTransitionMs, unlockScroll]);
+  }, [revealMode, closeItem]);
 
   const openItemFromElement = useCallback(
     el => {
@@ -499,6 +536,25 @@ export default function DomeGallery({
       const parent = el.parentElement;
       focusedElRef.current = el;
       el.setAttribute('data-focused', 'true');
+
+      // Reveal mode: hand the parent the poster + the tile's on-screen rect (so
+      // the holographic card can fly out of — and back into — this tile), then
+      // bow out. No built-in enlarge overlay is created.
+      if (revealMode) {
+        const rect = el.getBoundingClientRect();
+        onOpenItemRef.current?.({
+          id: parent.dataset.id,
+          mediaType: parent.dataset.mediaType || 'movie',
+          title: parent.dataset.title || '',
+          poster: parent.dataset.poster || '',
+          rect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
+        });
+        el.style.visibility = 'hidden';
+        el.style.zIndex = 0;
+        rootRef.current?.setAttribute('data-enlarging', 'true');
+        return;
+      }
+
       // Surface the opened tile's media metadata so the parent can show actions.
       const openedId = parent.dataset.id;
       if (openedId) {
@@ -610,7 +666,7 @@ export default function DomeGallery({
         overlay.addEventListener('transitionend', onFirstEnd);
       }
     },
-    [enlargeTransitionMs, lockScroll, openedImageHeight, openedImageWidth, segments, unlockScroll]
+    [enlargeTransitionMs, lockScroll, openedImageHeight, openedImageWidth, segments, unlockScroll, revealMode]
   );
 
   const onTileClick = useCallback(
@@ -666,6 +722,7 @@ export default function DomeGallery({
                 data-id={it.id}
                 data-media-type={it.mediaType}
                 data-title={it.title}
+                data-poster={it.poster}
                 data-offset-x={it.x}
                 data-offset-y={it.y}
                 data-size-x={it.sizeX}
