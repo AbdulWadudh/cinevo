@@ -10,8 +10,17 @@ const getHeaders = () => {
   };
 };
 
+// TMDb's gateway intermittently returns these for otherwise-valid requests
+// (the /recommendations endpoint is a frequent 502 offender). Retrying the same
+// request a moment later almost always succeeds.
+const TRANSIENT_STATUSES = new Set([429, 500, 502, 503, 504]);
+const MAX_RETRIES = 3;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 /**
- * Standard optimized fetch wrapper with automatic Next.js RSC caching
+ * Standard optimized fetch wrapper with automatic Next.js RSC caching.
+ * Retries transient TMDb gateway errors (429/5xx) with exponential backoff.
  */
 async function tmdbFetch<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
   const queryParams = new URLSearchParams({
@@ -22,22 +31,40 @@ async function tmdbFetch<T>(endpoint: string, params: Record<string, string> = {
 
   const url = `${TMDB_API_URL}${endpoint}?${queryParams.toString()}`;
 
-  try {
-    const res = await fetch(url, {
-      method: "GET",
-      headers: getHeaders(),
-      next: { revalidate: 3600 }, // Cache response for 1 hour
-    });
+  let lastError: unknown;
 
-    if (!res.ok) {
-      throw new Error(`TMDb API error: ${res.status} ${res.statusText}`);
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const res = await fetch(url, {
+        method: "GET",
+        headers: getHeaders(),
+        next: { revalidate: 3600 }, // Cache response for 1 hour
+      });
+
+      if (!res.ok) {
+        // Back off and retry transient gateway errors; fail fast on the rest
+        // (404, 401, etc. won't fix themselves on retry).
+        if (TRANSIENT_STATUSES.has(res.status) && attempt < MAX_RETRIES) {
+          await sleep(300 * 2 ** attempt); // 300ms, 600ms, 1200ms
+          continue;
+        }
+        throw new Error(`TMDb API error: ${res.status} ${res.statusText}`);
+      }
+
+      return await res.json() as T;
+    } catch (error) {
+      lastError = error;
+      // Network-level failures are also worth a retry.
+      if (attempt < MAX_RETRIES && !(error instanceof Error && error.message.startsWith("TMDb API error"))) {
+        await sleep(300 * 2 ** attempt);
+        continue;
+      }
+      break;
     }
-
-    return await res.json() as T;
-  } catch (error) {
-    console.error(`Failed to fetch from TMDb endpoint ${endpoint}:`, error);
-    throw error;
   }
+
+  console.error(`Failed to fetch from TMDb endpoint ${endpoint}:`, lastError);
+  throw lastError;
 }
 
 export interface TMDBMedia {
@@ -218,9 +245,16 @@ export const tmdb = {
   // Fetch "more like this" for a specific title. Prefers TMDB's /recommendations
   // (much more relevant) and falls back to /similar when there are none.
   getSimilar: async (id: string, type: "movie" | "tv" = "movie"): Promise<TMDBMedia[]> => {
+    // Try /recommendations first (more relevant), but isolate its failure so a
+    // flaky 502 there still lets us fall back to /similar instead of returning [].
     try {
       const recs = await tmdbFetch<TMDBResponse>(`/${type}/${id}/recommendations`);
       if (recs.results.length > 0) return recs.results;
+    } catch {
+      // fall through to /similar
+    }
+
+    try {
       const similar = await tmdbFetch<TMDBResponse>(`/${type}/${id}/similar`);
       return similar.results;
     } catch {
