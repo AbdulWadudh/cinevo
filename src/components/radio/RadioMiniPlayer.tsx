@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import {
   Play, Pause, Loader2, X, AlertTriangle, Radio as RadioIcon, Volume2, VolumeX,
-  SkipBack, SkipForward,
 } from "lucide-react";
 import { useRadioPlayerContext } from "./RadioPlayerProvider";
 import Equalizer from "./Equalizer";
@@ -20,7 +19,7 @@ import VolumeSlider from "./VolumeSlider";
 export default function RadioMiniPlayer() {
   const pathname = usePathname();
   const reduceMotion = useReducedMotion();
-  const { player, skip, canSkip } = useRadioPlayerContext();
+  const { player } = useRadioPlayerContext();
 
   const [hovered, setHovered] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -62,7 +61,7 @@ export default function RadioMiniPlayer() {
           <div
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
-            className="flex items-center gap-2 rounded-full border border-white/10 bg-bg-elevated/95 py-1.5 pl-2 pr-1.5 shadow-2xl shadow-black/60 backdrop-blur-xl"
+            className="flex items-center gap-1 rounded-full border border-white/10 bg-bg-elevated/95 py-1.5 pl-2 pr-1.5 shadow-2xl shadow-black/60 backdrop-blur-xl"
           >
             {/* Tapping the body returns to the full player. */}
             <Link
@@ -71,9 +70,8 @@ export default function RadioMiniPlayer() {
               aria-label={`Back to radio — ${station.name}`}
             >
               <span
-                className={`flex size-7 flex-none items-center justify-center rounded-full ${
-                  warn ? "bg-amber-500/15 text-amber-400" : "bg-purple-500/15 text-purple-300"
-                }`}
+                className={`flex size-7 flex-none items-center justify-center rounded-full ${warn ? "bg-amber-500/15 text-amber-400" : "bg-purple-500/15 text-purple-300"
+                  }`}
               >
                 {warn ? (
                   <AlertTriangle className="size-3.5" />
@@ -89,18 +87,17 @@ export default function RadioMiniPlayer() {
                   {station.name}
                 </span>
                 <span
-                  className={`block text-[10px] uppercase tracking-wider ${
-                    warn ? "text-amber-400/80" : playing ? "text-purple-300" : "text-muted"
-                  }`}
+                  className={`block text-[10px] uppercase tracking-wider ${warn ? "text-amber-400/80" : playing ? "text-purple-300" : "text-muted"
+                    }`}
                 >
                   {connecting ? "Connecting…" : playing ? "On air" : warn ? "Unavailable" : "Paused"}
                 </span>
               </span>
             </Link>
 
-            {/* Volume and transport slide out on hover — pointer-only, since
-                touch has no hover and the radio page is a tap away. */}
-            <SlideIn open={expanded} width={112} onPointerDown={() => setDragging(true)}>
+            {/* Volume slides out on hover — pointer-only, since touch has no
+                hover and the radio page is a tap away. */}
+            <SlideIn open={expanded} width={100} onPointerDown={() => setDragging(true)}>
               <button
                 type="button"
                 onClick={player.toggleMute}
@@ -120,17 +117,6 @@ export default function RadioMiniPlayer() {
                   onChange={player.changeVolume}
                 />
               </div>
-            </SlideIn>
-
-            <SlideIn open={expanded} width={26}>
-              <MiniAction
-                label="Previous station"
-                onClick={() => skip(-1)}
-                disabled={!canSkip}
-                tabIndex={expanded ? 0 : -1}
-              >
-                <SkipBack className="size-3.5" />
-              </MiniAction>
             </SlideIn>
 
             <motion.button
@@ -161,17 +147,6 @@ export default function RadioMiniPlayer() {
                 </motion.span>
               </AnimatePresence>
             </motion.button>
-
-            <SlideIn open={expanded} width={26}>
-              <MiniAction
-                label="Next station"
-                onClick={() => skip(1)}
-                disabled={!canSkip}
-                tabIndex={expanded ? 0 : -1}
-              >
-                <SkipForward className="size-3.5" />
-              </MiniAction>
-            </SlideIn>
 
             <motion.button
               type="button"
@@ -221,34 +196,3 @@ function SlideIn({
   );
 }
 
-function MiniAction({
-  label,
-  onClick,
-  disabled,
-  tabIndex,
-  children,
-}: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-  tabIndex?: number;
-  children: React.ReactNode;
-}) {
-  const reduceMotion = useReducedMotion();
-  return (
-    <motion.button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      tabIndex={tabIndex}
-      aria-label={label}
-      title={label}
-      whileHover={reduceMotion || disabled ? undefined : { scale: 1.15 }}
-      whileTap={reduceMotion || disabled ? undefined : { scale: 0.88 }}
-      transition={{ type: "spring", stiffness: 500, damping: 22 }}
-      className="tv-focusable flex size-6 flex-none cursor-pointer items-center justify-center rounded-full text-fg-secondary outline-none transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
-    >
-      {children}
-    </motion.button>
-  );
-}

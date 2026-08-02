@@ -194,6 +194,22 @@ export function useRadioPlayer() {
   );
 
   /**
+   * Stops playback but keeps the station cued. Unlike `toggle`, this never
+   * starts anything — used when something else (a video) takes over the
+   * speakers and the listener must opt back in deliberately.
+   */
+  const pause = useCallback(() => {
+    const audio = audioRef.current;
+    requestRef.current++;
+    if (audio) {
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+    }
+    setStatus((s) => (s === "idle" ? s : "paused"));
+  }, []);
+
+  /**
    * Selects a station without connecting to it — the bar shows it, paused,
    * ready for the play button. Used to pre-load a favourite on arrival.
    */
@@ -236,6 +252,7 @@ export function useRadioPlayer() {
     toggleMute: useCallback(() => setIsMuted((m) => !m), []),
     play,
     cue,
+    pause,
     toggle,
     stop,
   };

@@ -661,6 +661,26 @@ export default function RadioClient({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [player, pickOpeningStation, skipBy, revealStation]);
 
+  // Read out of the player object first: the compiler treats a `.current`
+  // access inside a callback as a ref read and bails on memoising it.
+  const nowPlaying = player.current;
+
+  /** Jumps the grid to whatever is on air — bound to the player bar's title. */
+  const handleFocusStation = useCallback(() => {
+    if (!nowPlaying) return;
+
+    if (!displayed.some((s) => s.id === nowPlaying.id)) {
+      toast(`“${nowPlaying.name}” isn't in this list`, {
+        description: nowPlaying.categorySlug
+          ? `It's in ${prettifyName(nowPlaying.categorySlug)}.`
+          : "Switch tabs to find it.",
+      });
+      return;
+    }
+
+    revealStation(nowPlaying);
+  }, [nowPlaying, displayed, revealStation]);
+
   const handleEdit = useCallback((s: RadioStationData) => openDialog(s, "edit"), [openDialog]);
   const handleDeleteRequest = useCallback((s: RadioStationData) => openDialog(s, "delete"), [openDialog]);
 
@@ -828,6 +848,7 @@ export default function RadioClient({
         onToggleMute={player.toggleMute}
         onToggleFavorite={() => player.current && toggleFavorite(player.current)}
         onReport={() => player.current && handleReport(player.current)}
+        onFocusStation={handleFocusStation}
         onClose={player.stop}
         eq={eq.settings}
         eqSupported={eq.supported}

@@ -37,6 +37,23 @@ The user retains complete control over code style, structure, and design decisio
 - Follow the approved implementation plan exactly.
 - Adhere strictly to the requested codebase patterns and style guidelines without imposing arbitrary deviations.
 - **Changelog Consultation:** Always read the `CHANGELOG.md` file first before writing code or suggesting new features. This helps you understand what systems are already implemented (e.g. watch progress sync, spatial D-pad navigation, PWA settings, brand portals) and prevents duplicating existing work.
+- **Changelog Maintenance:** Update `CHANGELOG.md` in the same change that ships the work — never as a follow-up. Record what the code actually does, not what was intended: if an entry becomes untrue (a control moved, a behaviour was replaced), correct it rather than leaving it to rot. Genuine bugs fixed along the way belong under `Fixed` with the cause, not buried inside a feature bullet. Keep `README.md` in step when a change adds a user-facing feature, a new script, or alters setup steps.
+
+# Hover Interactions & Touch
+
+Hover is a pointer-only affordance — it does not exist on touch. Any control
+revealed by hover must have a touch-reachable equivalent, or the feature is
+simply missing on phones.
+
+- Never hide a **primary** action behind hover. Favourite, play, and anything
+  destructive stay visible at all times on small screens.
+- Secondary/admin actions may collapse on desktop, but on touch they must be
+  either always visible or reachable from a tap-opened sheet or menu.
+- Tap targets are at least **44×44px** on touch; the compact desktop sizes
+  (`size-6`, `p-1.5`) are too small for a finger.
+- Gate hover-only reveals behind `md:` and provide the touch path below it,
+  rather than relying on `:hover`, which many mobile browsers emulate
+  inconsistently on first tap.
 
 # React Hooks & Code Standards
 

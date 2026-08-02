@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -5,7 +6,8 @@ import Image from "next/image";
 import { Star, Film } from "lucide-react";
 import { tmdb } from "@/lib/tmdb";
 import Nav from "@/components/Nav";
-import BackButton from "@/components/BackButton";
+import FloatingBackButton from "@/components/watch/FloatingBackButton";
+import RadioAutoPause from "@/components/watch/RadioAutoPause";
 import WatchProviders from "@/components/watch/WatchProviders";
 import IframePlayer from "@/components/player/IframePlayer";
 import TrackWatch from "@/components/watch/TrackWatch";
@@ -135,29 +137,32 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
       : "";
   const theme = search.theme;
 
-  const bgGradientClass = 
+  const bgGradientClass =
     theme === "marvel" ? "bg-[#0c0202] bg-linear-to-b from-red-600/10 to-transparent" :
-    theme === "dc" ? "bg-[#02060b] bg-linear-to-b from-sky-600/12 to-transparent" :
-    theme === "hbo" ? "bg-[#090b0d] bg-linear-to-b from-slate-500/10 to-transparent" :
-    theme === "animation" ? "bg-[#06020a] bg-linear-to-b from-purple-600/12 to-transparent" :
-    theme === "bollywood" ? "bg-[#0a0702] bg-linear-to-b from-amber-600/10 to-transparent" :
-    "bg-bg";
+      theme === "dc" ? "bg-[#02060b] bg-linear-to-b from-sky-600/12 to-transparent" :
+        theme === "hbo" ? "bg-[#090b0d] bg-linear-to-b from-slate-500/10 to-transparent" :
+          theme === "animation" ? "bg-[#06020a] bg-linear-to-b from-purple-600/12 to-transparent" :
+            theme === "bollywood" ? "bg-[#0a0702] bg-linear-to-b from-amber-600/10 to-transparent" :
+              "bg-bg";
 
-  const backButtonBorderClass = 
-    theme === "marvel" ? "border-red-500/20 hover:border-red-500/40 hover:text-red-500 hover:bg-red-500/5 bg-red-950/10" :
-    theme === "dc" ? "border-sky-500/20 hover:border-sky-500/40 hover:text-sky-400 hover:bg-sky-950/10 bg-sky-950/10" :
-    theme === "hbo" ? "border-white/10 hover:border-white/20 hover:text-white hover:bg-white/5 bg-white/5" :
-    theme === "animation" ? "border-purple-500/20 hover:border-purple-500/40 hover:text-purple-400 hover:bg-purple-950/10 bg-purple-950/10" :
-    theme === "bollywood" ? "border-amber-500/20 hover:border-amber-500/40 hover:text-amber-500 hover:bg-amber-950/10 bg-amber-950/10" :
-    "";
+  // Border and hover accents only — the pill's own translucent background is
+  // what keeps it legible over the player, and a second `bg-*` here would
+  // compete with it unpredictably.
+  const backButtonBorderClass =
+    theme === "marvel" ? "border-red-500/25 hover:border-red-500/50 hover:text-red-400" :
+      theme === "dc" ? "border-sky-500/25 hover:border-sky-500/50 hover:text-sky-400" :
+        theme === "hbo" ? "border-white/12 hover:border-white/25 hover:text-white" :
+          theme === "animation" ? "border-purple-500/25 hover:border-purple-500/50 hover:text-purple-400" :
+            theme === "bollywood" ? "border-amber-500/25 hover:border-amber-500/50 hover:text-amber-400" :
+              "";
 
-  const tagHoverClass = 
+  const tagHoverClass =
     theme === "marvel" ? "hover:border-red-500 hover:text-red-500" :
-    theme === "dc" ? "hover:border-sky-400 hover:text-sky-400" :
-    theme === "hbo" ? "hover:border-white hover:text-white" :
-    theme === "animation" ? "hover:border-purple-400 hover:text-purple-400" :
-    theme === "bollywood" ? "hover:border-amber-500 hover:text-amber-500" :
-    "hover:border-accent hover:text-accent";
+      theme === "dc" ? "hover:border-sky-400 hover:text-sky-400" :
+        theme === "hbo" ? "hover:border-white hover:text-white" :
+          theme === "animation" ? "hover:border-purple-400 hover:text-purple-400" :
+            theme === "bollywood" ? "hover:border-amber-500 hover:text-amber-500" :
+              "hover:border-accent hover:text-accent";
 
   return (
     <div className={`flex-1 w-full pb-16 overflow-x-hidden ${bgGradientClass}`}>
@@ -166,10 +171,10 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
 
       {/* Embedded Iframe Player Container (relative z-20 so the player's source/season/
           episode dropdowns render above the metadata section below) */}
-      <section className="relative z-20 pt-18 w-full px-3 sm:px-6 md:px-12">
-        <div className="mb-4 flex items-center gap-2">
-          <BackButton label="Back" fallback="/" className={backButtonBorderClass || undefined} />
-        </div>
+      <FloatingBackButton accentClass={backButtonBorderClass} />
+      <RadioAutoPause />
+
+      <section className="relative z-20 w-full px-3 pt-16 sm:px-6 md:px-12 md:pt-18">
 
         {/* Records this view into the user's watch history (no-op when signed out) */}
         <TrackWatch

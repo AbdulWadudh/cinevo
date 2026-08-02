@@ -27,6 +27,7 @@ interface PlayerBarProps {
   onToggleMute: () => void;
   onToggleFavorite: () => void;
   onReport: () => void;
+  onFocusStation: () => void;
   onClose: () => void;
   eq: EqSettings;
   eqSupported: boolean;
@@ -50,6 +51,7 @@ export default function PlayerBar({
   onToggleMute,
   onToggleFavorite,
   onReport,
+  onFocusStation,
   onClose,
   eq,
   eqSupported,
@@ -109,93 +111,104 @@ export default function PlayerBar({
             </AnimatePresence>
 
             <div className="relative flex flex-col gap-2 px-4 py-2.5 md:flex-row md:items-center md:gap-6 md:px-8 md:py-3">
-              {/* Identity */}
-              <div className="flex min-w-0 flex-1 items-center gap-3 md:max-w-[32%]">
-                <motion.div
-                  className={`flex size-11 flex-none items-center justify-center rounded-xl border ${
-                    warn
-                      ? "border-amber-500/30 bg-amber-950/40 text-amber-400"
-                      : "border-purple-500/25 bg-purple-950/40 text-purple-300"
-                  }`}
-                  animate={playing && !reduceMotion ? { scale: [1, 1.07, 1] } : { scale: 1 }}
-                  transition={playing ? { duration: 2, repeat: Infinity, ease: "easeInOut" } : { duration: 0.2 }}
-                >
-                  {warn ? <AlertTriangle className="size-5" /> : <RadioIcon className="size-5" />}
-                </motion.div>
-
-                <div className="min-w-0 flex-1">
-                  <AnimatePresence mode="wait" initial={false}>
-                    <motion.h4
-                      key={station.id}
-                      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
-                      transition={{ duration: 0.2 }}
-                      className="truncate text-sm font-semibold text-white"
-                    >
-                      {station.name}
-                    </motion.h4>
-                  </AnimatePresence>
-                  <div className="mt-0.5 flex items-center gap-2">
-                    {playing && <Equalizer active bars={4} className="h-3" barClassName="bg-purple-400" />}
-                    <p
-                      className={`truncate text-xs ${
-                        warn ? "text-amber-400/90" : playing ? "text-purple-200" : "text-fg-secondary"
-                      }`}
-                    >
-                      {blocked
-                        ? "Press play to start — your browser blocked autoplay"
-                        : errored
-                          ? "Stream unavailable — skipping to the next station"
-                          : connecting
-                            ? "Connecting…"
-                            : playing
-                              ? "On air"
-                              : "Paused"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Transport — taken out of flow on desktop and pinned to the
-                  centre of the bar, so unequal flank widths can't shift it. */}
-              <div className="flex flex-none items-center justify-center gap-2 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2">
-                <TransportButton onClick={onPrev} disabled={!canSkip} label="Previous station">
-                  <SkipBack className="size-4" />
-                </TransportButton>
-
-                <motion.button
+              {/* On phones the identity and transport share one row, pushed to
+                  opposite ends. `md:contents` dissolves this wrapper from md up
+                  so the desktop three-column layout — and the absolutely
+                  centred transport — behave exactly as before. */}
+              <div className="flex items-center justify-between gap-3 md:contents">
+                {/* Identity — doubles as a jump-to-station control. */}
+                <button
                   type="button"
-                  onClick={onToggle}
-                  aria-label={playing ? "Pause" : "Play"}
-                  whileHover={reduceMotion ? undefined : { scale: 1.08 }}
-                  whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                  className="tv-focusable flex size-11 cursor-pointer items-center justify-center rounded-full bg-linear-to-br from-purple-500 to-fuchsia-600 text-white shadow-lg shadow-purple-900/50 outline-none"
-                >
-                  <AnimatePresence mode="wait" initial={false}>
-                    <motion.span
-                      key={connecting ? "load" : playing ? "pause" : "play"}
-                      initial={reduceMotion ? false : { scale: 0.5, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={reduceMotion ? undefined : { scale: 0.5, opacity: 0 }}
-                      transition={{ duration: 0.14 }}
-                      className="flex items-center justify-center"
-                    >
-                      {connecting ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : playing ? (
-                        <Pause className="size-4 fill-white" />
-                      ) : (
-                        <Play className="size-4 translate-x-0.5 fill-white" />
-                      )}
-                    </motion.span>
-                  </AnimatePresence>
-                </motion.button>
+                  onClick={onFocusStation}
+                  aria-label={`Show ${station.name} in the list`}
+                  title="Show in list"
+                  className="tv-focusable flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-xl text-left outline-none transition-opacity hover:opacity-80 md:max-w-[32%]">
+                  <motion.div
+                    className={`flex size-11 flex-none items-center justify-center rounded-xl border ${
+                      warn
+                        ? "border-amber-500/30 bg-amber-950/40 text-amber-400"
+                        : "border-purple-500/25 bg-purple-950/40 text-purple-300"
+                    }`}
+                    animate={playing && !reduceMotion ? { scale: [1, 1.07, 1] } : { scale: 1 }}
+                    transition={playing ? { duration: 2, repeat: Infinity, ease: "easeInOut" } : { duration: 0.2 }}
+                  >
+                    {warn ? <AlertTriangle className="size-5" /> : <RadioIcon className="size-5" />}
+                  </motion.div>
 
-                <TransportButton onClick={onNext} disabled={!canSkip} label="Next station">
-                  <SkipForward className="size-4" />
-                </TransportButton>
+                  <div className="min-w-0 flex-1">
+                    <AnimatePresence mode="wait" initial={false}>
+                      <motion.h4
+                        key={station.id}
+                        initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
+                        transition={{ duration: 0.2 }}
+                        className="truncate text-sm font-semibold text-white"
+                      >
+                        {station.name}
+                      </motion.h4>
+                    </AnimatePresence>
+                    <div className="mt-0.5 flex items-center gap-2">
+                      {playing && <Equalizer active bars={4} className="h-3" barClassName="bg-purple-400" />}
+                      <p
+                        className={`truncate text-xs ${
+                          warn ? "text-amber-400/90" : playing ? "text-purple-200" : "text-fg-secondary"
+                        }`}
+                      >
+                        {blocked
+                          ? "Press play to start — your browser blocked autoplay"
+                          : errored
+                            ? "Stream unavailable — skipping to the next station"
+                            : connecting
+                              ? "Connecting…"
+                              : playing
+                                ? "On air"
+                                : "Paused"}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Transport — taken out of flow on desktop and pinned to the
+                    centre of the bar, so unequal flank widths can't shift it. */}
+                <div className="flex flex-none items-center justify-center gap-2 md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2">
+                  <TransportButton onClick={onPrev} disabled={!canSkip} label="Previous station">
+                    <SkipBack className="size-4" />
+                  </TransportButton>
+
+                  <motion.button
+                    type="button"
+                    onClick={onToggle}
+                    aria-label={playing ? "Pause" : "Play"}
+                    whileHover={reduceMotion ? undefined : { scale: 1.08 }}
+                    whileTap={reduceMotion ? undefined : { scale: 0.9 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                    className="tv-focusable flex size-11 cursor-pointer items-center justify-center rounded-full bg-linear-to-br from-purple-500 to-fuchsia-600 text-white shadow-lg shadow-purple-900/50 outline-none"
+                  >
+                    <AnimatePresence mode="wait" initial={false}>
+                      <motion.span
+                        key={connecting ? "load" : playing ? "pause" : "play"}
+                        initial={reduceMotion ? false : { scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={reduceMotion ? undefined : { scale: 0.5, opacity: 0 }}
+                        transition={{ duration: 0.14 }}
+                        className="flex items-center justify-center"
+                      >
+                        {connecting ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : playing ? (
+                          <Pause className="size-4 fill-white" />
+                        ) : (
+                          <Play className="size-4 translate-x-0.5 fill-white" />
+                        )}
+                      </motion.span>
+                    </AnimatePresence>
+                  </motion.button>
+
+                  <TransportButton onClick={onNext} disabled={!canSkip} label="Next station">
+                    <SkipForward className="size-4" />
+                  </TransportButton>
+                </div>
               </div>
 
               {/* Volume + actions. On phones this is a full-width row of its

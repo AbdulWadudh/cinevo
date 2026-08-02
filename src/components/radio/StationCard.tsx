@@ -116,13 +116,12 @@ function StationCardBase({
         whileHover={reduceMotion ? undefined : { y: -2 }}
         whileTap={reduceMotion ? undefined : { scale: 0.985 }}
         transition={{ type: "spring", stiffness: 500, damping: 30 }}
-        className={`tv-focusable relative flex w-full cursor-pointer items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 text-left outline-none transition-colors ${
-          isCurrent
-            ? "border-purple-400/70 bg-purple-500/15 shadow-lg shadow-purple-900/40 ring-2 ring-purple-500/50"
-            : isFavorite
-              ? "border-pink-500/30 bg-pink-500/6 hover:border-pink-400/50 hover:bg-pink-500/10"
-              : "border-white/6 bg-surface/50 hover:border-white/14 hover:bg-surface-hover/60"
-        } ${station.isBroken && !isCurrent ? "opacity-55" : ""}`}
+        className={`tv-focusable relative flex w-full cursor-pointer items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 text-left outline-none transition-colors ${isCurrent
+          ? "border-purple-400/70 bg-purple-500/15 shadow-lg shadow-purple-900/40 ring-2 ring-purple-500/50"
+          : isFavorite
+            ? "border-pink-500/30 bg-pink-500/6 hover:border-pink-400/50 hover:bg-pink-500/10"
+            : "border-white/6 bg-surface/50 hover:border-white/14 hover:bg-surface-hover/60"
+          } ${station.isBroken && !isCurrent ? "opacity-55" : ""}`}
       >
         {/* Breathing halo marks the station that's actually on air, so it
             stays findable after a shuffle scrolls it into view. */}
@@ -152,9 +151,8 @@ function StationCardBase({
 
         {/* Icon / state tile */}
         <span
-          className={`relative flex size-9 flex-none items-center justify-center rounded-lg ${
-            isFavorite && !isCurrent ? "bg-pink-500/15 text-pink-300" : accent.tile
-          }`}
+          className={`relative flex size-9 flex-none items-center justify-center rounded-lg ${isFavorite && !isCurrent ? "bg-pink-500/15 text-pink-300" : accent.tile
+            }`}
         >
           {connecting ? (
             <Loader2 className="size-4 animate-spin" />
@@ -168,7 +166,9 @@ function StationCardBase({
         </span>
 
         {/* Name + status */}
-        <span className="min-w-0 flex-1">
+        {/* Right padding reserves room for the action buttons, which are
+            absolutely positioned and now always visible. */}
+        <span className="min-w-0 flex-1 pr-20 md:pr-0">
           <span className="flex items-center gap-1.5">
             {isFavorite && (
               <motion.span
@@ -204,13 +204,12 @@ function StationCardBase({
               </span>
             )}
             <span
-              className={`truncate text-[10px] uppercase tracking-wider ${
-                errored || station.isBroken
-                  ? "text-amber-400/80"
-                  : playing
-                    ? "text-purple-300"
-                    : "text-muted"
-              }`}
+              className={`truncate text-[10px] uppercase tracking-wider ${errored || station.isBroken
+                ? "text-amber-400/80"
+                : playing
+                  ? "text-purple-300"
+                  : "text-muted"
+                }`}
             >
               {label}
             </span>
@@ -219,11 +218,10 @@ function StationCardBase({
 
         {/* Play / pause affordance */}
         <span
-          className={`flex size-7 flex-none items-center justify-center rounded-full transition-all duration-200 ${
-            isCurrent
-              ? "bg-white text-black"
-              : "bg-white/8 text-white opacity-0 group-hover:opacity-100"
-          }`}
+          className={`hidden size-7 flex-none items-center justify-center rounded-full transition-all duration-200 md:flex ${isCurrent
+            ? "bg-white text-black"
+            : "bg-white/8 text-white opacity-0 group-hover:opacity-100"
+            }`}
         >
           {playing || connecting ? (
             <Pause className="size-3 fill-current" />
@@ -233,12 +231,9 @@ function StationCardBase({
         </span>
       </motion.button>
 
-      {/* Hover actions, pinned to the card's right edge */}
-      <div
-        className={`absolute right-11 top-1/2 flex -translate-y-1/2 items-center gap-0.5 transition-opacity duration-200 focus-within:opacity-100 group-hover:opacity-100 ${
-          menuOpen ? "opacity-100" : "opacity-0"
-        }`}
-      >
+      {/* Actions pinned to the card's right edge. Always visible: hover is a
+          pointer-only affordance, and favouriting must work on touch. */}
+      <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-0.5 md:right-11">
         <IconAction
           label={isFavorite ? "Remove from favourites" : "Add to favourites"}
           pressed={isFavorite}
@@ -258,80 +253,103 @@ function StationCardBase({
           </AnimatePresence>
         </IconAction>
 
-        <IconAction label="Report not working" onClick={() => onReport(station)}>
-          <Flag className="size-3.5" />
-        </IconAction>
-
-        {/* Admins curate the Recommended rail straight from the grid. */}
-        {isAdmin && (
-          <IconAction
-            label={
-              station.isRecommended ? "Remove from Recommended" : "Add to Recommended"
-            }
-            pressed={station.isRecommended}
-            onClick={() => onToggleRecommended(station)}
-          >
-            <Star
-              className={`size-3.5 ${
-                station.isRecommended ? "fill-amber-400 text-amber-400" : ""
-              }`}
-            />
+        {/* Shortcuts for pointers. Everything here is also in the menu, which
+            is what touch uses — a finger can't hover, and these are too small
+            to be comfortable tap targets. */}
+        <span className="hidden items-center gap-0.5 md:flex">
+          <IconAction label="Report not working" onClick={() => onReport(station)}>
+            <Flag className="size-3.5" />
           </IconAction>
-        )}
 
-        {isAdmin && (
-          <div className="relative" ref={menuRef}>
-            <IconAction label="Station actions" onClick={() => setMenuOpen((o) => !o)}>
-              <MoreVertical className="size-3.5" />
+          {isAdmin && (
+            <IconAction
+              label={
+                station.isRecommended ? "Remove from Recommended" : "Add to Recommended"
+              }
+              pressed={station.isRecommended}
+              onClick={() => onToggleRecommended(station)}
+            >
+              <Star
+                className={`size-3.5 ${station.isRecommended ? "fill-amber-400 text-amber-400" : ""
+                  }`}
+              />
             </IconAction>
+          )}
+        </span>
 
-            <AnimatePresence>
-              {menuOpen && (
-                <motion.div
-                  initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9, y: -4 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9, y: -4 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  className="absolute right-0 top-full z-30 mt-1 w-44 origin-top-right overflow-hidden rounded-xl border border-white/10 bg-bg-elevated/95 py-1 shadow-2xl shadow-black/60 backdrop-blur-xl"
+        {/* The menu carries the non-primary actions, so touch has a path to
+            them. Favourite is deliberately absent — the heart beside it is
+            always visible, so a menu entry would only duplicate it. */}
+        <div className="relative" ref={menuRef}>
+          <IconAction label="Station actions" onClick={() => setMenuOpen((o) => !o)}>
+            <MoreVertical className="size-3.5" />
+          </IconAction>
+
+          <AnimatePresence>
+            {menuOpen && (
+              <motion.div
+                initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9, y: -4 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.9, y: -4 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                className="absolute right-0 top-full z-30 mt-1 w-48 origin-top-right overflow-hidden rounded-xl border border-white/10 bg-bg-elevated/95 py-1 shadow-2xl shadow-black/60 backdrop-blur-xl"
+              >
+                <MenuItem
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onReport(station);
+                  }}
                 >
-                  <MenuItem
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onEdit(station);
-                    }}
-                  >
-                    <Pencil className="size-3.5" /> Edit station
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onReport(station);
-                    }}
-                  >
-                    {station.isBroken ? (
-                      <>
-                        <CheckCircle2 className="size-3.5" /> Clear broken flag
-                      </>
-                    ) : (
-                      <>
-                        <Flag className="size-3.5" /> Mark not working
-                      </>
-                    )}
-                  </MenuItem>
-                  <MenuItem
-                    danger
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onDelete(station);
-                    }}
-                  >
-                    <Trash2 className="size-3.5" /> Delete station
-                  </MenuItem>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        )}
+                  {station.isBroken ? (
+                    <>
+                      <CheckCircle2 className="size-3.5" /> Clear broken flag
+                    </>
+                  ) : (
+                    <>
+                      <Flag className="size-3.5" /> Mark not working
+                    </>
+                  )}
+                </MenuItem>
+
+                {isAdmin && (
+                  <>
+                    <MenuItem
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onToggleRecommended(station);
+                      }}
+                    >
+                      <Star
+                        className={`size-3.5 ${station.isRecommended ? "fill-amber-400 text-amber-400" : ""
+                          }`}
+                      />
+                      {station.isRecommended ? "Unrecommend" : "Recommend"}
+                    </MenuItem>
+
+                    <MenuItem
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onEdit(station);
+                      }}
+                    >
+                      <Pencil className="size-3.5" /> Edit station
+                    </MenuItem>
+
+                    <MenuItem
+                      danger
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onDelete(station);
+                      }}
+                    >
+                      <Trash2 className="size-3.5" /> Delete station
+                    </MenuItem>
+                  </>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </motion.div>
   );
@@ -362,7 +380,9 @@ function IconAction({
       whileHover={reduceMotion ? undefined : { scale: 1.18 }}
       whileTap={reduceMotion ? undefined : { scale: 0.85 }}
       transition={{ type: "spring", stiffness: 500, damping: 20 }}
-      className="tv-focusable cursor-pointer rounded-md border border-white/8 bg-black/45 p-1.5 text-fg-secondary outline-none backdrop-blur-sm transition-colors hover:text-white"
+      // Roomier on touch, where a ~24px target is unusable; tightened from md
+      // up, where the pointer is precise and the row is denser.
+      className="tv-focusable cursor-pointer rounded-md border border-white/8 bg-black/45 p-2.5 text-fg-secondary outline-none backdrop-blur-sm transition-colors hover:text-white md:p-1.5"
     >
       {children}
     </motion.button>
@@ -385,9 +405,8 @@ function MenuItem({
         e.stopPropagation();
         onClick();
       }}
-      className={`flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs font-medium transition-colors ${
-        danger ? "text-red-400 hover:bg-red-500/12" : "text-fg-secondary hover:bg-white/6 hover:text-white"
-      }`}
+      className={`flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs font-medium transition-colors ${danger ? "text-red-400 hover:bg-red-500/12" : "text-fg-secondary hover:bg-white/6 hover:text-white"
+        }`}
     >
       {children}
     </button>
