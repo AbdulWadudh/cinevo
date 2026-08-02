@@ -167,47 +167,50 @@ export default function CategoryRail({
                 and the rail is fixed — it must not swallow the viewport.
                 Scrolling one axis clips the other, so the inner padding keeps
                 chips from being shaved as they scale on hover. */}
-            <motion.div
+            {/* Each chip animates itself in, rather than inheriting a variant
+                from the container. Inherited variants have to travel through
+                AnimatePresence to reach the children, and any chip that missed
+                the hand-off stayed stuck at `opacity: 0` — visible only once a
+                hover gave it an animation state of its own.
+
+                No `layout` or `popLayout` here either: with a hundred-odd
+                chips it was expensive, and popLayout absolutely-positions
+                exiting children, which is what tore holes in the row. */}
+            <div
               // -mx-1/px-1 cancel out, so the inner padding buys room for the
               // hover scale without pushing chips off the shared gutter.
               className="scrollbar-hide -mx-1 flex max-h-28 flex-wrap gap-2 overflow-y-auto px-1 py-1.5"
-              initial="hidden"
-              animate="show"
-              variants={{
-                hidden: {},
-                show: { transition: { staggerChildren: reduceMotion ? 0 : 0.012 } },
-              }}
             >
-              <AnimatePresence mode="popLayout">
-                {shown.map((cat) => {
-                  const active = activeSlug === cat.slug;
-                  return (
-                    <motion.button
-                      key={cat.slug}
-                      type="button"
-                      layout={!reduceMotion}
-                      variants={{
-                        hidden: { opacity: 0, scale: 0.85 },
-                        show: { opacity: 1, scale: 1 },
-                      }}
-                      exit={{ opacity: 0, scale: 0.85 }}
-                      whileHover={reduceMotion ? undefined : { scale: 1.06, y: -1 }}
-                      whileTap={reduceMotion ? undefined : { scale: 0.94 }}
-                      transition={{ type: "spring", stiffness: 460, damping: 30 }}
-                      onClick={() => onSelectCategory(cat.slug)}
-                      className={`tv-focusable cursor-pointer rounded-lg border px-3 py-1.5 text-xs font-medium outline-none transition-colors ${
-                        active
-                          ? "border-purple-400/60 bg-purple-500/25 text-white"
-                          : "border-white/6 bg-surface/60 text-fg-secondary hover:border-white/15 hover:text-white"
-                      }`}
-                    >
-                      {cat.name}
-                      <span className="ml-1.5 text-[10px] tabular-nums text-muted">{cat.count}</span>
-                    </motion.button>
-                  );
-                })}
-              </AnimatePresence>
-            </motion.div>
+              {shown.map((cat, i) => {
+                const active = activeSlug === cat.slug;
+                return (
+                  <motion.button
+                    key={cat.slug}
+                    type="button"
+                    initial={reduceMotion ? false : { opacity: 0, scale: 0.85 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 460,
+                      damping: 30,
+                      // Cap the stagger: the tail of a long list shouldn't wait.
+                      delay: reduceMotion ? 0 : Math.min(i * 0.012, 0.35),
+                    }}
+                    whileHover={reduceMotion ? undefined : { scale: 1.06, y: -1 }}
+                    whileTap={reduceMotion ? undefined : { scale: 0.94 }}
+                    onClick={() => onSelectCategory(cat.slug)}
+                    className={`tv-focusable cursor-pointer rounded-lg border px-3 py-1.5 text-xs font-medium outline-none transition-colors ${
+                      active
+                        ? "border-purple-400/60 bg-purple-500/25 text-white"
+                        : "border-white/6 bg-surface/60 text-fg-secondary hover:border-white/15 hover:text-white"
+                    }`}
+                  >
+                    {cat.name}
+                    <span className="ml-1.5 text-[10px] tabular-nums text-muted">{cat.count}</span>
+                  </motion.button>
+                );
+              })}
+            </div>
 
             {remaining > 0 && (
               <motion.button
