@@ -12,6 +12,7 @@ const MENU_ITEMS: StaggeredMenuItem[] = [
   { label: "Browse", ariaLabel: "Browse all titles", link: "/browse" },
   { label: "Gallery", ariaLabel: "Open the 3D gallery", link: "/gallery" },
   { label: "Mystery", ariaLabel: "Reveal mystery picks", link: "/reveal" },
+  { label: "Radio", ariaLabel: "Listen to radio", link: "/radio" },
   { label: "Wishlist", ariaLabel: "Your wishlist", link: "/wishlist" },
   { label: "History", ariaLabel: "Your watch history", link: "/history" },
   { label: "Profile", ariaLabel: "Your profile", link: "/profile" },

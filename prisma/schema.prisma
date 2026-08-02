@@ -131,3 +131,49 @@ model Wishlist {
   @@unique([profileId, mediaId, mediaType])
   @@index([profileId])
 }
+
+// One playlist from the m3u-rest-api index (4,684 of them). `count` is the
+// upstream station count; `stations` is what we have actually cached locally.
+model RadioCategory {
+  id        String         @id @default(uuid())
+  name      String
+  slug      String         @unique
+  url       String
+  count     Int            @default(0)
+  // Section the category is filed under in the UI: "genre" | "decade" |
+  // "language" | "country" | "theme" | "other". Derived from the slug.
+  group     String         @default("other")
+  // Set once the category's stations have been pulled from upstream and
+  // cached. NULL means "not hydrated yet" — the first visit fetches on demand.
+  hydratedAt DateTime?
+  stations  RadioStation[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([group])
+  @@index([hydratedAt])
+}
+
+model RadioStation {
+  id         String        @id @default(uuid())
+  name       String
+  url        String
+  categoryId String
+  category   RadioCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  // Listener reports that the stream is dead. Crossing BROKEN_REPORT_THRESHOLD
+  // flips isBroken, which sorts the station last and badges it in the UI.
+  reportCount Int          @default(0)
+  isBroken    Boolean      @default(false)
+  // Admin kill switch. Disabled stations stay in the catalogue but are hidden
+  // from listeners — used for streams that are dead or unwanted.
+  isActive    Boolean      @default(true)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @default(now()) @updatedAt
+
+  // Re-hydrating a category must not duplicate its stations.
+  @@unique([categoryId, url])
+  @@index([categoryId])
+  @@index([name])
+  @@index([isBroken])
+  @@index([isActive])
+}

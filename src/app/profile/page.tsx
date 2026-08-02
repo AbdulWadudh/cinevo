@@ -13,6 +13,7 @@ import AdminDashboard from "@/components/admin/AdminDashboard";
 import { db } from "@/lib/db";
 import ProviderAdmin from "@/components/admin/ProviderAdmin";
 import ProviderReportsAdmin from "@/components/admin/ProviderReportsAdmin";
+import RadioStationAdmin from "@/components/admin/RadioStationAdmin";
 import ForceSyncButton from "@/components/watch/ForceSyncButton";
 import ClearCacheButton from "@/components/settings/ClearCacheButton";
 import EffectPlayground from "@/components/reveal/EffectPlayground";
@@ -155,6 +156,9 @@ export default async function ProfilePage() {
         {isAdmin && reportsRes.success && (
           <ProviderReportsAdmin initial={[...reportsRes.data]} counts={[...reportsRes.counts]} />
         )}
+
+        {/* Admin-only: radio station catalogue management */}
+        {isAdmin && <RadioStationAdmin />}
       </section>
     </div>
   );

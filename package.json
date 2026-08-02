@@ -7,6 +7,9 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "radio:seed": "node --experimental-strip-types prisma/seed/seed-radio.mts",
+    "radio:backfill": "node --experimental-strip-types prisma/seed/backfill-radio-groups.mts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
