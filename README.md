@@ -173,7 +173,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-> 🔑 Set a user's `Profile.role` to `admin` to unlock the admin sections in `/profile`.
+> 🔑 Set a user's `Profile.role` to `admin` to unlock the admin sections in `/profile`. Only the first one needs doing by hand — from there, the **Users** panel promotes and demotes everyone else.
 
 ---
 

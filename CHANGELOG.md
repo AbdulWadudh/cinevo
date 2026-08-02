@@ -10,6 +10,12 @@ All changes to the Cinevo project are documented chronologically below in a time
 
 #### Added
 
+- **User management panel** (`/profile` → Admin → **Users**, admins only), built on the same shell as the radio catalogue: search, filter tabs (All / Admins / Members), a list that owns its own scrollbar, and pagination at 20 a page.
+  - Each row carries avatar, name, email, join date and an activity strip — watch records, wishlist entries, ratings, radio favourites and push devices — gathered in the same query through Prisma `_count`.
+  - Per-user actions: **promote / demote**, **clear library** (watch history, wishlist, ratings, radio favourites, push subscriptions and the `SentPush` dedupe log — that last one deleted by hand, as it carries a `profileId` with no foreign key to `Profile` and so never cascades), and **delete profile**. Both destructive actions confirm inline in the row rather than through a dialog.
+  - **Deleting a profile is not a ban.** The Supabase Auth user lives in a separate system that needs a service-role key this app doesn't hold, so the sign-in stays valid and `getOrCreateProfile` rebuilds an empty profile on the next visit. The confirmation toast says as much.
+  - Changing your own role and deleting your own account are both refused server-side. Self-demotion is an instant lockout with no route back through the UI — and since it is the only way the admin count could reach zero, blocking it also guarantees at least one admin survives, so no separate "last admin" check is needed.
+  - `setUserRole(email, role)` gave way to `setUserRoleAction(id, role)`, and the email-box *Manage roles* form was dropped from **Admin Overview** — the row actions supersede it. Overview is now purely its stat cards, with a staggered entrance.
 - **Premium Cinematic Intro Loaders:**
   - Replaced the generic card loader with full-screen, high-end intro screens in `StudioHubs.tsx` utilizing dynamic ambient background glows that match the chosen studio (Marvel = Red, DC = Sky Blue, HBO = Slate, Animation = Purple, Bollywood = Gold).
   - Added slow-pulsing background glows, concentric rotating rings (counter-clockwise outer solid line, clockwise inner dashed line), and a pulsing brand logo emblem in the center.

@@ -11,6 +11,7 @@ import { getAdminStats } from "@/app/actions/admin";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import { db } from "@/lib/db";
 import ProvidersPanel from "@/components/admin/ProvidersPanel";
+import UsersAdmin from "@/components/admin/UsersAdmin";
 import RadioStationAdmin from "@/components/admin/RadioStationAdmin";
 import ForceSyncButton from "@/components/watch/ForceSyncButton";
 import ClearCacheButton from "@/components/settings/ClearCacheButton";
@@ -114,6 +115,14 @@ export default async function ProfilePage({
         content: <AdminDashboard stats={statsRes.data} />,
       });
     }
+
+    sections.push({
+      id: "users",
+      label: "Users",
+      icon: "users",
+      group: "admin",
+      content: <UsersAdmin currentUserId={profile.id} />,
+    });
 
     if (providersRes.success && reportsRes.success) {
       sections.push({

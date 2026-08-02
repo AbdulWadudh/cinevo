@@ -4,12 +4,13 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
-  Clock, Flag, Heart, Mail, Palette, Radio, RefreshCw, Server, ShieldCheck, User,
+  Clock, Flag, Heart, Mail, Palette, Radio, RefreshCw, Server, ShieldCheck, User, Users,
 } from "lucide-react";
 
 /** Icons are keyed by name so sections can be described from a server component. */
 const SECTION_ICONS = {
   user: User,
+  users: Users,
   palette: Palette,
   sync: RefreshCw,
   shield: ShieldCheck,
