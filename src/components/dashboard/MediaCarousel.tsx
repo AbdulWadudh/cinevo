@@ -41,7 +41,7 @@ function PosterCard({
   const linkUrl = `/watch/${item.media_type || mediaType}/${item.id}`;
 
   return (
-    <div className="flex-none w-[140px] sm:w-[180px] snap-start group">
+    <div className="flex-none w-35 sm:w-45 snap-start group">
       <Link
         ref={ref}
         href={linkUrl}
@@ -49,7 +49,7 @@ function PosterCard({
         draggable={false}
         className={`tv-focusable block cursor-pointer select-none rounded-xl ${focused ? "tv-focused" : ""}`}
       >
-        <div className="relative aspect-[2/3] w-full bg-surface rounded-xl overflow-hidden border border-white/[0.04] shadow-md transition-all duration-500 group-hover:-translate-y-2 group-hover:scale-[1.02] group-hover:border-accent group-hover:shadow-[0_8px_25px_rgba(0,0,0,0.8)]">
+        <div className="relative aspect-2/3 w-full bg-surface rounded-xl overflow-hidden border border-white/[0.04] shadow-md transition-all duration-500 group-hover:-translate-y-2 group-hover:scale-[1.02] group-hover:border-accent group-hover:shadow-[0_8px_25px_rgba(0,0,0,0.8)]">
           <Image
             src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "https://picsum.photos/seed/cinevoposter/300/450"}
             alt={item.title || item.name || ""}
@@ -72,7 +72,7 @@ function PosterCard({
               <Clapperboard className="w-4 h-4" />
             </button>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/95 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+          <div className="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/95 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
             <div className="flex items-center gap-1 text-[11px] font-bold text-gold">
               <Star className="w-3.5 h-3.5 fill-gold stroke-gold" />
               <span>{item.vote_average ? item.vote_average.toFixed(1) : "N/A"}</span>
@@ -181,13 +181,28 @@ export default function MediaCarousel({
   const resumeAtRef = useRef(0);
   const [dragging, setDragging] = useState(false);
 
-  // Smooth sub-pixel infinite auto-panning (right-to-left).
+  // Smooth sub-pixel infinite auto-panning (right-to-left). The loop only runs
+  // while the row is on screen: the home page stacks six of these, and six rAF
+  // callbacks writing `scrollLeft` every frame kept the main thread busy during
+  // load for rows nobody could see, delaying the hero's paint.
+  const [onScreen, setOnScreen] = useState(false);
   useEffect(() => {
     const container = carouselRef.current;
     if (!container) return;
+    const io = new IntersectionObserver(
+      ([entry]) => setOnScreen(entry.isIntersecting),
+      { rootMargin: "100px" }
+    );
+    io.observe(container);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const container = carouselRef.current;
+    if (!container || !onScreen || isFullScreen) return;
     let animationId: number;
     const step = () => {
-      if (!isFullScreen && !pausedRef.current && !isDown.current && performance.now() > resumeAtRef.current) {
+      if (!pausedRef.current && !isDown.current && performance.now() > resumeAtRef.current) {
         container.scrollLeft += 0.4;
         if (container.scrollLeft >= container.scrollWidth - container.clientWidth - 2) {
           container.scrollLeft = 0;
@@ -197,7 +212,7 @@ export default function MediaCarousel({
     };
     animationId = requestAnimationFrame(step);
     return () => cancelAnimationFrame(animationId);
-  }, [isFullScreen]);
+  }, [isFullScreen, onScreen]);
 
   const scroll = (direction: number) => {
     const el = carouselRef.current;
@@ -278,9 +293,9 @@ export default function MediaCarousel({
         onMouseLeave={() => { pausedRef.current = false; resumeAtRef.current = performance.now() + 1500; }}
       >
         {/* Left Arrow */}
-        <button 
+        <button
           onClick={() => scroll(-1)}
-          className="absolute left-0 top-0 bottom-4 w-12 bg-gradient-to-r from-bg/95 to-transparent z-20 flex items-center justify-start pl-2 text-white/80 hover:text-white opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 pointer-events-none group-hover/carousel:pointer-events-auto cursor-pointer border-0 outline-none"
+          className="absolute left-0 top-0 bottom-4 w-12 bg-linear-to-r from-bg/95 to-transparent z-20 flex items-center justify-start pl-2 text-white/80 hover:text-white opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 pointer-events-none group-hover/carousel:pointer-events-auto cursor-pointer border-0 outline-none"
           aria-label="Scroll left"
         >
           <ChevronLeft className="w-8 h-8 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
@@ -313,9 +328,9 @@ export default function MediaCarousel({
         </div>
 
         {/* Right Arrow */}
-        <button 
+        <button
           onClick={() => scroll(1)}
-          className="absolute right-0 top-0 bottom-4 w-12 bg-gradient-to-l from-bg/95 to-transparent z-20 flex items-center justify-end pr-2 text-white/80 hover:text-white opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 pointer-events-none group-hover/carousel:pointer-events-auto cursor-pointer border-0 outline-none"
+          className="absolute right-0 top-0 bottom-4 w-12 bg-linear-to-l from-bg/95 to-transparent z-20 flex items-center justify-end pr-2 text-white/80 hover:text-white opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 pointer-events-none group-hover/carousel:pointer-events-auto cursor-pointer border-0 outline-none"
           aria-label="Scroll right"
         >
           <ChevronRight className="w-8 h-8 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
@@ -326,7 +341,7 @@ export default function MediaCarousel({
       {isFullScreen && (
         <div className="fixed inset-0 bg-bg/98 backdrop-blur-3xl z-50 overflow-y-auto animate-fade-in flex flex-col px-6 md:px-24 pt-20 pb-12">
           {/* Header */}
-          <div className="flex items-center justify-between w-full max-w-[1400px] mx-auto border-b border-white/[0.08] pb-4 mb-8">
+          <div className="flex items-center justify-between w-full max-w-350 mx-auto border-b border-white/8 pb-4 mb-8">
             <div>
               <span className="text-[10px] font-extrabold uppercase tracking-widest text-accent">Category view</span>
               <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight">
@@ -351,9 +366,9 @@ export default function MediaCarousel({
 
                 return (
                   <div key={item.id} className="group">
-                    <Link 
-                      href={linkUrl} 
-                      onClick={() => setIsFullScreen(false)} 
+                    <Link
+                      href={linkUrl}
+                      onClick={() => setIsFullScreen(false)}
                       className="block cursor-pointer select-none"
                     >
                       <div className="relative aspect-[2/3] w-full bg-surface rounded-xl overflow-hidden border border-white/[0.04] shadow-md transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] hover:border-accent hover:shadow-[0_8px_25px_rgba(0,0,0,0.8)]">

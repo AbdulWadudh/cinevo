@@ -128,6 +128,10 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
                   alt={item.title || item.name || ""}
                   fill
                   priority={index === 0}
+                  // `priority` alone only emits the preload link; the LCP element
+                  // wants the hint on the tag itself so the fetch outranks the
+                  // poster rows queued behind it.
+                  fetchPriority={index === 0 ? "high" : undefined}
                   // Unlock the neighbours off whichever backdrop is on screen,
                   // and off `onError` too, so a dead image can't strand the
                   // carousel with nothing left to fade to.
