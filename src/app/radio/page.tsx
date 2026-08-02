@@ -2,6 +2,7 @@ import React from "react";
 import type { Metadata } from "next";
 import Nav from "@/components/Nav";
 import RadioClient from "@/components/radio/RadioClient";
+import { getCurrentUser } from "@/lib/auth";
 import {
   getRadioCategoriesAction,
   getFeaturedCategoriesAction,
@@ -21,10 +22,11 @@ export const metadata: Metadata = {
 };
 
 export default async function RadioPage() {
-  const [categoriesRes, featuredRes, isAdmin] = await Promise.all([
+  const [categoriesRes, featuredRes, isAdmin, user] = await Promise.all([
     getRadioCategoriesAction(),
     getFeaturedCategoriesAction(),
     isRadioAdminAction(),
+    getCurrentUser(),
   ]);
 
   const categories = categoriesRes.data;
@@ -49,6 +51,7 @@ export default async function RadioPage() {
         initialSlug={initialSlug}
         initialStations={initialStations}
         isAdmin={isAdmin}
+        isSignedIn={Boolean(user)}
       />
     </div>
   );

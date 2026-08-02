@@ -38,7 +38,9 @@ The newest wing of the building, and the one with the most machinery behind it.
 
 - 🌍 **1,284 browsable categories**, distilled from a 4,684-entry upstream index and sorted into **Genres · Decades · Countries · Languages · Moods**.
 - 🎛️ **Three-band equaliser** — bass, mid and treble with six presets, running on real Web Audio biquad filters.
-- ❤️ **Favourites** that persist locally and sync across open tabs, with their own tinted treatment in the grid.
+- ⭐ **Recommended** — an admin-curated rail of hand-picked stations.
+- ❤️ **Favourites** that sync to your account across devices, work signed out, and get their own tinted treatment in the grid.
+- 🎧 **Keeps playing as you browse** — a mini player follows you across the app, with volume and transport on hover.
 - 🔀 **Surprise me** — a random station from whatever list you're looking at.
 - 💀 **Dead-stream handling** — flag a station as broken, and a stream that fails to open steps automatically to the next one.
 - ⌨️ `Space` to play/pause, `← / →` to change station.

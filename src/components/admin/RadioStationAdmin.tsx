@@ -5,7 +5,7 @@ import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { toast } from "sonner";
 import {
   Radio as RadioIcon, Search, X, Loader2, Pencil, Trash2, Flag, Power,
-  ChevronLeft, ChevronRight, ExternalLink, Plus,
+  ChevronLeft, ChevronRight, ExternalLink, Plus, Star,
 } from "lucide-react";
 import {
   getAdminRadioStationsAction,
@@ -24,6 +24,7 @@ const FILTERS: { id: AdminStationFilter; label: string }[] = [
   { id: "active", label: "Active" },
   { id: "disabled", label: "Disabled" },
   { id: "broken", label: "Reported" },
+  { id: "recommended", label: "Recommended" },
 ];
 
 const SEARCH_DEBOUNCE_MS = 320;
@@ -115,6 +116,25 @@ export default function RadioStationAdmin() {
     [refresh]
   );
 
+  const toggleRecommended = useCallback(
+    async (station: AdminRadioStation) => {
+      setPendingId(station.id);
+      const next = !station.isRecommended;
+      const res = await updateRadioStationAction(station.id, { isRecommended: next });
+      setPendingId(null);
+
+      if (res.success) {
+        toast.success(
+          next ? `“${station.name}” added to Recommended` : `“${station.name}” removed from Recommended`
+        );
+        refresh();
+      } else {
+        toast.error(res.error ?? "Could not update station");
+      }
+    },
+    [refresh]
+  );
+
   const handleSave = useCallback(
     async (patch: { name: string; url: string }) => {
       if (!dialogStation) return;
@@ -197,7 +217,7 @@ export default function RadioStationAdmin() {
             <h2 className="font-display text-lg font-bold">Radio Stations</h2>
             <p className="text-xs text-muted">
               {data
-                ? `${data.counts.total.toLocaleString()} cached · ${data.counts.disabled} disabled · ${data.counts.broken} reported`
+                ? `${data.counts.total.toLocaleString()} cached · ${data.counts.recommended} recommended · ${data.counts.disabled} disabled · ${data.counts.broken} reported`
                 : "Loading catalogue…"}
             </p>
           </div>
@@ -322,6 +342,7 @@ export default function RadioStationAdmin() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="truncate text-sm font-semibold text-white">{station.name}</span>
+                    {station.isRecommended && <Badge tone="star">Recommended</Badge>}
                     {!station.isActive && <Badge tone="muted">Disabled</Badge>}
                     {station.isBroken && (
                       <Badge tone="warn">Reported ×{station.reportCount ?? 0}</Badge>
@@ -347,6 +368,19 @@ export default function RadioStationAdmin() {
                     <Loader2 className="mx-3 size-4 animate-spin text-purple-400" />
                   ) : (
                     <>
+                      <RowAction
+                        label={
+                          station.isRecommended
+                            ? "Remove from Recommended"
+                            : "Add to Recommended"
+                        }
+                        onClick={() => toggleRecommended(station)}
+                        tone={station.isRecommended ? "star" : "default"}
+                      >
+                        <Star
+                          className={`size-3.5 ${station.isRecommended ? "fill-current" : ""}`}
+                        />
+                      </RowAction>
                       <RowAction
                         label={station.isActive ? "Disable station" : "Enable station"}
                         onClick={() => toggleActive(station)}
@@ -432,14 +466,21 @@ export default function RadioStationAdmin() {
 
 /* ── Pieces ────────────────────────────────────────────────────────────── */
 
-function Badge({ tone, children }: { tone: "muted" | "warn"; children: React.ReactNode }) {
+function Badge({
+  tone,
+  children,
+}: {
+  tone: "muted" | "warn" | "star";
+  children: React.ReactNode;
+}) {
+  const tones = {
+    warn: "border-amber-500/30 bg-amber-500/10 text-amber-300",
+    star: "border-purple-400/40 bg-purple-500/15 text-purple-200",
+    muted: "border-white/10 bg-white/5 text-muted",
+  };
   return (
     <span
-      className={`flex-none rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-        tone === "warn"
-          ? "border border-amber-500/30 bg-amber-500/10 text-amber-300"
-          : "border border-white/10 bg-white/5 text-muted"
-      }`}
+      className={`flex-none rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${tones[tone]}`}
     >
       {children}
     </span>
@@ -454,7 +495,7 @@ function RowAction({
 }: {
   label: string;
   onClick: () => void;
-  tone?: "default" | "danger" | "warn" | "success";
+  tone?: "default" | "danger" | "warn" | "success" | "star";
   children: React.ReactNode;
 }) {
   const reduceMotion = useReducedMotion();
@@ -463,6 +504,7 @@ function RowAction({
     danger: "text-red-400 hover:bg-red-500/12",
     warn: "text-amber-400 hover:bg-amber-500/12",
     success: "text-emerald-400 hover:bg-emerald-500/12",
+    star: "text-amber-300 hover:bg-amber-500/12",
   };
   return (
     <motion.button

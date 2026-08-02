@@ -4,11 +4,12 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { toast } from "sonner";
 import {
-  Radio as RadioIcon, Search, X, Loader2, Heart, SearchX, Shuffle, ListFilter,
+  Radio as RadioIcon, Search, X, Loader2, Heart, SearchX, Shuffle, ListFilter, Star,
 } from "lucide-react";
 import {
   getRadioStationsAction,
   getAllRadioStationsAction,
+  getRecommendedStationsAction,
   searchRadioStationsAction,
   reportRadioStationAction,
   updateRadioStationAction,
@@ -22,9 +23,8 @@ import StationCard from "./StationCard";
 import StationEditDialog, { type DialogMode } from "./StationEditDialog";
 import PlayerBar from "./PlayerBar";
 import Equalizer from "./Equalizer";
-import { useRadioPlayer } from "./useRadioPlayer";
+import { useRadioPlayerContext } from "./RadioPlayerProvider";
 import { useRadioFavorites } from "./useRadioFavorites";
-import { useRadioEqualizer } from "./useRadioEqualizer";
 import { radioStorage } from "./radioStorage";
 
 /** Cards rendered per page — motion on hundreds of nodes at once is costly. */
@@ -34,6 +34,8 @@ const SEARCH_DEBOUNCE_MS = 320;
 const MAX_AUTO_SKIPS = 8;
 /** Cache key for the cross-category "All stations" list. */
 const ALL_SLUG = "__all__";
+/** Cache key for the admin-curated recommendations. */
+const RECOMMENDED_SLUG = "__recommended__";
 
 /**
  * Shared horizontal gutter — identical to the one Nav uses, so the page
@@ -52,6 +54,7 @@ interface RadioClientProps {
   initialSlug: string | null;
   initialStations: RadioStationData[];
   isAdmin: boolean;
+  isSignedIn: boolean;
 }
 
 export default function RadioClient({
@@ -60,9 +63,10 @@ export default function RadioClient({
   initialSlug,
   initialStations,
   isAdmin,
+  isSignedIn,
 }: RadioClientProps) {
   const reduceMotion = useReducedMotion();
-  const { favorites, toggleFavorite, isFavorite } = useRadioFavorites();
+  const { favorites, toggleFavorite, isFavorite } = useRadioFavorites(isSignedIn);
 
   const [activeTab, setActiveTab] = useState<RailTab>("featured");
   const [activeSlug, setActiveSlug] = useState<string | null>(initialSlug);
@@ -84,8 +88,8 @@ export default function RadioClient({
   const [dialogBusy, setDialogBusy] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
 
-  const player = useRadioPlayer();
-  const eq = useRadioEqualizer(player.audioRef, player.markElementTainted);
+  // Shared with the root layout, so playback outlives this page.
+  const { player, eq, setQueue } = useRadioPlayerContext();
 
   /** Consecutive dead streams stepped over, so a bad run can't loop forever. */
   const autoSkipRef = useRef(0);
@@ -111,7 +115,8 @@ export default function RadioClient({
   /* ── Station loading (localStorage-backed) ───────────────────────────── */
 
   // "All stations" is loaded through the same cache, under a reserved key.
-  const loadSlug = activeTab === "all" ? ALL_SLUG : activeSlug;
+  const loadSlug =
+    activeTab === "all" ? ALL_SLUG : activeTab === "recommended" ? RECOMMENDED_SLUG : activeSlug;
 
   useEffect(() => {
     if (!loadSlug || stationsBySlug[loadSlug] !== undefined) return;
@@ -130,7 +135,9 @@ export default function RadioClient({
       const res =
         loadSlug === ALL_SLUG
           ? await getAllRadioStationsAction()
-          : await getRadioStationsAction(loadSlug);
+          : loadSlug === RECOMMENDED_SLUG
+            ? await getRecommendedStationsAction()
+            : await getRadioStationsAction(loadSlug);
       if (cancelled) return;
 
       const data = res.success ? res.data : [];
@@ -166,13 +173,15 @@ export default function RadioClient({
 
   /* ── What the grid shows ─────────────────────────────────────────────── */
 
-  const mode: "search" | "favorites" | "all" | "category" = searchActive
+  const mode: "search" | "favorites" | "all" | "recommended" | "category" = searchActive
     ? "search"
     : activeTab === "favorites"
       ? "favorites"
       : activeTab === "all"
         ? "all"
-        : "category";
+        : activeTab === "recommended"
+          ? "recommended"
+          : "category";
 
   const searchData = search && search.q === q ? search.data : null;
   const stations = loadSlug ? stationsBySlug[loadSlug] : undefined;
@@ -180,7 +189,9 @@ export default function RadioClient({
   const busy =
     mode === "search"
       ? searchData === null
-      : (mode === "category" || mode === "all") && Boolean(loadSlug) && stations === undefined;
+      : (mode === "category" || mode === "all" || mode === "recommended") &&
+        Boolean(loadSlug) &&
+        stations === undefined;
 
   const displayed = useMemo(() => {
     if (mode === "search") return searchData ?? [];
@@ -225,6 +236,12 @@ export default function RadioClient({
    */
   useEffect(() => {
     if (touchedRef.current || cuedRef.current) return;
+    // The player is shared with the layout: coming back from another page it
+    // already holds a station, and re-cueing would cut off playback.
+    if (player.current) {
+      cuedRef.current = true;
+      return;
+    }
 
     const pick = pickOpeningStation();
     if (!pick) return;
@@ -234,6 +251,12 @@ export default function RadioClient({
     // Re-running on every render is harmless — the guard above returns
     // immediately once a station has been cued.
   }, [pickOpeningStation, player]);
+
+  /* Hand the visible list to the provider, so the mini player's prev/next
+     step through whatever you were last browsing. */
+  useEffect(() => {
+    setQueue(displayed);
+  }, [displayed, setQueue]);
 
   /* ── Auto-skip past dead streams ─────────────────────────────────────── */
 
@@ -412,6 +435,35 @@ export default function RadioClient({
     [isAdmin, patchStation]
   );
 
+  const handleToggleRecommended = useCallback(
+    async (station: RadioStationData) => {
+      const next = !station.isRecommended;
+      const res = await updateRadioStationAction(station.id, { isRecommended: next });
+
+      if (!res.success) {
+        toast.error(res.error ?? "Could not update station");
+        return;
+      }
+
+      patchStation(station.id, { isRecommended: next });
+
+      // The rail is cached like any other list; drop it so the tab rebuilds
+      // from the server on next visit.
+      radioStorage.invalidateStations(RECOMMENDED_SLUG);
+      setStationsBySlug((prev) => {
+        if (prev[RECOMMENDED_SLUG] === undefined) return prev;
+        return Object.fromEntries(
+          Object.entries(prev).filter(([slug]) => slug !== RECOMMENDED_SLUG)
+        );
+      });
+
+      toast.success(
+        next ? `“${station.name}” added to Recommended` : `“${station.name}” removed from Recommended`
+      );
+    },
+    [patchStation]
+  );
+
   const openDialog = useCallback((station: RadioStationData, dialog: DialogMode) => {
     setDialogStation(station);
     setDialogMode(dialog);
@@ -465,7 +517,7 @@ export default function RadioClient({
       setQuery("");
       // These two are lists in their own right — no category to land on, so
       // close the phone picker and show them straight away.
-      if (tab === "favorites" || tab === "all") {
+      if (tab === "favorites" || tab === "all" || tab === "recommended") {
         setMobilePanel("none");
         return;
       }
@@ -629,6 +681,8 @@ export default function RadioClient({
         ? "Your favourites"
         : mode === "all"
           ? "All stations"
+          : mode === "recommended"
+            ? "Recommended stations"
           : (activeCategory?.name ?? (activeSlug ? prettifyName(activeSlug) : "Stations"));
 
   return (
@@ -666,6 +720,7 @@ export default function RadioClient({
             categories={categories}
             featured={featured}
             favoritesCount={favorites.length}
+            recommendedCount={stationsBySlug[RECOMMENDED_SLUG]?.length ?? 0}
             activeTab={activeTab}
             activeSlug={activeSlug}
             onTabChange={handleTabChange}
@@ -738,6 +793,7 @@ export default function RadioClient({
                     onReport={handleReport}
                     onEdit={handleEdit}
                     onDelete={handleDeleteRequest}
+                    onToggleRecommended={handleToggleRecommended}
                   />
                 ))}
               </AnimatePresence>
@@ -1023,7 +1079,7 @@ function EmptyState({
   mode,
   query,
 }: {
-  mode: "search" | "favorites" | "all" | "category";
+  mode: "search" | "favorites" | "all" | "recommended" | "category";
   query: string;
 }) {
   const reduceMotion = useReducedMotion();
@@ -1033,9 +1089,11 @@ function EmptyState({
       ? [Heart, "No favourites yet", "Tap the heart on any station to pin it here."]
       : mode === "search"
         ? [SearchX, "Nothing found", `No cached station matches “${query}”. Try a category instead.`]
-        : mode === "all"
-          ? [RadioIcon, "Nothing cached yet", "Open a category or two — everything you browse lands here."]
-          : [RadioIcon, "No stations here", "This playlist came back empty upstream. Pick another category."];
+        : mode === "recommended"
+          ? [Star, "No recommendations yet", "An admin hasn't starred any stations. Browse a category in the meantime."]
+          : mode === "all"
+            ? [RadioIcon, "Nothing cached yet", "Open a category or two — everything you browse lands here."]
+            : [RadioIcon, "No stations here", "This playlist came back empty upstream. Pick another category."];
 
   return (
     <motion.div

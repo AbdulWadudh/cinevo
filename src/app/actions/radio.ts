@@ -30,6 +30,7 @@ export interface RadioStationData {
   reportCount?: number;
   isBroken?: boolean;
   isActive?: boolean;
+  isRecommended?: boolean;
 }
 
 /** Listener reports needed before a station is flagged broken automatically. */
@@ -240,6 +241,47 @@ export async function getAllRadioStationsAction(
   }
 }
 
+/**
+ * The admin-curated "Recommended" rail. Ordered by `recommendedOrder`, with
+ * unordered picks falling to the end alphabetically.
+ */
+export async function getRecommendedStationsAction(
+  limit = 120
+): Promise<ActionResult<RadioStationData[]>> {
+  try {
+    const stations = await db.radioStation.findMany({
+      where: { isRecommended: true, isActive: true },
+      orderBy: [{ recommendedOrder: { sort: "asc", nulls: "last" } }, { name: "asc" }],
+      take: limit,
+      select: {
+        id: true,
+        name: true,
+        url: true,
+        reportCount: true,
+        isBroken: true,
+        isRecommended: true,
+        category: { select: { slug: true } },
+      },
+    });
+
+    return {
+      success: true,
+      data: stations.map((s) => ({
+        id: s.id,
+        name: s.name,
+        url: s.url,
+        reportCount: s.reportCount,
+        isBroken: s.isBroken,
+        isRecommended: s.isRecommended,
+        categorySlug: s.category.slug,
+      })),
+    };
+  } catch (err) {
+    console.error("Failed to fetch recommended radio stations:", err);
+    return { success: false, data: [], error: message(err, "Failed to load recommendations") };
+  }
+}
+
 /* ── Search ────────────────────────────────────────────────────────────── */
 
 /** Search cached stations across every category. */
@@ -279,6 +321,118 @@ export async function searchRadioStationsAction(
   } catch (err) {
     console.error(`Radio station search failed for "${q}":`, err);
     return { success: false, data: [], error: message(err, "Search failed") };
+  }
+}
+
+/* ── Favourites (server-side, for signed-in listeners) ─────────────────── */
+
+/**
+ * The signed-in listener's favourites. `requiresAuth` tells the client to stay
+ * on localStorage rather than treating an empty list as "you have none".
+ */
+export async function getRadioFavoritesAction(): Promise<
+  ActionResult<RadioStationData[]> & { requiresAuth?: boolean }
+> {
+  try {
+    const profile = await getOrCreateProfile();
+    if (!profile) return { success: true, data: [], requiresAuth: true };
+
+    const rows = await db.radioFavorite.findMany({
+      where: { profileId: profile.id },
+      orderBy: { createdAt: "asc" },
+      select: {
+        station: {
+          select: {
+            id: true,
+            name: true,
+            url: true,
+            reportCount: true,
+            isBroken: true,
+            category: { select: { slug: true } },
+          },
+        },
+      },
+    });
+
+    return {
+      success: true,
+      data: rows.map((r) => ({
+        id: r.station.id,
+        name: r.station.name,
+        url: r.station.url,
+        reportCount: r.station.reportCount,
+        isBroken: r.station.isBroken,
+        categorySlug: r.station.category.slug,
+      })),
+    };
+  } catch (err) {
+    console.error("Failed to load radio favourites:", err);
+    return { success: false, data: [], error: message(err, "Failed to load favourites") };
+  }
+}
+
+/** Adds or removes one favourite. Returns the new state for that station. */
+export async function toggleRadioFavoriteAction(
+  stationId: string
+): Promise<ActionResult<{ isFavorite: boolean } | null> & { requiresAuth?: boolean }> {
+  try {
+    const profile = await getOrCreateProfile();
+    if (!profile) return { success: false, data: null, requiresAuth: true };
+
+    const existing = await db.radioFavorite.findUnique({
+      where: { profileId_stationId: { profileId: profile.id, stationId } },
+      select: { id: true },
+    });
+
+    if (existing) {
+      await db.radioFavorite.delete({ where: { id: existing.id } });
+      return { success: true, data: { isFavorite: false } };
+    }
+
+    await db.radioFavorite.create({ data: { profileId: profile.id, stationId } });
+    return { success: true, data: { isFavorite: true } };
+  } catch (err) {
+    console.error(`Failed to toggle radio favourite ${stationId}:`, err);
+    return { success: false, data: null, error: message(err, "Failed to update favourite") };
+  }
+}
+
+/**
+ * Reconciles the browser's favourites with the account's on sign-in.
+ *
+ * The union is taken rather than letting either side win: anything favourited
+ * while signed out would otherwise be lost, and anything saved on another
+ * device would be wiped by an empty local list.
+ */
+export async function mergeRadioFavoritesAction(
+  localStationIds: string[]
+): Promise<ActionResult<RadioStationData[]> & { requiresAuth?: boolean }> {
+  try {
+    const profile = await getOrCreateProfile();
+    if (!profile) return { success: true, data: [], requiresAuth: true };
+
+    const ids = [...new Set(localStationIds.filter((id) => typeof id === "string" && id))];
+
+    if (ids.length > 0) {
+      // Stations can be deleted by an admin between sessions, so only insert
+      // ids that still exist — a bad reference would fail the whole batch.
+      const live = await db.radioStation.findMany({
+        where: { id: { in: ids } },
+        select: { id: true },
+      });
+
+      if (live.length > 0) {
+        await db.radioFavorite.createMany({
+          data: live.map((s) => ({ profileId: profile.id, stationId: s.id })),
+          skipDuplicates: true,
+        });
+      }
+    }
+
+    return getRadioFavoritesAction();
+  } catch (err) {
+    console.error("Failed to merge radio favourites:", err);
+    return { success: false, data: [], error: message(err, "Failed to sync favourites") };
   }
 }
 
@@ -333,7 +487,13 @@ export async function reportRadioStationAction(
 /** Admin: rename a station, repoint its stream, or flip its flags. */
 export async function updateRadioStationAction(
   stationId: string,
-  patch: { name?: string; url?: string; isBroken?: boolean; isActive?: boolean }
+  patch: {
+    name?: string;
+    url?: string;
+    isBroken?: boolean;
+    isActive?: boolean;
+    isRecommended?: boolean;
+  }
 ): Promise<ActionResult<RadioStationData | null>> {
   try {
     await requireAdmin();
@@ -343,10 +503,12 @@ export async function updateRadioStationAction(
       url?: string;
       isBroken?: boolean;
       isActive?: boolean;
+      isRecommended?: boolean;
       reportCount?: number;
     } = {};
 
     if (patch.isActive !== undefined) data.isActive = patch.isActive;
+    if (patch.isRecommended !== undefined) data.isRecommended = patch.isRecommended;
 
     if (patch.name !== undefined) {
       const name = patch.name.trim();
@@ -572,10 +734,10 @@ export interface AdminStationPage {
   total: number;
   page: number;
   pageSize: number;
-  counts: { total: number; disabled: number; broken: number };
+  counts: { total: number; disabled: number; broken: number; recommended: number };
 }
 
-export type AdminStationFilter = "all" | "active" | "disabled" | "broken";
+export type AdminStationFilter = "all" | "active" | "disabled" | "broken" | "recommended";
 
 const ADMIN_PAGE_SIZE = 25;
 
@@ -600,9 +762,10 @@ export async function getAdminRadioStationsAction(opts: {
       ...(filter === "active" ? { isActive: true, isBroken: false } : {}),
       ...(filter === "disabled" ? { isActive: false } : {}),
       ...(filter === "broken" ? { isBroken: true } : {}),
+      ...(filter === "recommended" ? { isRecommended: true } : {}),
     };
 
-    const [stations, total, totalAll, disabled, broken] = await Promise.all([
+    const [stations, total, totalAll, disabled, broken, recommended] = await Promise.all([
       db.radioStation.findMany({
         where,
         orderBy: [{ isActive: "asc" }, { isBroken: "desc" }, { name: "asc" }],
@@ -615,6 +778,7 @@ export async function getAdminRadioStationsAction(opts: {
           reportCount: true,
           isBroken: true,
           isActive: true,
+          isRecommended: true,
           category: { select: { slug: true, name: true } },
         },
       }),
@@ -622,6 +786,7 @@ export async function getAdminRadioStationsAction(opts: {
       db.radioStation.count(),
       db.radioStation.count({ where: { isActive: false } }),
       db.radioStation.count({ where: { isBroken: true } }),
+      db.radioStation.count({ where: { isRecommended: true } }),
     ]);
 
     return {
@@ -634,13 +799,14 @@ export async function getAdminRadioStationsAction(opts: {
           reportCount: s.reportCount,
           isBroken: s.isBroken,
           isActive: s.isActive,
+          isRecommended: s.isRecommended,
           categorySlug: s.category.slug,
           categoryName: prettifyName(s.category.slug),
         })),
         total,
         page,
         pageSize: ADMIN_PAGE_SIZE,
-        counts: { total: totalAll, disabled, broken },
+        counts: { total: totalAll, disabled, broken, recommended },
       },
     };
   } catch (err) {

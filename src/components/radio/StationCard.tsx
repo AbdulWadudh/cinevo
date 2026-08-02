@@ -4,9 +4,10 @@ import React, { memo, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import {
   Heart, Play, Pause, Radio as RadioIcon, Loader2, AlertTriangle,
-  MoreVertical, Pencil, Trash2, Flag, CheckCircle2,
+  MoreVertical, Pencil, Trash2, Flag, CheckCircle2, Star,
 } from "lucide-react";
 import type { RadioStationData } from "@/app/actions/radio";
+import { prettifyName } from "@/lib/radio/categories";
 import type { PlaybackStatus } from "./useRadioPlayer";
 import Equalizer from "./Equalizer";
 
@@ -38,6 +39,7 @@ interface StationCardProps {
   onReport: (station: RadioStationData) => void;
   onEdit: (station: RadioStationData) => void;
   onDelete: (station: RadioStationData) => void;
+  onToggleRecommended: (station: RadioStationData) => void;
 }
 
 function StationCardBase({
@@ -51,6 +53,7 @@ function StationCardBase({
   onReport,
   onEdit,
   onDelete,
+  onToggleRecommended,
 }: StationCardProps) {
   const reduceMotion = useReducedMotion();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -177,21 +180,40 @@ function StationCardBase({
                 <Heart className="size-3 fill-pink-500 text-pink-500" aria-label="Favourite" />
               </motion.span>
             )}
+            {station.isRecommended && (
+              <motion.span
+                initial={reduceMotion ? false : { scale: 0, rotate: -30 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 600, damping: 18 }}
+                className="flex-none"
+              >
+                <Star className="size-3 fill-amber-400 text-amber-400" aria-label="Recommended" />
+              </motion.span>
+            )}
             <span className="truncate text-[13px] font-semibold text-white">{station.name}</span>
             {station.isBroken && (
               <Flag className="size-3 flex-none text-amber-500/80" aria-label="Reported not working" />
             )}
           </span>
-          <span
-            className={`mt-0.5 block truncate text-[10px] uppercase tracking-wider ${
-              errored || station.isBroken
-                ? "text-amber-400/80"
-                : playing
-                  ? "text-purple-300"
-                  : "text-muted"
-            }`}
-          >
-            {label}
+          <span className="mt-0.5 flex items-center gap-1.5">
+            {/* Which category the station came from — the list is often mixed
+                (favourites, search, All stations), so the card has to say. */}
+            {station.categorySlug && (
+              <span className="flex-none rounded bg-white/8 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-fg-secondary">
+                {prettifyName(station.categorySlug)}
+              </span>
+            )}
+            <span
+              className={`truncate text-[10px] uppercase tracking-wider ${
+                errored || station.isBroken
+                  ? "text-amber-400/80"
+                  : playing
+                    ? "text-purple-300"
+                    : "text-muted"
+              }`}
+            >
+              {label}
+            </span>
           </span>
         </span>
 
@@ -239,6 +261,23 @@ function StationCardBase({
         <IconAction label="Report not working" onClick={() => onReport(station)}>
           <Flag className="size-3.5" />
         </IconAction>
+
+        {/* Admins curate the Recommended rail straight from the grid. */}
+        {isAdmin && (
+          <IconAction
+            label={
+              station.isRecommended ? "Remove from Recommended" : "Add to Recommended"
+            }
+            pressed={station.isRecommended}
+            onClick={() => onToggleRecommended(station)}
+          >
+            <Star
+              className={`size-3.5 ${
+                station.isRecommended ? "fill-amber-400 text-amber-400" : ""
+              }`}
+            />
+          </IconAction>
+        )}
 
         {isAdmin && (
           <div className="relative" ref={menuRef}>
@@ -364,6 +403,7 @@ export default memo(StationCardBase, (prev, next) =>
   prev.station.name === next.station.name &&
   prev.station.url === next.station.url &&
   prev.station.isBroken === next.station.isBroken &&
+  prev.station.isRecommended === next.station.isRecommended &&
   prev.isCurrent === next.isCurrent &&
   prev.isFavorite === next.isFavorite &&
   prev.isAdmin === next.isAdmin &&

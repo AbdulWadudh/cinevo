@@ -21,6 +21,7 @@ model Profile {
   wishlists     Wishlist[]
   ratings       Rating[]
   pushSubs      PushSubscription[]
+  radioFavorites RadioFavorite[]
 }
 
 // A browser Web Push subscription (one per device/browser the user enables).
@@ -159,6 +160,21 @@ model RadioCategory {
   @@index([isCustom])
 }
 
+// A station a signed-in listener has favourited. Signed-out visitors keep
+// their favourites in localStorage only; signing in merges those in.
+model RadioFavorite {
+  id        String       @id @default(uuid())
+  profileId String
+  profile   Profile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  stationId String
+  station   RadioStation @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+
+  @@unique([profileId, stationId])
+  @@index([profileId])
+  @@index([stationId])
+}
+
 model RadioStation {
   id         String        @id @default(uuid())
   name       String
@@ -172,8 +188,13 @@ model RadioStation {
   // Admin kill switch. Disabled stations stay in the catalogue but are hidden
   // from listeners — used for streams that are dead or unwanted.
   isActive    Boolean      @default(true)
+  // Hand-picked by an admin for the "Recommended" rail on the radio page.
+  // `recommendedOrder` controls the running order; nulls sort last.
+  isRecommended    Boolean @default(false)
+  recommendedOrder Int?
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @default(now()) @updatedAt
+  favorites  RadioFavorite[]
 
   // Re-hydrating a category must not duplicate its stations.
   @@unique([categoryId, url])
@@ -181,4 +202,5 @@ model RadioStation {
   @@index([name])
   @@index([isBroken])
   @@index([isActive])
+  @@index([isRecommended])
 }

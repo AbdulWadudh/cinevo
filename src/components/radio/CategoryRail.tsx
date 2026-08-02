@@ -2,12 +2,12 @@
 
 import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
-import { Heart, Search, Sparkles, ChevronDown, X, Library } from "lucide-react";
+import { Heart, Search, Sparkles, ChevronDown, X, Library, Star } from "lucide-react";
 import type { RadioCategoryData } from "@/app/actions/radio";
 import { RADIO_GROUPS, type RadioGroup } from "@/lib/radio/categories";
 
 /** Pseudo-groups that sit alongside the real ones in the tab strip. */
-export type RailTab = "favorites" | "all" | "featured" | RadioGroup;
+export type RailTab = "recommended" | "favorites" | "all" | "featured" | RadioGroup;
 
 const CHIP_PAGE = 48;
 
@@ -15,6 +15,7 @@ interface CategoryRailProps {
   categories: RadioCategoryData[];
   featured: RadioCategoryData[];
   favoritesCount: number;
+  recommendedCount: number;
   activeTab: RailTab;
   activeSlug: string | null;
   onTabChange: (tab: RailTab) => void;
@@ -25,6 +26,7 @@ export default function CategoryRail({
   categories,
   featured,
   favoritesCount,
+  recommendedCount,
   activeTab,
   activeSlug,
   onTabChange,
@@ -36,6 +38,7 @@ export default function CategoryRail({
 
   const tabs = useMemo(
     () => [
+      { id: "recommended" as const, label: "Recommended", badge: recommendedCount || null },
       { id: "favorites" as const, label: "Favourites", badge: favoritesCount },
       { id: "all" as const, label: "All stations", badge: null },
       { id: "featured" as const, label: "Featured", badge: featured.length },
@@ -45,12 +48,12 @@ export default function CategoryRail({
         badge: categories.filter((c) => c.group === g.id).length,
       })),
     ],
-    [categories, featured.length, favoritesCount]
+    [categories, featured.length, favoritesCount, recommendedCount]
   );
 
   const chips = useMemo(() => {
     // These tabs are lists in their own right, not collections of categories.
-    if (activeTab === "favorites" || activeTab === "all") return [];
+    if (activeTab === "favorites" || activeTab === "all" || activeTab === "recommended") return [];
     const pool = activeTab === "featured" ? featured : categories.filter((c) => c.group === activeTab);
     const q = filter.trim().toLowerCase();
     if (!q) return pool;
@@ -96,6 +99,9 @@ export default function CategoryRail({
               {tab.id === "favorites" && (
                 <Heart className={`size-3.5 ${active ? "fill-white text-white" : "text-pink-500"}`} />
               )}
+              {tab.id === "recommended" && (
+                <Star className={`size-3.5 ${active ? "fill-white text-white" : "fill-amber-400/30 text-amber-400"}`} />
+              )}
               {tab.id === "all" && (
                 <Library className={`size-3.5 ${active ? "text-white" : "text-sky-400"}`} />
               )}
@@ -115,7 +121,7 @@ export default function CategoryRail({
 
       {/* Category chips for the active section */}
       <AnimatePresence mode="wait" initial={false}>
-        {activeTab !== "favorites" && activeTab !== "all" && (
+        {activeTab !== "favorites" && activeTab !== "all" && activeTab !== "recommended" && (
           <motion.div
             key={activeTab}
             initial={reduceMotion ? false : { opacity: 0, y: -6 }}
