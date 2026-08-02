@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { flushWatch } from "@/lib/watchSyncClient";
 import { getDirty } from "@/lib/watchStore";
 import { safeStorage } from "@/lib/safeStorage";
+import { radioStorage } from "@/components/radio/radioStorage";
 import { STORAGE_PREFIX, storageKey } from "@/config";
 
 const APP_CACHE_PREFIX = STORAGE_PREFIX;
@@ -32,6 +33,13 @@ export default function ClearCacheButton() {
       const supabase = createClient();
       const { data } = await supabase.auth.getUser();
       const authed = !!data.user;
+
+      // Radio caches its category index and station lists under `cinevo_radio_*`,
+      // which the `cinevo:` prefix sweep below never matched — so a reset left
+      // them in place for up to a day. Favourites are deliberately spared:
+      // they're user data, not a cache.
+      radioStorage.invalidateCategories();
+      radioStorage.clearStations();
 
       if (authed) {
         // Push pending changes, then confirm the local store is fully synced

@@ -17,6 +17,7 @@ import {
   type AdminStationPage,
 } from "@/app/actions/radio";
 import StationEditDialog, { type DialogMode } from "@/components/radio/StationEditDialog";
+import { radioStorage } from "@/components/radio/radioStorage";
 import StationCreateDialog, { type NewStationInput } from "./StationCreateDialog";
 
 const FILTERS: { id: AdminStationFilter; label: string }[] = [
@@ -172,6 +173,10 @@ export default function RadioStationAdmin() {
 
     if (res.success) {
       toast.success(`Deleted “${dialogStation.name}”`);
+      // The listener-facing rail caches the category index, station counts and
+      // all — drop it so the change shows up rather than waiting out the TTL.
+      radioStorage.invalidateCategories();
+      if (dialogStation.categorySlug) radioStorage.invalidateStations(dialogStation.categorySlug);
       setDialogStation(null);
       refresh();
     } else {
@@ -192,6 +197,10 @@ export default function RadioStationAdmin() {
         toast.success(`Added “${res.data.name}”`, {
           description: `Filed under ${res.data.categoryName}.`,
         });
+        // A hand-made category is brand new to the index, and an existing one
+        // just gained a station — the cached rail knows neither.
+        radioStorage.invalidateCategories();
+        if (res.data.categorySlug) radioStorage.invalidateStations(res.data.categorySlug);
         refresh();
       } else {
         setCreateError(res.error ?? "Could not add station");

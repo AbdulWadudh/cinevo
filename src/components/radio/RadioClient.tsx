@@ -7,6 +7,7 @@ import {
   Radio as RadioIcon, Search, X, Loader2, Heart, SearchX, Shuffle, ListFilter, Star,
 } from "lucide-react";
 import {
+  getRadioCategoriesAction,
   getRadioStationsAction,
   getAllRadioStationsAction,
   getRecommendedStationsAction,
@@ -17,7 +18,7 @@ import {
   type RadioCategoryData,
   type RadioStationData,
 } from "@/app/actions/radio";
-import { prettifyName } from "@/lib/radio/categories";
+import { prettifyName, FEATURED_SLUGS } from "@/lib/radio/categories";
 import CategoryRail, { type RailTab } from "./CategoryRail";
 import StationCard from "./StationCard";
 import StationEditDialog, { type DialogMode } from "./StationEditDialog";
@@ -49,8 +50,6 @@ function randomOf<T>(list: readonly T[]): T | undefined {
 }
 
 interface RadioClientProps {
-  categories: RadioCategoryData[];
-  featured: RadioCategoryData[];
   initialSlug: string | null;
   initialStations: RadioStationData[];
   isAdmin: boolean;
@@ -58,8 +57,6 @@ interface RadioClientProps {
 }
 
 export default function RadioClient({
-  categories,
-  featured,
   initialSlug,
   initialStations,
   isAdmin,
@@ -67,6 +64,45 @@ export default function RadioClient({
 }: RadioClientProps) {
   const reduceMotion = useReducedMotion();
   const { favorites, toggleFavorite, isFavorite } = useRadioFavorites(isSignedIn);
+
+  /**
+   * The category index, held client-side. It's the same list for everybody and
+   * changes only when an admin edits the catalogue, so re-reading several
+   * thousand rows on every page load bought nothing — it comes from
+   * localStorage instead, and only misses go to the server.
+   */
+  const [categories, setCategories] = useState<RadioCategoryData[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    // Async so the cache read lands in a promise callback rather than
+    // synchronously in the effect body.
+    (async () => {
+      const cached = radioStorage.readCategories();
+      if (cached) {
+        if (!cancelled) setCategories(cached);
+        return;
+      }
+
+      const res = await getRadioCategoriesAction();
+      if (cancelled || !res.success) return;
+      radioStorage.writeCategories(res.data);
+      setCategories(res.data);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /** Derived here rather than fetched — `FEATURED_SLUGS` is a client constant. */
+  const featured = useMemo(() => {
+    const bySlug = new Map(categories.map((c) => [c.slug, c]));
+    return FEATURED_SLUGS.map((s) => bySlug.get(s)).filter(
+      (c): c is RadioCategoryData => Boolean(c)
+    );
+  }, [categories]);
 
   const [activeTab, setActiveTab] = useState<RailTab>("featured");
   const [activeSlug, setActiveSlug] = useState<string | null>(initialSlug);

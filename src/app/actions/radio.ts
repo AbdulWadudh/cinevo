@@ -7,7 +7,6 @@ import {
   classifySlug,
   isBrowsableSlug,
   prettifyName,
-  FEATURED_SLUGS,
   type RadioGroup,
 } from "@/lib/radio/categories";
 
@@ -86,18 +85,6 @@ export async function getRadioCategoriesAction(): Promise<ActionResult<RadioCate
 }
 
 /** The hand-picked landing rail, ordered as listed in FEATURED_SLUGS. */
-export async function getFeaturedCategoriesAction(): Promise<ActionResult<RadioCategoryData[]>> {
-  const all = await getRadioCategoriesAction();
-  if (!all.success) return all;
-
-  const bySlug = new Map(all.data.map((c) => [c.slug, c]));
-  const featured = FEATURED_SLUGS.map((s) => bySlug.get(s)).filter(
-    (c): c is RadioCategoryData => Boolean(c)
-  );
-
-  return { success: true, data: featured };
-}
-
 /* ── Stations ──────────────────────────────────────────────────────────── */
 
 /**

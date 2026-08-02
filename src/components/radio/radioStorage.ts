@@ -1,6 +1,6 @@
 "use client";
 
-import type { RadioStationData } from "@/app/actions/radio";
+import type { RadioCategoryData, RadioStationData } from "@/app/actions/radio";
 
 /**
  * localStorage-backed stores for radio preferences, exposed as external stores
@@ -15,6 +15,7 @@ import type { RadioStationData } from "@/app/actions/radio";
 const FAVORITES_KEY = "cinevo_radio_favorites";
 const VOLUME_KEY = "cinevo_radio_volume";
 const STATIONS_KEY = "cinevo_radio_stations";
+const CATEGORIES_KEY = "cinevo_radio_categories";
 const EQ_KEY = "cinevo_radio_eq";
 const LAST_KEY = "cinevo_radio_last";
 
@@ -223,6 +224,64 @@ function clearStations() {
   }
 }
 
+/* ── Category cache ────────────────────────────────────────────────────── */
+
+/**
+ * The browsable category index, cached client-side so the rail is there on
+ * arrival and a page load doesn't re-read a table of several thousand rows.
+ *
+ * Versioned as well as timed: `group` and `name` are derived by the slug
+ * classifier at query time, so a list cached by an older build could file
+ * categories under sections that no longer exist. A version bump discards it.
+ */
+const CATEGORY_CACHE_VERSION = 1;
+const CATEGORY_TTL_MS = 24 * 60 * 60 * 1000;
+
+interface CategoryCacheEntry {
+  v: number;
+  t: number;
+  d: RadioCategoryData[];
+}
+
+function readCategories(): RadioCategoryData[] | null {
+  try {
+    const raw = localStorage.getItem(CATEGORIES_KEY);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+
+    const entry = parsed as Partial<CategoryCacheEntry>;
+    if (entry.v !== CATEGORY_CACHE_VERSION || !Array.isArray(entry.d)) return null;
+    if (typeof entry.t !== "number" || Date.now() - entry.t >= CATEGORY_TTL_MS) return null;
+    return entry.d;
+  } catch {
+    return null;
+  }
+}
+
+function writeCategories(data: RadioCategoryData[]) {
+  // Never cache an empty list — a failed fetch would otherwise pin the rail
+  // empty for a day.
+  if (data.length === 0) return;
+  try {
+    const entry: CategoryCacheEntry = { v: CATEGORY_CACHE_VERSION, t: Date.now(), d: data };
+    localStorage.setItem(CATEGORIES_KEY, JSON.stringify(entry));
+  } catch {
+    // Out of quota. The index is a nice-to-have, so drop it rather than
+    // competing with the station cache for room.
+    invalidateCategories();
+  }
+}
+
+/** Drops the index after an admin change (new category, moved station counts). */
+function invalidateCategories() {
+  try {
+    localStorage.removeItem(CATEGORIES_KEY);
+  } catch {
+    /* non-fatal */
+  }
+}
+
 /* ── Last played station ───────────────────────────────────────────────── */
 
 /**
@@ -351,5 +410,8 @@ export const radioStorage = {
   writeStations,
   invalidateStations,
   clearStations,
+  readCategories,
+  writeCategories,
+  invalidateCategories,
   DEFAULT_VOLUME,
 };
