@@ -66,13 +66,22 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${plusJakarta.variable} ${geistSans.variable} h-full antialiased`}
     >
+      <head>
+        {/* Every poster and backdrop comes from here, and the hero's is the LCP
+            element — opening the connection alongside the HTML saves the DNS +
+            TLS round trips that would otherwise sit in front of it. */}
+        <link rel="preconnect" href="https://image.tmdb.org" />
+        <link rel="dns-prefetch" href="https://image.tmdb.org" />
+      </head>
       <body className="bg-bg text-fg min-h-full flex flex-col font-sans">
         {/* Owns the audio element, so radio keeps playing across navigation. */}
         <RadioPlayerProvider>
           <WishlistProvider>
             <TrailerProvider>
               <ClickSpark sparkColor="#e53e4f" sparkSize={12} sparkRadius={18} sparkCount={8} duration={500}>
-                {children}
+                {/* The single `main` landmark for every route — pages render their
+                    own sections inside it and must not nest another `main`. */}
+                <main id="main-content">{children}</main>
               </ClickSpark>
             </TrailerProvider>
           </WishlistProvider>

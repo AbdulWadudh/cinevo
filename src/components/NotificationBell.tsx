@@ -80,7 +80,7 @@ export default function NotificationBell({
       >
         <Bell className="w-5 h-5" />
         {unread > 0 && (
-          <span className="absolute top-1 right-1 min-w-[15px] h-[15px] px-1 bg-accent rounded-full text-[9px] font-extrabold text-white flex items-center justify-center">
+          <span className="absolute top-1 right-1 min-w-[15px] h-[15px] px-1 bg-accent-strong rounded-full text-[9px] font-extrabold text-white flex items-center justify-center">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
@@ -133,7 +133,7 @@ export default function NotificationBell({
                           {n.kind === "upcoming" ? `Airs ${n.airDate}` : "New episode"}
                         </span>
                       </div>
-                      {isUnread && <span className="w-2 h-2 rounded-full bg-accent flex-none" />}
+                      {isUnread && <span className="w-2 h-2 rounded-full bg-accent-strong flex-none" />}
                     </Link>
                   );
                 })

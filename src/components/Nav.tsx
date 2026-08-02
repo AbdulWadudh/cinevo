@@ -94,7 +94,7 @@ export default function Nav() {
                     }`}
                 >
                   {link.name}
-                  {active && <span className="absolute bottom-0 left-1.5 right-1.5 h-[2px] bg-accent rounded-full" />}
+                  {active && <span className="absolute bottom-0 left-1.5 right-1.5 h-[2px] bg-accent-strong rounded-full" />}
                 </FocusableLink>
               );
             })}
@@ -105,12 +105,12 @@ export default function Nav() {
           <FocusableButton
             onPress={goSearch}
             ariaLabel="Search"
-            className="p-2 text-fg-secondary hover:text-fg hover:bg-white/[0.06] rounded-full transition-all cursor-pointer"
+            className="p-2 text-fg-secondary hover:text-fg hover:bg-white/6 rounded-full transition-all cursor-pointer"
           >
             <Search className="w-5 h-5" />
           </FocusableButton>
           <NotificationBell />
-          <FocusableLink href="/wishlist" className="p-2 text-fg-secondary hover:text-fg hover:bg-white/[0.06] rounded-full transition-all block">
+          <FocusableLink href="/wishlist" ariaLabel="Wishlist" className="p-2 text-fg-secondary hover:text-fg hover:bg-white/6 rounded-full transition-all block">
             <Heart className="w-5 h-5" />
           </FocusableLink>
           {authUser ? (

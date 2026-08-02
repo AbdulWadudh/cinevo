@@ -71,7 +71,8 @@ export default function BrowseSection({ initialTrending }: BrowseSectionProps) {
         </div>
       ) : (
         <div className="-mt-4">
-          <MediaCarousel title="" items={movies} mediaType="movie" />
+          {/* No heading of its own — the page's "Explore Categories" h2 names it. */}
+          <MediaCarousel label="Explore Categories" items={movies} mediaType="movie" />
         </div>
       )}
     </div>

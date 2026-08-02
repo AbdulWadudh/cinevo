@@ -118,7 +118,7 @@ export default function TrailerProvider({ children }: { children: React.ReactNod
                     <Link
                       href={`/watch/${media.mediaType}/${media.id}`}
                       onClick={close}
-                      className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-sm font-bold bg-accent text-white hover:bg-accent-hover hover:shadow-[0_6px_20px_rgba(229,62,79,0.35)] transition-all cursor-pointer"
+                      className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover hover:shadow-[0_6px_20px_rgba(229,62,79,0.35)] transition-all cursor-pointer"
                     >
                       <Play className="w-4 h-4 fill-white" />
                       <span className="hidden sm:inline">Play {media.mediaType === "tv" ? "Show" : "Movie"}</span>
@@ -126,7 +126,7 @@ export default function TrailerProvider({ children }: { children: React.ReactNod
                     <button
                       onClick={close}
                       aria-label="Close trailer"
-                      className="w-10 h-10 rounded-full bg-surface hover:bg-accent text-fg-secondary hover:text-white border border-white/[0.1] flex items-center justify-center transition-all cursor-pointer"
+                      className="w-10 h-10 rounded-full bg-surface hover:bg-accent-strong text-fg-secondary hover:text-white border border-white/[0.1] flex items-center justify-center transition-all cursor-pointer"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -141,7 +141,7 @@ export default function TrailerProvider({ children }: { children: React.ReactNod
                     </div>
                   ) : key ? (
                     <iframe
-                      src={`https://www.youtube.com/embed/${key}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
+                      src={`https://www.youtube-nocookie.com/embed/${key}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
                       title={`${media.title} trailer`}
                       allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                       allowFullScreen

@@ -248,7 +248,7 @@ export default function ProviderAdmin({ providers, setProviders, ref }: Provider
 
         <div className="flex items-center gap-2.5 mt-5">
           <button onClick={save} disabled={pending}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold bg-accent text-white hover:bg-accent-hover transition-all cursor-pointer disabled:opacity-60">
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover transition-all cursor-pointer disabled:opacity-60">
             {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {editingId === "new" ? "Create provider" : "Save changes"}
           </button>

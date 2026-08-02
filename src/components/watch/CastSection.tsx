@@ -61,7 +61,7 @@ export default function CastSection({ cast }: CastSectionProps) {
             <div className="flex justify-center mt-6">
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-full text-xs font-bold tracking-wider uppercase border border-accent/30 text-white bg-accent/10 hover:bg-accent hover:border-accent hover:shadow-[0_4px_15px_rgba(229,62,79,0.3)] transition-all duration-300 cursor-pointer shadow-lg"
+                className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-full text-xs font-bold tracking-wider uppercase border border-accent/30 text-white bg-accent/10 hover:bg-accent-strong hover:border-accent hover:shadow-[0_4px_15px_rgba(229,62,79,0.3)] transition-all duration-300 cursor-pointer shadow-lg"
               >
                 {isExpanded ? (
                   <>

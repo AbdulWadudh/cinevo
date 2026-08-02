@@ -14,8 +14,8 @@ export default function WishlistPage() {
       {/* Fixed navigation */}
       <Nav />
 
-      {/* Main Container */}
-      <main className="max-w-[1400px] mx-auto px-6 md:px-12 pt-28">
+      {/* Main Container — the `main` landmark itself lives in the root layout. */}
+      <div className="max-w-350 mx-auto px-6 md:px-12 pt-28">
         <header className="flex items-center gap-3 mb-8 border-b border-border pb-6 animate-fade-in">
           <div className="p-3.5 bg-accent/10 border border-accent/20 rounded-2xl">
             <Heart className="w-6 h-6 text-accent fill-accent" />
@@ -34,7 +34,7 @@ export default function WishlistPage() {
         <section className="w-full">
           <WishlistGrid />
         </section>
-      </main>
+      </div>
     </div>
   );
 }

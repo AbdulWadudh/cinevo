@@ -14,7 +14,7 @@ export default function Loading() {
       </section>
 
       {/* Metadata */}
-      <main className="px-6 md:px-12 pt-8 grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8 lg:gap-12">
+      <div className="px-6 md:px-12 pt-8 grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8 lg:gap-12">
         <div className="flex flex-col gap-4">
           <div className="h-10 w-2/3 bg-surface/60 rounded-lg animate-pulse" />
           <div className="h-4 w-1/3 bg-surface/40 rounded animate-pulse" />
@@ -32,7 +32,7 @@ export default function Loading() {
         <div className="lg:border-l border-border lg:pl-8">
           <div className="w-full aspect-video bg-surface/50 rounded-xl animate-pulse" />
         </div>
-      </main>
+      </div>
     </div>
   );
 }

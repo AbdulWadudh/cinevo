@@ -460,7 +460,9 @@ export const StaggeredMenu = ({
         </div>
       </header>
 
-      <aside id="staggered-menu-panel" ref={panelRef} className="staggered-menu-panel" aria-hidden={!open}>
+      {/* `inert` rather than aria-hidden: the closed panel keeps its links in the
+          DOM, so they have to leave the tab order as well as the a11y tree. */}
+      <aside id="staggered-menu-panel" ref={panelRef} className="staggered-menu-panel" inert={!open}>
         <div className="sm-panel-inner">
           <ul className="sm-panel-list" role="list" data-numbering={displayItemNumbering || undefined}>
             {items && items.length ? (

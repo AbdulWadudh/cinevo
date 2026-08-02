@@ -90,7 +90,7 @@ function OverviewPopup({ overview, epName, epNumber, seasonNumber, thumbUrl, onC
           />
           <div className="absolute inset-0 bg-gradient-to-t from-surface/95 via-surface/30 to-transparent" />
           {/* Badge */}
-          <div className="absolute top-3 left-3 bg-accent text-white text-[9px] font-extrabold px-2 py-0.5 rounded uppercase tracking-widest shadow-md">
+          <div className="absolute top-3 left-3 bg-accent-strong text-white text-[9px] font-extrabold px-2 py-0.5 rounded uppercase tracking-widest shadow-md">
             S{seasonNumber} · EP {epNumber}
           </div>
           {/* Close */}
@@ -363,7 +363,7 @@ export default function SeasonList({
             </h2>
           </div>
           <div className="flex items-center gap-2 mt-1 ml-11">
-            <span className="w-12 h-[3px] bg-accent rounded-full" />
+            <span className="w-12 h-[3px] bg-accent-strong rounded-full" />
             <p className="text-xs text-muted uppercase tracking-widest font-extrabold">
               {validSeasons.length} Season{validSeasons.length !== 1 ? "s" : ""} Available · Click a season to browse episodes
             </p>
@@ -501,7 +501,7 @@ export default function SeasonList({
                       {/* Panel header */}
                       <div className="flex items-center justify-between">
                         <h4 className="text-[10px] font-extrabold uppercase tracking-widest text-accent flex items-center gap-2">
-                          <span className="w-1 h-4 bg-accent rounded-full inline-block" />
+                          <span className="w-1 h-4 bg-accent-strong rounded-full inline-block" />
                           Season {s.season_number} · Episode List
                         </h4>
                         {!isLoading && loadedSeasons[s.season_number] && (
@@ -566,7 +566,7 @@ export default function SeasonList({
                                 />
                                 {/* Hover play overlay */}
                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-all duration-300 bg-black/30">
-                                  <div className="w-9 h-9 bg-accent rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(229,62,79,0.6)] scale-50 group-hover/row:scale-100 transition-transform duration-300">
+                                  <div className="w-9 h-9 bg-accent-strong rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(229,62,79,0.6)] scale-50 group-hover/row:scale-100 transition-transform duration-300">
                                     <Play className="w-3.5 h-3.5 fill-white translate-x-0.5" />
                                   </div>
                                 </div>
@@ -583,7 +583,7 @@ export default function SeasonList({
                                 {/* Now Playing */}
                                 {isCurrentPlaying && (
                                   <div className="absolute top-1.5 left-1.5 badge-pop">
-                                    <span className="bg-accent text-white text-[7px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse">▶ Now Playing</span>
+                                    <span className="bg-accent-strong text-white text-[7px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse">▶ Now Playing</span>
                                   </div>
                                 )}
                               </Link>

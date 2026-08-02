@@ -12,7 +12,7 @@ import { useFocusable } from "@noriginmedia/norigin-spatial-navigation";
 import { FocusSection } from "@/components/tv/Focusable";
 
 const badgeConfig = {
-  trend: { label: "Trending", style: "bg-accent text-white" },
+  trend: { label: "Trending", style: "bg-accent-strong text-white" },
   new: { label: "New", style: "bg-blue text-white" },
   top: { label: "Top 10", style: "bg-gold text-black" },
 } as const;
@@ -60,7 +60,7 @@ function PosterCard({
           />
           <WishlistHeart item={item} mediaType={mediaType} />
           <div className="absolute inset-0 flex items-center justify-center gap-2.5 opacity-0 group-hover:opacity-100 bg-black/55 transition-opacity duration-300 z-20">
-            <span className="w-11 h-11 bg-accent text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(229,62,79,0.45)] transform scale-75 group-hover:scale-100 transition-transform duration-300" title="Play">
+            <span className="w-11 h-11 bg-accent-strong text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(229,62,79,0.45)] transform scale-75 group-hover:scale-100 transition-transform duration-300" title="Play">
               <Play className="w-4.5 h-4.5 fill-white translate-x-0.5" />
             </span>
             <button
@@ -98,8 +98,11 @@ function PosterCard({
 }
 
 interface MediaCarouselProps {
-  /** Plain text, or a node (e.g. with only part of it linked). */
-  title: React.ReactNode;
+  /** Plain text, or a node (e.g. with only part of it linked). Omit for a row
+   *  that sits under a heading owned by the page — pass `label` instead. */
+  title?: React.ReactNode;
+  /** Accessible name for the row when it renders without a visible heading. */
+  label?: string;
   items: TMDBMedia[];
   mediaType?: "movie" | "tv";
   badge?: "trend" | "new" | "top";
@@ -109,11 +112,16 @@ interface MediaCarouselProps {
 
 export default function MediaCarousel({
   title,
+  label,
   items,
   mediaType = "movie",
   badge,
   source,
 }: MediaCarouselProps) {
+  // An empty title used to still render an empty <h2>, which reads as a
+  // structural heading with no content to a screen reader.
+  const hasTitle = title !== undefined && title !== null && title !== "";
+  const seeAllLabel = typeof title === "string" && title ? `See all ${title}` : "See all";
   const { openTrailer } = useTrailer();
   const [isFullScreen, setIsFullScreen] = useState(false);
 
@@ -242,18 +250,25 @@ export default function MediaCarousel({
   if (items.length === 0) return null;
 
   return (
-    <section className="px-6 md:px-12 mb-12 relative w-full group/carousel">
+    <section
+      className="px-6 md:px-12 mb-12 relative w-full group/carousel"
+      aria-label={hasTitle ? undefined : label}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="font-display text-lg md:text-xl font-bold tracking-tight text-fg">
-          {title}
-        </h2>
-        <span 
+      <div className={`flex items-center mb-4 ${hasTitle ? "justify-between" : "justify-end"}`}>
+        {hasTitle && (
+          <h2 className="font-display text-lg md:text-xl font-bold tracking-tight text-fg">
+            {title}
+          </h2>
+        )}
+        <button
+          type="button"
           onClick={() => setIsFullScreen(true)}
+          aria-label={seeAllLabel}
           className="text-xs text-accent font-semibold hover:opacity-80 cursor-pointer transition-opacity"
         >
           See All &rarr;
-        </span>
+        </button>
       </div>
 
       {/* Carousel Container */}
@@ -314,7 +329,9 @@ export default function MediaCarousel({
           <div className="flex items-center justify-between w-full max-w-[1400px] mx-auto border-b border-white/[0.08] pb-4 mb-8">
             <div>
               <span className="text-[10px] font-extrabold uppercase tracking-widest text-accent">Category view</span>
-              <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight">{title} ({gridItems.length})</h3>
+              <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight">
+                {hasTitle ? title : label ?? "All titles"} ({gridItems.length})
+              </h3>
             </div>
             <button
               onClick={() => setIsFullScreen(false)}
@@ -353,7 +370,7 @@ export default function MediaCarousel({
 
                         {/* Hover preview: Play + Watch Trailer actions */}
                         <div className="absolute inset-0 flex items-center justify-center gap-2.5 opacity-0 group-hover:opacity-100 bg-black/55 transition-opacity duration-300 z-20">
-                          <span className="w-11 h-11 bg-accent text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(229,62,79,0.45)] transform scale-75 group-hover:scale-100 transition-transform duration-300" title="Play">
+                          <span className="w-11 h-11 bg-accent-strong text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(229,62,79,0.45)] transform scale-75 group-hover:scale-100 transition-transform duration-300" title="Play">
                             <Play className="w-4.5 h-4.5 fill-white translate-x-0.5" />
                           </span>
                           <button

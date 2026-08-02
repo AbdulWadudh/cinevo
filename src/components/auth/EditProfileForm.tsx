@@ -90,7 +90,7 @@ export default function EditProfileForm({ username, avatarUrl, email }: EditProf
           whileHover={reduceMotion || pending ? undefined : { scale: 1.03 }}
           whileTap={reduceMotion || pending ? undefined : { scale: 0.97 }}
           transition={{ type: "spring", stiffness: 420, damping: 30 }}
-          className="inline-flex w-fit cursor-pointer items-center justify-center gap-2 rounded-xl bg-accent px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex w-fit cursor-pointer items-center justify-center gap-2 rounded-xl bg-accent-strong px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-accent-strong-hover disabled:cursor-not-allowed disabled:opacity-60"
         >
           {pending ? <Loader2 className="size-4 animate-spin" /> : null}
           Save Changes

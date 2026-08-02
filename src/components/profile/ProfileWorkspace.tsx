@@ -343,7 +343,7 @@ function SectionNav({ sections, active, onSelect, idPrefix, orientation }: Secti
           <span
             className={`relative flex-none rounded-full px-1.5 py-0.5 text-[10px] font-extrabold tabular-nums ${
               vertical ? "ml-auto" : ""
-            } ${isActive ? "bg-accent text-white" : "bg-white/8 text-fg-secondary"}`}
+            } ${isActive ? "bg-accent-strong text-white" : "bg-white/8 text-fg-secondary"}`}
           >
             {s.badge}
           </span>

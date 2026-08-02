@@ -101,7 +101,6 @@ export default function RadioMiniPlayer() {
               <button
                 type="button"
                 onClick={player.toggleMute}
-                tabIndex={expanded ? 0 : -1}
                 aria-label={player.isMuted || player.volume === 0 ? "Unmute" : "Mute"}
                 className="flex-none cursor-pointer text-fg-secondary transition-colors hover:text-white"
               >
@@ -188,7 +187,9 @@ function SlideIn({
       animate={{ width: open ? width : 0, opacity: open ? 1 : 0 }}
       transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 36 }}
       onPointerDown={onPointerDown}
-      aria-hidden={!open}
+      // `inert` (not aria-hidden) — the slot holds real controls, so it has to
+      // drop out of the tab order as well as the accessibility tree.
+      inert={!open}
       className="hidden items-center gap-1.5 overflow-hidden pointer-fine:flex"
     >
       {children}

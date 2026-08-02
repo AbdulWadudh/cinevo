@@ -41,7 +41,7 @@ export default function AuthForm({ redirect = "/" }: { redirect?: string }) {
               type="button"
               onClick={() => setMode(m)}
               className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-                mode === m ? "bg-accent text-white shadow" : "text-fg-secondary hover:text-fg"
+                mode === m ? "bg-accent-strong text-white shadow" : "text-fg-secondary hover:text-fg"
               }`}
             >
               {m === "signin" ? "Sign In" : "Sign Up"}
@@ -100,7 +100,7 @@ export default function AuthForm({ redirect = "/" }: { redirect?: string }) {
           <button
             type="submit"
             disabled={pending}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-accent text-white hover:bg-accent-hover transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
             {isSignIn ? "Sign In" : "Create Account"}

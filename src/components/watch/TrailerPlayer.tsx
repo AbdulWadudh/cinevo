@@ -27,7 +27,7 @@ export default function TrailerPlayer({ trailerKey, poster, title }: TrailerPlay
     return (
       <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black border border-white/[0.06]">
         <iframe
-          src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
+          src={`https://www.youtube-nocookie.com/embed/${trailerKey}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
           title={`${title} trailer`}
           allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
           allowFullScreen
@@ -51,7 +51,7 @@ export default function TrailerPlayer({ trailerKey, poster, title }: TrailerPlay
         className="object-cover brightness-[0.6] transition duration-500 group-hover:scale-105 group-hover:brightness-[0.5]"
       />
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-14 h-14 bg-accent text-white rounded-full flex items-center justify-center shadow-[0_6px_24px_rgba(229,62,79,0.45)] transition-transform duration-300 group-hover:scale-110">
+        <div className="w-14 h-14 bg-accent-strong text-white rounded-full flex items-center justify-center shadow-[0_6px_24px_rgba(229,62,79,0.45)] transition-transform duration-300 group-hover:scale-110">
           <Play className="w-6 h-6 fill-white translate-x-0.5" />
         </div>
       </div>

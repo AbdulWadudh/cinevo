@@ -110,7 +110,7 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
         <Film className="w-16 h-16 text-accent mb-4 animate-bounce" />
         <h1 className="text-2xl font-bold font-display mb-2">Content Not Found</h1>
         <p className="text-sm text-fg-secondary mb-6">The requested title details could not be loaded from our database.</p>
-        <Link href="/" className="bg-accent text-white px-6 py-3 rounded-lg font-semibold hover:bg-accent-hover transition-colors">
+        <Link href="/" className="bg-accent-strong text-white px-6 py-3 rounded-lg font-semibold hover:bg-accent-strong-hover transition-colors">
           Return Home
         </Link>
       </div>
@@ -208,8 +208,8 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
         />
       </section>
 
-      {/* Content & Metadata Layout */}
-      <main className="px-6 md:px-12 pt-8">
+      {/* Content & Metadata Layout — the `main` landmark lives in the root layout. */}
+      <div className="px-6 md:px-12 pt-8">
         <h1 className="font-display text-3xl md:text-5xl font-extrabold leading-tight tracking-tight mb-4">
           {details.title || details.name}
         </h1>
@@ -255,7 +255,7 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
           <ShareButton title={details.title || details.name || ""} />
           <WatchProviders providers={watchProviders} bare />
         </div>
-      </main>
+      </div>
 
       {/* Dynamic Seasons & Episodes List matching reference */}
       {isTV && details.seasons && (

@@ -837,8 +837,9 @@ export default function RadioClient({
         </div>
       </div>
 
-      {/* The page's only scroll container. */}
-      <main data-radio-scroll="" className={`${GUTTER} min-h-0 flex-1 overflow-y-auto pb-40 pt-5`}>
+      {/* The page's only scroll container. Not a `main` — the root layout owns
+          the single `main` landmark. */}
+      <div data-radio-scroll="" className={`${GUTTER} min-h-0 flex-1 overflow-y-auto pb-40 pt-5`}>
         {busy ? (
           <StationGridSkeleton />
         ) : displayed.length === 0 ? (
@@ -885,7 +886,7 @@ export default function RadioClient({
             )}
           </>
         )}
-      </main>
+      </div>
 
       <PlayerBar
         station={player.current}

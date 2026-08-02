@@ -227,7 +227,7 @@ function DialogBody({ userId }: { userId: string }) {
                               animate={{ width: `${pct}%` }}
                               transition={{ duration: 0.5, ease: "easeOut" }}
                               className={`h-full rounded-full ${
-                                pct >= 90 ? "bg-emerald-400" : "bg-accent"
+                                pct >= 90 ? "bg-emerald-400" : "bg-accent-strong"
                               }`}
                             />
                           </div>

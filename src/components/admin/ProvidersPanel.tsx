@@ -125,7 +125,7 @@ export default function ProvidersPanel({
               {active && (
                 <motion.span
                   layoutId={reduceMotion ? undefined : "provider-admin-tab"}
-                  className="absolute inset-0 -z-10 rounded-lg bg-accent"
+                  className="absolute inset-0 -z-10 rounded-lg bg-accent-strong"
                   transition={SPRING}
                 />
               )}
@@ -191,7 +191,7 @@ function HeaderAction({
       transition={{ type: "spring", stiffness: 440, damping: 26 }}
       className={`flex flex-none cursor-pointer items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${
         tone === "accent"
-          ? "bg-accent text-white hover:bg-accent-hover"
+          ? "bg-accent-strong text-white hover:bg-accent-strong-hover"
           : "border border-white/10 bg-white/5 text-fg-secondary hover:text-fg"
       }`}
     >

@@ -80,7 +80,7 @@ export default function PreferencePanel({
   };
 
   const typeBtn = (active: boolean) =>
-    `flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${active ? "bg-accent text-white" : "text-fg-secondary hover:text-fg"}`;
+    `flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${active ? "bg-accent-strong text-white" : "text-fg-secondary hover:text-fg"}`;
 
   return (
     <div className="bg-surface/40 border border-white/[0.08] rounded-2xl p-5 sm:p-6 mb-8 text-left">
@@ -127,7 +127,7 @@ export default function PreferencePanel({
                 <button
                   key={g.name}
                   onClick={() => toggleGenre(g.name)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${active ? "bg-accent border-accent text-white" : "bg-surface border-border text-fg-secondary hover:border-fg-secondary/50 hover:text-fg"}`}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${active ? "bg-accent-strong border-accent text-white" : "bg-surface border-border text-fg-secondary hover:border-fg-secondary/50 hover:text-fg"}`}
                 >
                   {g.name}
                 </button>
@@ -159,7 +159,7 @@ export default function PreferencePanel({
         <button
           onClick={submit}
           disabled={loading}
-          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-accent text-white hover:bg-accent-hover active:scale-95 transition-all shadow-[0_8px_30px_rgba(229,62,79,0.35)] cursor-pointer disabled:opacity-60"
+          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover active:scale-95 transition-all shadow-[0_8px_30px_rgba(229,62,79,0.35)] cursor-pointer disabled:opacity-60"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
           Reveal {count} {count === 1 ? "pick" : "picks"}

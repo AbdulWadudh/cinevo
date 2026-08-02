@@ -172,7 +172,7 @@ export default function TrendingDome({ images }: { images: DomeImage[] }) {
               <div className="mt-1 flex items-center gap-3">
                 <button
                   onClick={play}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-accent text-white hover:bg-accent-hover hover:scale-[1.03] active:scale-95 transition-all shadow-[0_8px_30px_rgba(229,62,79,0.4)] cursor-pointer"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover hover:scale-[1.03] active:scale-95 transition-all shadow-[0_8px_30px_rgba(229,62,79,0.4)] cursor-pointer"
                 >
                   <Play className="w-4 h-4 fill-white" /> Play
                 </button>

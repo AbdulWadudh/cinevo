@@ -96,7 +96,7 @@ export default function BrowseFilters() {
             <button
               key={t}
               onClick={() => { setMediaType(t); setGenre(""); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${mediaType === t ? "bg-accent text-white" : "text-fg-secondary hover:text-fg"}`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${mediaType === t ? "bg-accent-strong text-white" : "text-fg-secondary hover:text-fg"}`}
             >
               {t === "movie" ? <Film className="w-3.5 h-3.5" /> : <Tv2 className="w-3.5 h-3.5" />}
               {t === "movie" ? "Movies" : "TV"}
@@ -150,7 +150,7 @@ export default function BrowseFilters() {
                       />
                       <WishlistHeart item={item} mediaType={mediaType} />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity duration-300 z-10">
-                        <div className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-lg scale-90 group-hover:scale-100 transition-transform">
+                        <div className="w-10 h-10 bg-accent-strong text-white rounded-full flex items-center justify-center shadow-lg scale-90 group-hover:scale-100 transition-transform">
                           <Play className="w-4 h-4 fill-white translate-x-0.5" />
                         </div>
                       </div>
@@ -176,7 +176,7 @@ export default function BrowseFilters() {
               <button
                 onClick={loadMore}
                 disabled={loadingMore}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-extrabold tracking-wider uppercase border border-accent/30 text-white bg-accent/10 hover:bg-accent hover:border-accent transition-all duration-300 cursor-pointer disabled:opacity-60"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-extrabold tracking-wider uppercase border border-accent/30 text-white bg-accent/10 hover:bg-accent-strong hover:border-accent transition-all duration-300 cursor-pointer disabled:opacity-60"
               >
                 {loadingMore ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 Load more

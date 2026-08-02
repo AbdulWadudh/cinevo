@@ -101,7 +101,7 @@ export default async function Home({ searchParams }: HomeProps) {
       theme === "hbo" ? "bg-white" :
       theme === "animation" ? "bg-purple-400" :
       theme === "bollywood" ? "bg-amber-500" :
-      "bg-accent";
+      "bg-accent-strong";
 
     return (
       <div className={`flex-1 w-full pb-12 overflow-x-hidden ${bgGradientClass}`}>

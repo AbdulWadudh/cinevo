@@ -13,12 +13,18 @@ import type { ImageLoaderProps } from "next/image";
 // host (pravatar, YouTube thumbs, Google avatars, local /public assets) is
 // passed through unchanged.
 
-// TMDb's supported poster/profile widths, ascending. Anything larger -> original.
-const TMDB_BUCKETS = [92, 154, 185, 342, 500, 780];
+// TMDb's supported widths, ascending. `w1280` is the backdrop bucket and the
+// ceiling we serve: above it TMDb only offers `original`, which for a backdrop
+// is the studio's full-resolution master — 1–2.5MB each. A full-bleed hero at
+// `sizes="100vw"` asks for 1920/2048/3840, so every one of those used to fetch a
+// master. `w1280` upscaled behind the hero's brightness filter and gradients is
+// indistinguishable, at roughly a tenth of the bytes.
+const TMDB_BUCKETS = [92, 154, 185, 342, 500, 780, 1280];
+const TMDB_MAX = `w${TMDB_BUCKETS[TMDB_BUCKETS.length - 1]}`;
 
 function tmdbSize(width: number): string {
   const bucket = TMDB_BUCKETS.find((b) => b >= width);
-  return bucket ? `w${bucket}` : "original";
+  return bucket ? `w${bucket}` : TMDB_MAX;
 }
 
 export default function cinevoImageLoader({ src, width }: ImageLoaderProps): string {

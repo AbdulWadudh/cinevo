@@ -13,7 +13,8 @@ export default function PrivacyPage() {
   return (
     <div className="flex-1 w-full bg-bg min-h-screen pb-20">
       <Nav />
-      <main className="pt-24 md:pt-28 px-6 md:px-12 max-w-3xl mx-auto">
+      {/* The `main` landmark itself lives in the root layout. */}
+      <div className="pt-24 md:pt-28 px-6 md:px-12 max-w-3xl mx-auto">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 text-xs text-fg-secondary bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] hover:text-fg px-3.5 py-2 rounded-lg transition-all mb-8"
@@ -75,7 +76,7 @@ export default function PrivacyPage() {
             <p>Questions about this policy? Reach us at <span className="text-accent">{site.emails.support}</span>.</p>
           </section>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

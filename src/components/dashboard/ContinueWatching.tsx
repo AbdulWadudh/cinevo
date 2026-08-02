@@ -80,14 +80,14 @@ export default function ContinueWatching() {
                       <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20">
                         <div
                           style={{ width: `${percent}%` }}
-                          className="h-full bg-accent rounded-r-md transition-all duration-300"
+                          className="h-full bg-accent-strong rounded-r-md transition-all duration-300"
                         />
                       </div>
                     )}
 
                     {/* Play Mini Hover Overlay */}
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                      <div className="w-10 h-10 bg-accent-strong text-white rounded-full flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300">
                         <Play className="w-4 h-4 fill-white translate-x-0.5" />
                       </div>
                     </div>

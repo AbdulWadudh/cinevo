@@ -17,10 +17,12 @@ interface FocusableLinkProps {
   focusClassName?: string;
   onClick?: () => void;
   focusKey?: string;
+  /** Required when the link's only content is an icon. */
+  ariaLabel?: string;
 }
 
 /** A D-pad-focusable Next.js link. Enter follows the link. */
-export function FocusableLink({ href, children, className = "", focusClassName = "", onClick, focusKey }: FocusableLinkProps) {
+export function FocusableLink({ href, children, className = "", focusClassName = "", onClick, focusKey, ariaLabel }: FocusableLinkProps) {
   const { ref, focused } = useFocusable({
     focusKey,
     onEnterPress: () => { onClick?.(); ref.current?.click(); },
@@ -31,6 +33,7 @@ export function FocusableLink({ href, children, className = "", focusClassName =
       ref={ref}
       href={href}
       onClick={onClick}
+      aria-label={ariaLabel}
       className={`tv-focusable ${className} ${focused ? `tv-focused ${focusClassName}` : ""}`}
     >
       {children}

@@ -46,8 +46,8 @@ export default function WishlistHeart({ item, mediaType = "movie", corner = "rig
       title={active ? "Remove from wishlist" : "Add to wishlist"}
       className={`absolute top-2 ${corner === "left" ? "left-2" : "right-2"} z-30 w-8 h-8 rounded-full flex items-center justify-center border backdrop-blur-md transition-all duration-200 cursor-pointer ${
         active
-          ? "bg-accent border-accent text-white opacity-100"
-          : "bg-black/55 border-white/15 text-white hover:bg-accent hover:border-accent opacity-0 group-hover:opacity-100"
+          ? "bg-accent-strong border-accent text-white opacity-100"
+          : "bg-black/55 border-white/15 text-white hover:bg-accent-strong hover:border-accent opacity-0 group-hover:opacity-100"
       } ${className}`}
     >
       <Heart className={`w-4 h-4 ${active ? "fill-white" : ""}`} />

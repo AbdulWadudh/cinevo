@@ -40,7 +40,7 @@ export default function GenreBar({
             onClick={() => onGenreSelect(genre.id)}
             className={`flex-none px-4.5 py-2 rounded-full text-xs font-semibold border transition-all duration-200 cursor-pointer ${
               active 
-                ? "bg-accent border-accent text-white shadow-[0_4px_15px_rgba(229,62,79,0.35)]" 
+                ? "bg-accent-strong border-accent text-white shadow-[0_4px_15px_rgba(229,62,79,0.35)]" 
                 : "bg-surface border-border text-fg-secondary hover:border-fg-secondary/50 hover:text-fg"
             }`}
           >

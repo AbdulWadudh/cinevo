@@ -84,7 +84,7 @@ export default function GenreSection({
             theme === "hbo" ? "bg-white text-black shadow-[0_4px_20px_rgba(255,255,255,0.3)]" :
             theme === "animation" ? "bg-purple-600 shadow-[0_4px_20px_rgba(168,85,247,0.55)] text-white" :
             theme === "bollywood" ? "bg-amber-600 shadow-[0_4px_20px_rgba(245,158,11,0.55)] text-white" :
-            "bg-accent shadow-[0_4px_20px_rgba(229,62,79,0.45)] text-white";
+            "bg-accent-strong shadow-[0_4px_20px_rgba(229,62,79,0.45)] text-white";
 
           const titleHoverClass = 
             theme === "marvel" ? "group-hover:text-red-500" :

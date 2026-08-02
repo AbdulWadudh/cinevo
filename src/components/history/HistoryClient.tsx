@@ -185,7 +185,7 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
           <HistoryIcon className="w-12 h-12 mx-auto mb-4 opacity-30 text-accent" />
           <h3 className="text-lg font-bold text-fg mb-1">No watch history yet</h3>
           <p className="text-sm max-w-xs mx-auto mb-6">Titles you open will show up here so you can jump back in.</p>
-          <Link href="/" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-accent text-white hover:bg-accent-hover transition-all">
+          <Link href="/" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover transition-all">
             Browse titles
           </Link>
         </div>
@@ -207,7 +207,7 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
                     />
                     {!selectMode && (
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity duration-300 z-10">
-                        <div className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-lg scale-90 group-hover:scale-100 transition-transform">
+                        <div className="w-10 h-10 bg-accent-strong text-white rounded-full flex items-center justify-center shadow-lg scale-90 group-hover:scale-100 transition-transform">
                           <Play className="w-4 h-4 fill-white translate-x-0.5" />
                         </div>
                       </div>

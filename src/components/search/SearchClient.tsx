@@ -224,7 +224,7 @@ export default function SearchClient() {
               <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
                 <button
                   onClick={() => setSelectedActor(null)}
-                  className="inline-flex items-center gap-1.5 text-xs text-accent bg-accent/10 border border-accent/20 px-3 py-1.5 rounded-full hover:bg-accent hover:text-white transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1.5 text-xs text-accent bg-accent/10 border border-accent/20 px-3 py-1.5 rounded-full hover:bg-accent-strong hover:text-white transition-all cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Back to search list</span>
@@ -304,7 +304,7 @@ export default function SearchClient() {
                       <Image src={img} alt={item.title || item.name || ""} fill sizes="(max-width: 640px) 50vw, 12vw" className="object-cover transition duration-500 group-hover:scale-105" />
                       {!isPerson && <WishlistHeart item={item} mediaType={mt} />}
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity duration-300 z-20">
-                        <div className="w-9 h-9 bg-accent text-white rounded-full flex items-center justify-center shadow-lg transform scale-75 group-hover:scale-100 transition-transform">
+                        <div className="w-9 h-9 bg-accent-strong text-white rounded-full flex items-center justify-center shadow-lg transform scale-75 group-hover:scale-100 transition-transform">
                           {isPerson ? <User className="w-4 h-4" /> : <Play className="w-3.5 h-3.5 fill-white translate-x-0.5" />}
                         </div>
                       </div>
@@ -396,7 +396,7 @@ function CreditCategory({
                 />
                 <WishlistHeart item={item} mediaType={mediaType} />
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity duration-300 z-20">
-                  <div className="w-9 h-9 bg-accent text-white rounded-full flex items-center justify-center shadow-lg transform scale-75 group-hover:scale-100 transition-transform">
+                  <div className="w-9 h-9 bg-accent-strong text-white rounded-full flex items-center justify-center shadow-lg transform scale-75 group-hover:scale-100 transition-transform">
                     <Play className="w-3.5 h-3.5 fill-white translate-x-0.5" />
                   </div>
                 </div>
@@ -419,7 +419,7 @@ function CreditCategory({
         <div className="flex justify-center mt-6">
           <button
             onClick={onMore}
-            className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase border border-accent/30 text-white bg-accent/10 hover:bg-accent hover:border-accent hover:shadow-[0_4px_15px_rgba(229,62,79,0.35)] transition-all duration-300 cursor-pointer shadow-lg"
+            className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase border border-accent/30 text-white bg-accent/10 hover:bg-accent-strong hover:border-accent hover:shadow-[0_4px_15px_rgba(229,62,79,0.35)] transition-all duration-300 cursor-pointer shadow-lg"
           >
             Load More
           </button>

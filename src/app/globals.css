@@ -7,12 +7,21 @@
   --color-surface-hover: #1c1c30;
   --color-fg: #eeeef4;
   --color-fg-secondary: #b0b0c4;
-  --color-muted: #6e6e88;
+  /* 5.8:1 on --color-bg, 4.85:1 on --color-surface-hover — the old #6e6e88 sat
+     at 4.0:1 and failed WCAG AA for the small metadata it is used on. */
+  --color-muted: #8888a4;
   --color-border: #1e1e32;
+  /* Brand red, for text / borders / glows on the dark background only. Under
+     white text it lands at 4.1:1, so solid fills use --color-accent-strong. */
   --color-accent: #e53e4f;
   --color-accent-hover: #f04d5e;
+  /* Solid accent surfaces that carry white text or icons: 5.0:1 at rest and
+     4.6:1 on hover, both clearing AA for 14px bold. */
+  --color-accent-strong: #d02f43;
+  --color-accent-strong-hover: #db3346;
   --color-gold: #f59e0b;
-  --color-blue: #3b82f6;
+  /* blue-600 rather than blue-500 — white badge text needs 4.5:1. */
+  --color-blue: #2563eb;
   --color-emerald-400: #34d399;
 
   --font-display: "Plus Jakarta Sans", sans-serif;

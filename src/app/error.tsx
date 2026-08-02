@@ -21,7 +21,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
       <div className="flex items-center gap-3">
         <button
           onClick={reset}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-accent text-white hover:bg-accent-hover transition-all cursor-pointer"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover transition-all cursor-pointer"
         >
           <RotateCcw className="w-4 h-4" /> Try again
         </button>

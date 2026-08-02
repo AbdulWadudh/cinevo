@@ -136,7 +136,7 @@ export default function RevealClient({ pool: initialPool }: { pool: RevealItem[]
         <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
           <button
             onClick={deal}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-accent text-white hover:bg-accent-hover active:scale-95 transition-all shadow-[0_8px_30px_rgba(229,62,79,0.35)] cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover active:scale-95 transition-all shadow-[0_8px_30px_rgba(229,62,79,0.35)] cursor-pointer"
           >
             <Shuffle className="w-4 h-4" /> New pack
           </button>
@@ -244,7 +244,7 @@ export default function RevealClient({ pool: initialPool }: { pool: RevealItem[]
               <div className="mt-1 flex items-center gap-3">
                 <Link
                   href={`/watch/${opened.mediaType}/${opened.id}`}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-accent text-white hover:bg-accent-hover active:scale-95 transition-all shadow-[0_8px_30px_rgba(229,62,79,0.4)]"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover active:scale-95 transition-all shadow-[0_8px_30px_rgba(229,62,79,0.4)]"
                 >
                   <Play className="w-4 h-4 fill-white" /> Play now
                 </Link>

@@ -39,7 +39,7 @@ export default async function PersonPage({ params }: PageProps) {
         <div className="flex flex-col items-center justify-center min-h-screen text-center p-6">
           <User className="w-16 h-16 text-accent mb-4" />
           <h1 className="text-2xl font-bold font-display mb-2">Person Not Found</h1>
-          <Link href="/" className="mt-4 bg-accent text-white px-6 py-3 rounded-lg font-semibold hover:bg-accent-hover transition-colors">Return Home</Link>
+          <Link href="/" className="mt-4 bg-accent-strong text-white px-6 py-3 rounded-lg font-semibold hover:bg-accent-strong-hover transition-colors">Return Home</Link>
         </div>
       </div>
     );
@@ -93,7 +93,7 @@ export default async function PersonPage({ params }: PageProps) {
                   <Image src={`https://image.tmdb.org/t/p/w300${item.poster_path}`} alt={item.title || item.name || ""} fill sizes="(max-width: 640px) 50vw, 16vw" className="object-cover transition duration-500 group-hover:scale-105" />
                   <WishlistHeart item={item} mediaType={mt} />
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity duration-300 z-10">
-                    <div className="w-10 h-10 bg-accent text-white rounded-full flex items-center justify-center shadow-lg scale-90 group-hover:scale-100 transition-transform">
+                    <div className="w-10 h-10 bg-accent-strong text-white rounded-full flex items-center justify-center shadow-lg scale-90 group-hover:scale-100 transition-transform">
                       <Play className="w-4 h-4 fill-white translate-x-0.5" />
                     </div>
                   </div>
