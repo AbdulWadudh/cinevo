@@ -1,4 +1,4 @@
-const TMDB_API_URL = "https://api.themoviedb.org/3";
+const TMDB_API_URL = "https://api.tmdb.org/3";
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN;
 
@@ -353,6 +353,28 @@ export const tmdb = {
     }
   },
 
+  // Fetch media by production company/studio with pagination metadata
+  getByCompanyPaged: async (
+    companyIds: string,
+    type: "movie" | "tv" = "movie",
+    page: number = 1
+  ): Promise<TMDBPagedResult> => {
+    try {
+      const data = await tmdbFetch<TMDBResponse>(`/discover/${type}`, {
+        with_companies: companyIds,
+        sort_by: "popularity.desc",
+        page: String(page),
+      });
+      return {
+        results: data.results,
+        page: data.page ?? page,
+        totalPages: Math.min(data.total_pages ?? 1, 500),
+      };
+    } catch {
+      return { results: [], page, totalPages: 0 };
+    }
+  },
+
   // Fetch media by original language (e.g. Bollywood = "hi", Tollywood = "te")
   getByLanguage: async (language: string, type: "movie" | "tv" = "movie"): Promise<TMDBMedia[]> => {
     try {
@@ -364,6 +386,29 @@ export const tmdb = {
       return data.results;
     } catch {
       return [];
+    }
+  },
+
+  // Fetch media by original language with pagination metadata
+  getByLanguagePaged: async (
+    language: string,
+    type: "movie" | "tv" = "movie",
+    page: number = 1
+  ): Promise<TMDBPagedResult> => {
+    try {
+      const data = await tmdbFetch<TMDBResponse>(`/discover/${type}`, {
+        with_original_language: language,
+        sort_by: "popularity.desc",
+        "vote_count.gte": "30",
+        page: String(page),
+      });
+      return {
+        results: data.results,
+        page: data.page ?? page,
+        totalPages: Math.min(data.total_pages ?? 1, 500),
+      };
+    } catch {
+      return { results: [], page, totalPages: 0 };
     }
   },
 

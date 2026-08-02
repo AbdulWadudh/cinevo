@@ -90,13 +90,13 @@ export default function TrendingDome({ images }: { images: DomeImage[] }) {
   // The holo card expects a TMDB poster *path* (it builds a w780 URL itself).
   const revealItem: RevealItem | null = opened
     ? {
-        id: Number(opened.id),
-        mediaType: opened.mediaType,
-        title: opened.title,
-        poster: opened.poster || null,
-        rating: 0,
-        year: "",
-      }
+      id: Number(opened.id),
+      mediaType: opened.mediaType,
+      title: opened.title,
+      poster: opened.poster || null,
+      rating: 0,
+      year: "",
+    }
     : null;
 
   return (
@@ -178,7 +178,7 @@ export default function TrendingDome({ images }: { images: DomeImage[] }) {
                 </button>
                 <button
                   onClick={trailer}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-white/[0.12] border border-white/[0.18] text-white backdrop-blur-md hover:bg-white/[0.2] hover:scale-[1.03] active:scale-95 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-white/12 border border-white/18 text-white backdrop-blur-md hover:bg-white/20 hover:scale-[1.03] active:scale-95 transition-all cursor-pointer"
                 >
                   <Clapperboard className="w-4 h-4" /> Watch Trailer
                 </button>

@@ -123,6 +123,27 @@ export function touchWatch(m: WatchMeta) {
   commit();
 }
 
+/** Update watch progress with specific progress and duration values. */
+export function updateWatchProgressLocal(m: WatchMeta, progress: number, duration: number) {
+  const store = ensure();
+  const { season, episode } = norm(m);
+  const key = entryKey({ mediaType: m.mediaType, mediaId: m.mediaId, season });
+  const existing = store[key];
+  store[key] = {
+    mediaId: m.mediaId,
+    mediaType: m.mediaType,
+    title: m.title,
+    posterPath: m.posterPath ?? existing?.posterPath ?? null,
+    season,
+    episode,
+    progress,
+    duration,
+    updatedAt: Date.now(),
+    dirty: true,
+  };
+  commit();
+}
+
 export function removeEntries(keys: string[]) {
   const store = ensure();
   let changed = false;

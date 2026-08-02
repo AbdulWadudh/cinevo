@@ -31,10 +31,10 @@ export default function CastSection({ cast }: CastSectionProps) {
                 <Link
                   key={c.id}
                   href={`/person/${c.id}`}
-                  className="block text-center group cursor-pointer hover:scale-105 transition-all duration-350 p-2 rounded-2xl border border-transparent hover:bg-accent/5 hover:border-accent/20"
+                  className="block text-center group cursor-pointer hover:scale-105 transition-all duration-350 p-2 rounded-2xl"
                 >
                   {/* Portrait photo */}
-                  <div className="w-full aspect-[3/4] mb-3 rounded-xl overflow-hidden bg-surface border-2 border-border group-hover:border-accent transition-all shadow-md relative group-hover:shadow-[0_0_15px_rgba(229,62,79,0.25)]">
+                  <div className="w-full aspect-3/4 mb-3 rounded-xl overflow-hidden bg-surface border-2 border-border transition-all shadow-md relative group-hover:shadow-[0_0_15px_rgba(229,62,79,0.25)]">
                     <Image
                       src={c.profile_path ? `https://image.tmdb.org/t/p/w500${c.profile_path}` : `https://i.pravatar.cc/500?u=${c.id}`}
                       alt={c.name}
@@ -42,7 +42,6 @@ export default function CastSection({ cast }: CastSectionProps) {
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 220px"
                       className="object-cover transition duration-500 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
 
                   {/* Name */}

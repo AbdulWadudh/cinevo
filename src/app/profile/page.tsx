@@ -41,7 +41,7 @@ export default async function ProfilePage() {
       <section className="pt-24 md:pt-28 px-6 md:px-12 max-w-4xl mx-auto">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs text-fg-secondary bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] hover:text-fg px-3.5 py-2 rounded-lg transition-all mb-8"
+          className="inline-flex items-center gap-1.5 text-xs text-fg-secondary bg-white/4 border border-white/[0.06] hover:bg-white/[0.08] hover:text-fg px-3.5 py-2 rounded-lg transition-all mb-8"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to Home</span>
@@ -55,7 +55,7 @@ export default async function ProfilePage() {
               src={profile.avatarUrl}
               alt={displayName}
               referrerPolicy="no-referrer"
-              className="w-24 h-24 rounded-2xl object-cover border border-white/[0.1] shadow-lg"
+              className="w-24 h-24 rounded-2xl object-cover border border-white/10 shadow-lg"
             />
           ) : (
             <div className="w-24 h-24 rounded-2xl bg-accent/20 border border-accent/30 flex items-center justify-center text-4xl font-extrabold text-accent shadow-lg">
@@ -75,7 +75,7 @@ export default async function ProfilePage() {
         <div className="grid grid-cols-2 gap-4 mb-10">
           <Link
             href="/wishlist"
-            className="group bg-surface/60 border border-white/[0.08] rounded-2xl p-5 hover:border-accent/40 transition-all"
+            className="group bg-surface/60 border border-white/8 rounded-2xl p-5 transition-all"
           >
             <div className="flex items-center gap-2 text-muted mb-1">
               <Heart className="w-4 h-4 text-accent" />

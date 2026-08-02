@@ -8,52 +8,129 @@ import MediaCarousel from "@/components/dashboard/MediaCarousel";
 import BrowseSection from "@/components/dashboard/BrowseSection";
 import GenreSection from "@/components/dashboard/GenreSection";
 import HeroCarousel from "@/components/dashboard/HeroCarousel";
-import { tmdb } from "@/lib/tmdb";
+import StudioHubs from "@/components/dashboard/StudioHubs";
+import { tmdb, type TMDBMedia } from "@/lib/tmdb";
 import { site } from "@/config";
 
 interface HomeProps {
-  searchParams: Promise<{ genre?: string; genreName?: string }>;
+  searchParams: Promise<{
+    genre?: string;
+    genreName?: string;
+    company?: string;
+    companyName?: string;
+    language?: string;
+    languageName?: string;
+    theme?: string;
+  }>;
 }
 
 export default async function Home({ searchParams }: HomeProps) {
-  const { genre, genreName } = await searchParams;
+  const { genre, genreName, company, companyName, language, languageName, theme } = await searchParams;
 
-  // ── Genre-focused browse view (e.g. /?genre=12&genreName=Adventure) ──
-  if (genre) {
-    const [movieData, showData] = await Promise.all([
-      tmdb.getByGenrePaged(genre, "movie", 1),
-      tmdb.getByGenrePaged(genre, "tv", 1),
-    ]);
-    const empty = movieData.results.length === 0 && showData.results.length === 0;
+  const isBrowseMode = genre || company || language;
+
+  // ── Unified Category/Franchise/Language browse view ──
+  if (isBrowseMode) {
+    let movieItems: TMDBMedia[] = [];
+    let tvItems: TMDBMedia[] = [];
+    let totalPages = 1;
+    let title = "Browse";
+    let subtitle = "Explore titles";
+
+    if (genre) {
+      const [movieData, showData] = await Promise.all([
+        tmdb.getByGenrePaged(genre, "movie", 1),
+        tmdb.getByGenrePaged(genre, "tv", 1),
+      ]);
+      movieItems = movieData.results;
+      tvItems = showData.results;
+      totalPages = Math.max(movieData.totalPages, showData.totalPages);
+      title = genreName || "Genre";
+      subtitle = "Browse movies & shows in this category";
+    } else if (company) {
+      const [moviesData, tvShowsData] = await Promise.all([
+        tmdb.fetchMediaPage({ kind: "company", value: company, mediaType: "movie" }, 1),
+        tmdb.fetchMediaPage({ kind: "company", value: company, mediaType: "tv" }, 1),
+      ]);
+      movieItems = moviesData.results;
+      tvItems = tvShowsData.results;
+      totalPages = Math.max(moviesData.totalPages, tvShowsData.totalPages);
+      title = companyName || "Studio";
+      subtitle = `Popular releases from ${companyName || "production studios"}`;
+    } else if (language) {
+      const [moviesData, tvShowsData] = await Promise.all([
+        tmdb.fetchMediaPage({ kind: "language", value: language, mediaType: "movie" }, 1),
+        tmdb.fetchMediaPage({ kind: "language", value: language, mediaType: "tv" }, 1),
+      ]);
+      movieItems = moviesData.results;
+      tvItems = tvShowsData.results;
+      totalPages = Math.max(moviesData.totalPages, tvShowsData.totalPages);
+      title = languageName || "Language";
+      subtitle = `Popular releases in ${languageName || "this language"}`;
+    }
+
+    const empty = movieItems.length === 0 && tvItems.length === 0;
+
+    const bgGradientClass = 
+      theme === "marvel" ? "bg-[#0c0202] bg-linear-to-b from-red-600/10 to-transparent" :
+      theme === "dc" ? "bg-[#02060b] bg-linear-to-b from-sky-600/12 to-transparent" :
+      theme === "hbo" ? "bg-[#090b0d] bg-linear-to-b from-slate-500/10 to-transparent" :
+      theme === "animation" ? "bg-[#06020a] bg-linear-to-b from-purple-600/12 to-transparent" :
+      theme === "bollywood" ? "bg-[#0a0702] bg-linear-to-b from-amber-600/10 to-transparent" :
+      "bg-bg";
+
+    const accentBorderClass = 
+      theme === "marvel" ? "border-red-500/20 hover:border-red-500/40 hover:text-red-500 hover:bg-red-500/5 bg-red-950/10 text-fg-secondary" :
+      theme === "dc" ? "border-sky-500/20 hover:border-sky-500/40 hover:text-sky-450 hover:bg-sky-950/10 bg-sky-950/10 text-fg-secondary" :
+      theme === "hbo" ? "border-white/10 hover:border-white/20 hover:text-white hover:bg-white/5 bg-white/5 text-fg-secondary" :
+      theme === "animation" ? "border-purple-500/20 hover:border-purple-500/40 hover:text-purple-400 hover:bg-purple-950/10 bg-purple-950/10 text-fg-secondary" :
+      theme === "bollywood" ? "border-amber-500/20 hover:border-amber-500/40 hover:text-amber-550 hover:bg-amber-950/10 bg-amber-950/10 text-fg-secondary" :
+      "border-white/[0.06] hover:border-accent/40 hover:text-fg hover:bg-white/[0.08] bg-white/[0.04] text-fg-secondary";
+
+    const headerTextClass = 
+      theme === "marvel" ? "text-red-500" :
+      theme === "dc" ? "text-sky-400" :
+      theme === "hbo" ? "text-slate-100" :
+      theme === "animation" ? "text-purple-400" :
+      theme === "bollywood" ? "text-amber-500" :
+      "text-fg";
+
+    const dotClass = 
+      theme === "marvel" ? "bg-red-500" :
+      theme === "dc" ? "bg-sky-400" :
+      theme === "hbo" ? "bg-white" :
+      theme === "animation" ? "bg-purple-400" :
+      theme === "bollywood" ? "bg-amber-500" :
+      "bg-accent";
 
     return (
-      <div className="flex-1 w-full bg-bg pb-12 overflow-x-hidden">
+      <div className={`flex-1 w-full pb-12 overflow-x-hidden ${bgGradientClass}`}>
         <Nav />
 
-        <section className="pt-24 md:pt-28 px-6 md:px-12 mb-10">
+        <section className="pt-32 md:pt-40 px-6 md:px-12 mb-8">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs text-fg-secondary bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] hover:text-fg px-3.5 py-2 rounded-lg transition-all mb-6"
+            className={`fixed top-[76px] md:top-[96px] left-6 md:left-12 z-30 inline-flex items-center gap-1.5 text-xs border px-3.5 py-2 rounded-lg transition-all shadow-md backdrop-blur-md bg-bg/80 cursor-pointer ${accentBorderClass}`}
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Home</span>
           </Link>
-          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-accent mb-2">
-            <span className="w-6 h-[2px] bg-accent rounded-full" />
-            Genre
+          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-fg-secondary mb-2">
+            <span className={`w-6 h-0.5 rounded-full ${dotClass}`} />
+            {theme ? "Collection" : "Genre"}
           </div>
-          <h1 className="font-display text-4xl md:text-5xl font-extrabold tracking-tight">
-            {genreName || "Genre"}
+          <h1 className={`font-display text-4xl md:text-5xl font-extrabold tracking-tight ${headerTextClass}`}>
+            {title}
           </h1>
           <p className="text-sm text-fg-secondary mt-2">
-            {empty ? "No titles found in this genre" : "Browse movies & shows in this genre"}
+            {empty ? "No titles found in this category" : subtitle}
           </p>
         </section>
 
         {empty ? (
           <div className="px-6 md:px-12 py-28 flex flex-col items-center justify-center text-center">
             <Film className="w-12 h-12 text-accent/70 mb-4" />
-            <p className="text-sm text-fg-secondary">No titles found for this genre.</p>
+            <p className="text-sm text-fg-secondary">No titles found.</p>
             <Link href="/" className="mt-5 text-xs font-semibold text-accent hover:opacity-80 transition-opacity">
               &larr; Back to browsing
             </Link>
@@ -62,17 +139,23 @@ export default async function Home({ searchParams }: HomeProps) {
           <div className="pb-16">
             <GenreSection
               title="Movies"
-              genreId={genre}
-              mediaType="movie"
-              initialItems={movieData.results}
-              totalPages={movieData.totalPages}
+              source={
+                genre ? { kind: "genre", value: genre, mediaType: "movie" } :
+                  company ? { kind: "company", value: company, mediaType: "movie" } :
+                    { kind: "language", value: language!, mediaType: "movie" }
+              }
+              initialItems={movieItems}
+              totalPages={totalPages}
             />
             <GenreSection
               title="TV Shows"
-              genreId={genre}
-              mediaType="tv"
-              initialItems={showData.results}
-              totalPages={showData.totalPages}
+              source={
+                genre ? { kind: "genre", value: genre, mediaType: "tv" } :
+                  company ? { kind: "company", value: company, mediaType: "tv" } :
+                    { kind: "language", value: language!, mediaType: "tv" }
+              }
+              initialItems={tvItems}
+              totalPages={totalPages}
             />
           </div>
         )}
@@ -122,6 +205,9 @@ export default async function Home({ searchParams }: HomeProps) {
         <BecauseYouWatched />
       </Suspense>
 
+      {/* Branded Studios & Franchises portals */}
+      <StudioHubs />
+
       {/* Interactive Explore (genre chips + carousel) — replaces the old Trending row */}
       <div className="w-full">
         <div className="px-6 md:px-12 mb-2">
@@ -129,7 +215,7 @@ export default async function Home({ searchParams }: HomeProps) {
             Explore Categories
           </h2>
         </div>
-        <Suspense fallback={<div className="h-[300px] bg-surface/50 animate-pulse rounded-2xl mx-6 md:mx-12" />}>
+        <Suspense fallback={<div className="h-75 bg-surface/50 animate-pulse rounded-2xl mx-6 md:mx-12" />}>
           <BrowseSection initialTrending={trendingMovies} />
         </Suspense>
       </div>

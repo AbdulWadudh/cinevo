@@ -21,7 +21,7 @@ import { site } from "@/config";
 
 interface PageProps {
   params: Promise<{ type: string; id: string }>;
-  searchParams: Promise<{ season?: string; episode?: string; t?: string; source?: string; sandbox?: string }>;
+  searchParams: Promise<{ season?: string; episode?: string; t?: string; source?: string; sandbox?: string; theme?: string }>;
 }
 
 // Sets the browser tab title to "{Title} · <app>" via the layout template
@@ -121,11 +121,11 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
   const rawReleaseDate = details.release_date || details.first_air_date || "";
   const releaseDateText = rawReleaseDate
     ? new Date(rawReleaseDate).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        timeZone: "UTC",
-      })
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    })
     : "";
 
   const durationText = isTV
@@ -133,17 +133,42 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
     : details.runtime
       ? `${Math.floor(details.runtime / 60)}h ${details.runtime % 60}m`
       : "";
+  const theme = search.theme;
+
+  const bgGradientClass = 
+    theme === "marvel" ? "bg-[#0c0202] bg-linear-to-b from-red-600/10 to-transparent" :
+    theme === "dc" ? "bg-[#02060b] bg-linear-to-b from-sky-600/12 to-transparent" :
+    theme === "hbo" ? "bg-[#090b0d] bg-linear-to-b from-slate-500/10 to-transparent" :
+    theme === "animation" ? "bg-[#06020a] bg-linear-to-b from-purple-600/12 to-transparent" :
+    theme === "bollywood" ? "bg-[#0a0702] bg-linear-to-b from-amber-600/10 to-transparent" :
+    "bg-bg";
+
+  const backButtonBorderClass = 
+    theme === "marvel" ? "border-red-500/20 hover:border-red-500/40 hover:text-red-500 hover:bg-red-500/5 bg-red-950/10" :
+    theme === "dc" ? "border-sky-500/20 hover:border-sky-500/40 hover:text-sky-400 hover:bg-sky-950/10 bg-sky-950/10" :
+    theme === "hbo" ? "border-white/10 hover:border-white/20 hover:text-white hover:bg-white/5 bg-white/5" :
+    theme === "animation" ? "border-purple-500/20 hover:border-purple-500/40 hover:text-purple-400 hover:bg-purple-950/10 bg-purple-950/10" :
+    theme === "bollywood" ? "border-amber-500/20 hover:border-amber-500/40 hover:text-amber-500 hover:bg-amber-950/10 bg-amber-950/10" :
+    "";
+
+  const tagHoverClass = 
+    theme === "marvel" ? "hover:border-red-500 hover:text-red-500" :
+    theme === "dc" ? "hover:border-sky-400 hover:text-sky-400" :
+    theme === "hbo" ? "hover:border-white hover:text-white" :
+    theme === "animation" ? "hover:border-purple-400 hover:text-purple-400" :
+    theme === "bollywood" ? "hover:border-amber-500 hover:text-amber-500" :
+    "hover:border-accent hover:text-accent";
 
   return (
-    <div className="flex-1 w-full bg-bg pb-16 overflow-x-hidden">
+    <div className={`flex-1 w-full pb-16 overflow-x-hidden ${bgGradientClass}`}>
       {/* Scroll responsive transparent nav */}
       <Nav />
 
       {/* Embedded Iframe Player Container (relative z-20 so the player's source/season/
           episode dropdowns render above the metadata section below) */}
-      <section className="relative z-20 pt-[72px] w-full px-3 sm:px-6 md:px-12">
+      <section className="relative z-20 pt-18 w-full px-3 sm:px-6 md:px-12">
         <div className="mb-4 flex items-center gap-2">
-          <BackButton label="Back" fallback="/browse" />
+          <BackButton label="Back" fallback="/" className={backButtonBorderClass || undefined} />
         </div>
 
         {/* Records this view into the user's watch history (no-op when signed out) */}
@@ -168,6 +193,7 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
           initialSourceKey={initialSourceKey}
           initialSandbox={initialSandbox}
           seasons={isTV && details.seasons ? (details.seasons as any[]).filter((s: any) => s.season_number > 0) : undefined}
+          runtimeMinutes={details.runtime || undefined}
         />
       </section>
 
@@ -177,8 +203,8 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
           {details.title || details.name}
         </h1>
 
-        <div className="flex items-center gap-2.5 flex-wrap mb-4 text-xs sm:text-sm font-medium">
-          <span className="bg-gold text-black font-extrabold px-2.5 py-[3px] rounded flex items-center gap-1 shadow-sm">
+        <div className="flex items-center gap-3 text-xs sm:text-sm font-semibold mb-6 flex-wrap">
+          <span className="bg-gold text-black font-extrabold px-2.5 py-0.75 rounded flex items-center gap-1 shadow-sm">
             <Star className="w-3.5 h-3.5 fill-black stroke-black" />
             {details.vote_average ? details.vote_average.toFixed(1) : "N/A"}
           </span>
@@ -193,7 +219,7 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
             <Link
               key={g.id}
               href={`/?genre=${g.id}&genreName=${encodeURIComponent(g.name)}`}
-              className="px-3.5 py-1 rounded-full text-xs font-semibold bg-surface border border-border text-fg-secondary hover:border-accent hover:text-accent transition-colors cursor-pointer"
+              className={`px-3.5 py-1 rounded-full text-xs font-semibold bg-surface border border-border text-fg-secondary transition-colors cursor-pointer ${tagHoverClass}`}
             >
               {g.name}
             </Link>
@@ -252,10 +278,10 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
             {similar.slice(0, 24).map((m) => (
               <div
                 key={m.id}
-                className="flex-none w-[130px] sm:w-[160px] snap-start group"
+                className="flex-none w-32.5 sm:w-40 snap-start group"
               >
                 <Link href={`/watch/${m.media_type || mediaType}/${m.id}`} className="block cursor-pointer">
-                  <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-surface border border-white/[0.04]">
+                  <div className="relative w-full aspect-2/3 rounded-lg overflow-hidden bg-surface border border-white/4">
                     <Image
                       src={m.poster_path ? `https://image.tmdb.org/t/p/w300${m.poster_path}` : "https://picsum.photos/seed/similar/300/450"}
                       alt={m.title || m.name || ""}

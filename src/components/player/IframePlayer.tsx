@@ -17,6 +17,8 @@ import {
 import { reportProvider } from "@/app/actions/reports";
 import { safeStorage } from "@/lib/safeStorage";
 import { toast } from "sonner";
+import { updateWatchProgressLocal } from "@/lib/watchStore";
+import { flushWatch } from "@/lib/watchSyncClient";
 
 interface SeasonInfo {
   season_number: number;
@@ -37,6 +39,7 @@ interface IframePlayerProps {
   /** Explicit `?sandbox=` mode; when absent we use the provider's configured mode. */
   initialSandbox?: SandboxMode;
   seasons?: SeasonInfo[];
+  runtimeMinutes?: number;
 }
 
 /* ─── Custom animated dropdown ─────────────────────────────── */
@@ -63,6 +66,7 @@ function CustomDropdown({ icon, label, options, value, onChange, onOpenChange, d
   const [mounted, setMounted] = useState(false);
   const selected = options.find((o) => o.value === value);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), []);
 
   // Position the (portaled) panel under the trigger, clamped inside the viewport
@@ -114,10 +118,10 @@ function CustomDropdown({ icon, label, options, value, onChange, onOpenChange, d
         onClick={() => !disabled && toggleOpen(!open)}
         disabled={disabled}
         className={`flex items-center gap-1.5 sm:gap-2 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl border transition-all duration-200 outline-none group/trigger ${disabled
-          ? "bg-white/[0.03] border-white/[0.06] opacity-60 cursor-not-allowed"
+          ? "bg-white/3 border-white/6 opacity-60 cursor-not-allowed"
           : open
             ? "bg-accent/20 border-accent/60 shadow-[0_0_16px_rgba(229,62,79,0.15)] cursor-pointer"
-            : "bg-white/[0.05] border-white/[0.10] hover:bg-white/[0.09] hover:border-white/[0.20] cursor-pointer"
+            : "bg-white/5 border-white/10 hover:bg-white/9 hover:border-white/20 cursor-pointer"
           }`}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -132,14 +136,14 @@ function CustomDropdown({ icon, label, options, value, onChange, onOpenChange, d
             {/* Desktop: full label + value */}
             <div className="hidden lg:flex flex-col items-start leading-none">
               <span className="text-[9px] font-extrabold uppercase tracking-widest text-muted">{label}</span>
-              <span className="text-xs font-bold text-white mt-0.5 max-w-[96px] truncate">{selected?.label ?? "—"}</span>
+              <span className="text-xs font-bold text-white mt-0.5 max-w-24 truncate">{selected?.label ?? "—"}</span>
             </div>
           </>
         ) : (
           <div className="flex flex-col items-start leading-none">
             {/* tiny label hidden until desktop to keep the trigger short */}
             <span className="hidden lg:block text-[9px] font-extrabold uppercase tracking-widest text-muted">{label}</span>
-            <span className="text-xs font-bold text-white lg:mt-0.5 max-w-[72px] lg:max-w-[96px] truncate">{selected?.label ?? "—"}</span>
+            <span className="text-xs font-bold text-white lg:mt-0.5 max-w-18 lg:max-w-24 truncate">{selected?.label ?? "—"}</span>
           </div>
         )}
         <ChevronDown
@@ -161,15 +165,15 @@ function CustomDropdown({ icon, label, options, value, onChange, onOpenChange, d
               zIndex: 1000,
               animation: "dropDown 0.22s cubic-bezier(0.22,1,0.36,1) both",
             }}
-            className="w-[220px] bg-surface/98 backdrop-blur-2xl border border-white/[0.12] rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.9)] overflow-hidden"
+            className="w-55 bg-surface/98 backdrop-blur-2xl border border-white/12 rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.9)] overflow-hidden"
           >
             {/* Panel header */}
-            <div className="px-4 py-2.5 border-b border-white/[0.06] flex items-center justify-between gap-2">
+            <div className="px-4 py-2.5 border-b border-white/6 flex items-center justify-between gap-2">
               <p className="text-[9px] font-extrabold uppercase tracking-widest text-accent">{label}</p>
               {headerAction}
             </div>
             {/* Options */}
-            <div className="flex flex-col py-1 max-h-[220px] overflow-y-auto">
+            <div className="flex flex-col py-1 max-h-55 overflow-y-auto">
               {options.map((opt) => (
                 <button
                   key={opt.value}
@@ -178,7 +182,7 @@ function CustomDropdown({ icon, label, options, value, onChange, onOpenChange, d
                   aria-selected={opt.value === value}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all duration-150 cursor-pointer group/opt ${opt.value === value
                     ? "bg-accent/15 text-accent"
-                    : "text-fg hover:bg-white/[0.06] hover:text-white"
+                    : "text-fg hover:bg-white/6 hover:text-white"
                     }`}
                 >
                   <span className={`flex-1 flex flex-col gap-0.5`}>
@@ -206,9 +210,11 @@ export default function IframePlayer({
   posterPath,
   season: initialSeason = 1,
   episode: initialEpisode = 1,
+  initialProgress = 0,
   initialSourceKey,
   initialSandbox,
   seasons = [],
+  runtimeMinutes,
 }: IframePlayerProps) {
   const router = useRouter();
   const playerRef = useRef<HTMLDivElement>(null);
@@ -251,8 +257,144 @@ export default function IframePlayer({
     setSandboxMode(activeProvider.sandboxMode);
   }, [activeProvider, initialSandbox]);
 
+  /* ─── Playback Progress Tracking & Syncing ─── */
+  const receivedPostMessageRef = useRef(false);
+  const progressRef = useRef(initialProgress);
+  const durationRef = useRef(runtimeMinutes ? runtimeMinutes * 60 : (mediaType === "tv" ? 2700 : 7200));
+
+  // Update duration when props change
+  useEffect(() => {
+    durationRef.current = runtimeMinutes ? runtimeMinutes * 60 : (mediaType === "tv" ? 2700 : 7200);
+  }, [runtimeMinutes, mediaType]);
+
+  // Keep progressRef updated with initialProgress if it changes (e.g. fresh episode)
+  useEffect(() => {
+    progressRef.current = initialProgress;
+    // Reset postMessage status for fresh episode
+    receivedPostMessageRef.current = false;
+  }, [initialProgress, currentSeason, currentEpisode]);
+
+  const updateProgress = useCallback((prog: number, dur: number) => {
+    const p = Math.floor(prog);
+    const d = Math.floor(dur);
+    if (Number.isNaN(p) || Number.isNaN(d) || d <= 0) return;
+
+    progressRef.current = p;
+    durationRef.current = d;
+
+    // Update local watch history
+    updateWatchProgressLocal(
+      {
+        mediaId,
+        mediaType,
+        title,
+        posterPath,
+        season: mediaType === "tv" ? currentSeason : undefined,
+        episode: mediaType === "tv" ? currentEpisode : undefined,
+      },
+      p,
+      d
+    );
+  }, [mediaId, mediaType, title, posterPath, currentSeason, currentEpisode]);
+
+  // postMessage Listener for standard and provider-specific progress broadcasts
+  useEffect(() => {
+    const handlePostMessage = (event: MessageEvent) => {
+      let payload = event.data;
+      if (typeof payload === "string") {
+        try {
+          payload = JSON.parse(payload);
+        } catch {
+          return; // Ignore non-JSON strings
+        }
+      }
+
+      if (!payload || typeof payload !== "object") return;
+
+      let p: number | undefined;
+      let d: number | undefined;
+
+      // Sniff standard timeupdate and progress schemas (generic, nested, and vendor-specific)
+      if (typeof payload.currentTime === "number") p = payload.currentTime;
+      else if (typeof payload.seconds === "number") p = payload.seconds;
+      else if (typeof payload.time === "number") p = payload.time;
+      else if (typeof payload.progress === "number") p = payload.progress;
+
+      if (typeof payload.duration === "number") d = payload.duration;
+      else if (typeof payload.totalTime === "number") d = payload.totalTime;
+
+      // Check nested structures (commonly wrapped in event/data envelopes)
+      const nested = payload.data || payload.value || payload.payload;
+      if (nested && typeof nested === "object") {
+        if (typeof nested.currentTime === "number") p = nested.currentTime;
+        else if (typeof nested.seconds === "number") p = nested.seconds;
+        else if (typeof nested.time === "number") p = nested.time;
+        else if (typeof nested.progress === "number") p = nested.progress;
+
+        if (typeof nested.duration === "number") d = nested.duration;
+        else if (typeof nested.totalTime === "number") d = nested.totalTime;
+      }
+
+      if (p !== undefined && d !== undefined && d > 0) {
+        if (!receivedPostMessageRef.current) {
+          console.log(`[Cinevo Player Sync] Active postMessage feed detected from: ${event.origin || "embed iframe"}`);
+          receivedPostMessageRef.current = true;
+        }
+        console.log(`[Cinevo Player Sync] Progress update (postMessage): ${Math.floor(p)}s / ${Math.floor(d)}s`);
+        updateProgress(p, d);
+      }
+    };
+
+    window.addEventListener("message", handlePostMessage);
+    return () => window.removeEventListener("message", handlePostMessage);
+  }, [updateProgress]);
+
+  // Simulated Progress Tracker (estimates progress if player is silent)
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    // Wait 15 seconds before starting the simulated estimation tracker,
+    // to give any potential postMessage events time to register.
+    const startTimeout = setTimeout(() => {
+      if (receivedPostMessageRef.current) {
+        console.log("[Cinevo Player Sync] PostMessage tracking active. Skipping simulated tracker.");
+        return;
+      }
+
+      console.log("[Cinevo Player Sync] Starting visibility-aware progress estimation (no postMessage detected).");
+
+      interval = setInterval(() => {
+        // Only increment progress if the tab is in focus (document is visible)
+        if (document.visibilityState === "visible") {
+          const nextProg = progressRef.current + 10;
+          const dur = durationRef.current;
+
+          // Cap progress slightly below duration to avoid premature completed mark if they just left the tab open
+          if (nextProg < dur * 0.98) {
+            console.log(`[Cinevo Player Sync] Progress update (Estimated): ${nextProg}s / ${dur}s`);
+            updateProgress(nextProg, dur);
+          }
+        }
+      }, 10000); // Check and increment every 10 seconds
+    }, 15000);
+
+    return () => {
+      clearTimeout(startTimeout);
+      if (interval) clearInterval(interval);
+    };
+  }, [updateProgress]);
+
+  // Instant DB flush on unmount
+  useEffect(() => {
+    return () => {
+      console.log("[Cinevo Player Sync] Player unmounted. Flushing progress to database.");
+      flushWatch().catch((err) => console.error("[Cinevo Player Sync] Flush failed:", err));
+    };
+  }, []);
+
+
   // Build a consistent URL with all persistent query params
-  const buildUrl = (opts: { season?: number; episode?: number; source?: number; sandbox?: SandboxMode }) => {
+  const buildUrl = useCallback((opts: { season?: number; episode?: number; source?: number; sandbox?: SandboxMode }) => {
     const s = opts.season ?? currentSeason;
     const e = opts.episode ?? currentEpisode;
     const src = opts.source ?? selectedProvider;
@@ -263,7 +405,7 @@ export default function IframePlayer({
       : `/watch/movie/${mediaId}?source=${srcKey}`;
     // Always persist the explicit sandbox mode so a manual change survives navigation.
     return `${base}&sandbox=${sb}`;
-  };
+  }, [currentSeason, currentEpisode, selectedProvider, sandboxMode, providers, mediaType, mediaId]);
 
   const validSeasons = seasons
     .filter((s) => s.season_number > 0)
@@ -290,7 +432,7 @@ export default function IframePlayer({
     router.replace(buildUrl({ episode: v }), { scroll: false });
   };
 
-  const handleProviderChange = (v: number) => {
+  const handleProviderChange = useCallback((v: number) => {
     setSelectedProvider(v);
     // Remember this as the user's base provider for future visits.
     if (providers[v]) safeStorage.set(LAST_PROVIDER_KEY, providers[v].key);
@@ -300,16 +442,16 @@ export default function IframePlayer({
     setSandboxMode(mode);
     reload();
     router.replace(buildUrl({ source: v, sandbox: mode }), { scroll: false });
-  };
+  }, [providers, reload, router, buildUrl]);
 
   // Direct sandbox-mode pick (manual override — stops auto-sync to provider).
-  const handleSandboxChange = (mode: SandboxMode) => {
+  const handleSandboxChange = useCallback((mode: SandboxMode) => {
     if (mode === sandboxMode) return;
     sandboxTouchedRef.current = true;
     setSandboxMode(mode);
     reload();
     router.replace(buildUrl({ sandbox: mode }), { scroll: false });
-  };
+  }, [sandboxMode, reload, router, buildUrl]);
 
   const toggleFullscreen = () => {
     if (!playerRef.current) return;
@@ -320,9 +462,25 @@ export default function IframePlayer({
     }
   };
 
-  const embedUrl = activeProvider
-    ? buildEmbedUrl(activeProvider, mediaId, mediaType, currentSeason, currentEpisode)
-    : "";
+  // Dynamically build embed URL and append start times for known providers
+  const embedUrl = (() => {
+    if (!activeProvider) return "";
+    let url = buildEmbedUrl(activeProvider, mediaId, mediaType, currentSeason, currentEpisode, initialProgress);
+
+    // If there is progress and the url template doesn't naturally support {progress},
+    // append vendor-specific parameters to resume playback.
+    if (initialProgress > 0 && !activeProvider.movieUrl.includes("{progress}") && !activeProvider.tvUrl.includes("{progress}")) {
+      const separator = url.includes("?") ? "&" : "?";
+      if (activeProvider.key.includes("vidlink")) {
+        url = `${url}${separator}start=${initialProgress}`;
+      } else if (activeProvider.key.includes("vidsrc")) {
+        url = `${url}${separator}t=${initialProgress}`;
+      } else {
+        url = `${url}${separator}start=${initialProgress}`;
+      }
+    }
+    return url;
+  })();
 
   /* ─── Prev / Next episode (TV) ── */
   const seasonOrder = validSeasons.map((s) => s.season_number);
@@ -345,12 +503,61 @@ export default function IframePlayer({
     return null; // already at S1E1
   })();
 
-  const goToEpisode = (target: { season: number; episode: number }) => {
+  const goToEpisode = useCallback((target: { season: number; episode: number }) => {
     setCurrentSeason(target.season);
     setCurrentEpisode(target.episode);
     reload();
     router.replace(buildUrl({ season: target.season, episode: target.episode }), { scroll: false });
-  };
+  }, [reload, router, buildUrl]);
+
+  // Global media keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't run shortcuts if the user is typing in form fields
+      const active = document.activeElement;
+      if (active?.tagName === "INPUT" || active?.tagName === "TEXTAREA" || active?.hasAttribute("contenteditable")) {
+        return;
+      }
+
+      const key = e.key.toLowerCase();
+      if (key === "f") {
+        e.preventDefault();
+        toggleFullscreen();
+      } else if (key === "t") {
+        e.preventDefault();
+        openTrailer({ id: mediaId, mediaType, title });
+      } else if (key === "p") {
+        e.preventDefault();
+        if (providers.length > 0) {
+          const nextIdx = (selectedProvider + 1) % providers.length;
+          handleProviderChange(nextIdx);
+          toast.info(`Switched to provider: ${providers[nextIdx].label}`);
+        }
+      } else if (key === "s") {
+        e.preventDefault();
+        const currentIdx = SANDBOX_MODES.indexOf(sandboxMode);
+        const nextIdx = (currentIdx + 1) % SANDBOX_MODES.length;
+        handleSandboxChange(SANDBOX_MODES[nextIdx]);
+        toast.info(`Sandbox: ${SANDBOX_MODES[nextIdx] === "off" ? "Off" : SANDBOX_MODES[nextIdx] === "strict" ? "Strict" : "Balanced"}`);
+      } else if (e.shiftKey && e.key === "ArrowRight") {
+        e.preventDefault();
+        if (nextEpisode) {
+          goToEpisode(nextEpisode);
+          toast.info(`Next episode: S${nextEpisode.season} E${nextEpisode.episode}`);
+        }
+      } else if (e.shiftKey && e.key === "ArrowLeft") {
+        e.preventDefault();
+        if (prevEpisode) {
+          goToEpisode(prevEpisode);
+          toast.info(`Previous episode: S${prevEpisode.season} E${prevEpisode.episode}`);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedProvider, providers, sandboxMode, nextEpisode, prevEpisode, mediaId, mediaType, title, openTrailer, handleProviderChange, handleSandboxChange, goToEpisode]);
+
 
   /* ─── Dropdown option arrays ── */
   const providerOptions: DropdownOption[] = providers.map((p, i) => ({ value: i, label: p.label, sub: p.sub ?? undefined }));
@@ -375,7 +582,7 @@ export default function IframePlayer({
         {/* ── Player ── */}
         <div
           ref={playerRef}
-          className="relative w-full aspect-video max-h-[70vh] bg-black rounded-t-xl overflow-hidden select-none shadow-2xl border border-white/[0.04] border-b-0 group"
+          className="relative w-full aspect-video max-h-[70vh] bg-black rounded-t-xl overflow-hidden select-none shadow-2xl border border-white/4 border-b-0 group"
         >
           <div className="w-full h-full relative">
             {embedUrl && (
@@ -425,7 +632,7 @@ export default function IframePlayer({
         </div>
 
         {/* ── Controls bar ── */}
-        <div className="w-full bg-surface/50 backdrop-blur-xl border border-white/[0.07] border-t border-t-white/[0.04] rounded-b-xl px-2 py-1.5 sm:px-5 sm:py-3 flex flex-wrap items-center justify-center gap-1.5 sm:flex-nowrap sm:justify-between sm:gap-4 relative overflow-visible">
+        <div className="w-full bg-surface/50 backdrop-blur-xl border border-white/[0.07] border-t border-t-white/4 rounded-b-xl px-2 py-1.5 sm:px-5 sm:py-3 flex flex-wrap items-center justify-center gap-1.5 sm:flex-nowrap sm:justify-between sm:gap-4 relative overflow-visible">
 
           {/* Left: Ad-block mode — direct pick (Balanced / Strict / Off) */}
           <CustomDropdown
@@ -446,7 +653,7 @@ export default function IframePlayer({
             onClick={() => openTrailer({ id: mediaId, mediaType, title })}
             title="Watch trailer"
             aria-label="Watch trailer"
-            className="flex items-center gap-1.5 sm:gap-2 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl border bg-white/[0.04] border-white/[0.08] text-muted hover:text-accent hover:border-accent/40 transition-all duration-200 cursor-pointer flex-shrink-0 self-stretch"
+            className="flex items-center gap-1.5 sm:gap-2 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl border bg-white/4 border-white/8 text-muted hover:text-accent hover:border-accent/40 transition-all duration-200 cursor-pointer shrink-0 self-stretch"
           >
             <Clapperboard className="w-3.5 h-3.5" />
             <span className="text-xs font-bold text-white hidden sm:inline">Trailer</span>
@@ -454,40 +661,40 @@ export default function IframePlayer({
 
           {/* Report broken provider — hidden for now */}
           {false && (
-          <button
-            onClick={() => {
-              if (reported || !activeProvider) return;
-              setReported(true);
-              reportProvider({
-                providerKey: activeProvider.key,
-                providerLabel: activeProvider.label,
-                mediaId,
-                mediaType,
-                title,
-              })
-                .then(() => toast.success(`Reported ${activeProvider.label}`, { description: "Thanks — our team will take a look." }))
-                .catch(() => toast.error("Couldn't submit report"));
-              setTimeout(() => setReported(false), 4000);
-            }}
-            disabled={reported || !activeProvider}
-            title={reported ? "Thanks — reported" : "Report this provider as not working"}
-            aria-label="Report broken provider"
-            className={`flex items-center gap-1.5 px-2 py-1.5 sm:px-2.5 rounded-lg border transition-all duration-300 cursor-pointer flex-shrink-0 ${reported
-              ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
-              : "bg-white/[0.04] border-white/[0.08] text-muted hover:text-accent hover:border-accent/40"
-              }`}
-          >
-            <Flag className="w-3 h-3" />
-            <span className="text-[9px] font-extrabold uppercase tracking-widest hidden sm:inline">
-              {reported ? "Reported" : "Report"}
-            </span>
-          </button>
+            <button
+              onClick={() => {
+                if (reported || !activeProvider) return;
+                setReported(true);
+                reportProvider({
+                  providerKey: activeProvider.key,
+                  providerLabel: activeProvider.label,
+                  mediaId,
+                  mediaType,
+                  title,
+                })
+                  .then(() => toast.success(`Reported ${activeProvider.label}`, { description: "Thanks — our team will take a look." }))
+                  .catch(() => toast.error("Couldn't submit report"));
+                setTimeout(() => setReported(false), 4000);
+              }}
+              disabled={reported || !activeProvider}
+              title={reported ? "Thanks — reported" : "Report this provider as not working"}
+              aria-label="Report broken provider"
+              className={`flex items-center gap-1.5 px-2 py-1.5 sm:px-2.5 rounded-lg border transition-all duration-300 cursor-pointer shrink-0 ${reported
+                ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
+                : "bg-white/4 border-white/8 text-muted hover:text-accent hover:border-accent/40"
+                }`}
+            >
+              <Flag className="w-3 h-3" />
+              <span className="text-[9px] font-extrabold uppercase tracking-widest hidden sm:inline">
+                {reported ? "Reported" : "Report"}
+              </span>
+            </button>
           )}
 
           {/* Center: the dropdowns stay on one line together (Provider/Season/Episode).
               On mobile this group drops to its own full-width row; on desktop it
               flex-centers between the side items. Scrolls if too narrow. */}
-          <div className="flex flex-wrap items-center justify-center gap-2 w-full order-last sm:flex-1 sm:min-w-0 sm:flex-nowrap sm:order-none sm:w-auto sm:overflow-x-auto scrollbar-hide">
+          <div className="flex flex-wrap items-center justify-center gap-2 w-full order-last sm:flex-1 sm:min-w-0 sm:flex-nowrap sm:order-0 sm:w-auto sm:overflow-x-auto scrollbar-hide">
             {/* Provider — the refresh control lives in the dropdown header.
                 Clears the localStorage cache and re-fetches providers from the DB. */}
             <CustomDropdown
@@ -504,7 +711,7 @@ export default function IframePlayer({
                   disabled={refreshing}
                   title="Refresh providers from server"
                   aria-label="Refresh providers"
-                  className="flex items-center justify-center w-6 h-6 rounded-md border bg-white/[0.05] border-white/[0.10] hover:bg-white/[0.09] hover:border-accent/40 text-muted hover:text-accent transition-all duration-200 cursor-pointer disabled:opacity-60 disabled:cursor-wait"
+                  className="flex items-center justify-center w-6 h-6 rounded-md border bg-white/5 border-white/10 hover:bg-white/9 hover:border-accent/40 text-muted hover:text-accent transition-all duration-200 cursor-pointer disabled:opacity-60 disabled:cursor-wait"
                 >
                   <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin text-accent" : ""}`} />
                 </button>
@@ -514,7 +721,7 @@ export default function IframePlayer({
             {mediaType === "tv" && (
               <>
                 {/* Divider */}
-                <div className="hidden sm:block w-px h-8 bg-white/[0.08] flex-shrink-0" />
+                <div className="hidden sm:block w-px h-8 bg-white/8 shrink-0" />
 
                 {/* Season */}
                 <CustomDropdown
@@ -528,7 +735,7 @@ export default function IframePlayer({
                 />
 
                 {/* Divider */}
-                <div className="hidden sm:block w-px h-8 bg-white/[0.08] flex-shrink-0" />
+                <div className="hidden sm:block w-px h-8 bg-white/8 shrink-0" />
 
                 {/* Episode */}
                 <CustomDropdown
@@ -544,13 +751,13 @@ export default function IframePlayer({
                 {/* Prev / Next — icon-only, side by side; each hidden at its
                     boundary. Drops to its own centered row below on mobile. */}
                 {(prevEpisode || nextEpisode) && (
-                  <div className="flex items-center justify-center gap-1.5 w-full sm:w-auto sm:flex-shrink-0">
+                  <div className="flex items-center justify-center gap-1.5 w-full sm:w-auto sm:shrink-0">
                     {prevEpisode && (
                       <button
                         onClick={() => goToEpisode(prevEpisode)}
                         title={`Previous: S${prevEpisode.season} E${prevEpisode.episode}`}
                         aria-label="Previous episode"
-                        className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl border bg-white/[0.05] border-white/[0.10] hover:bg-accent/20 hover:border-accent/60 text-muted hover:text-accent transition-all duration-200 cursor-pointer"
+                        className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl border bg-white/5 border-white/10 hover:bg-accent/20 hover:border-accent/60 text-muted hover:text-accent transition-all duration-200 cursor-pointer"
                       >
                         <SkipBack className="w-4 h-4" />
                       </button>
@@ -560,7 +767,7 @@ export default function IframePlayer({
                         onClick={() => goToEpisode(nextEpisode)}
                         title={`Next: S${nextEpisode.season} E${nextEpisode.episode}`}
                         aria-label="Next episode"
-                        className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl border bg-white/[0.05] border-white/[0.10] hover:bg-accent/20 hover:border-accent/60 text-muted hover:text-accent transition-all duration-200 cursor-pointer"
+                        className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl border bg-white/5 border-white/10 hover:bg-accent/20 hover:border-accent/60 text-muted hover:text-accent transition-all duration-200 cursor-pointer"
                       >
                         <SkipForward className="w-4 h-4" />
                       </button>
@@ -575,8 +782,8 @@ export default function IframePlayer({
 
         {/* No-sandbox advisory — this provider can't be ad-protected */}
         {sandboxMode === "off" && !noticeDismissed && (
-          <div className="mt-2 flex items-center gap-2 rounded-xl border border-orange-500/25 bg-orange-500/[0.08] px-2.5 py-1.5 sm:px-3 sm:py-2 animate-fade-in">
-            <ShieldOff className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-400 flex-shrink-0" />
+          <div className="mt-2 flex items-center gap-2 rounded-xl border border-orange-500/25 bg-orange-500/8 px-2.5 py-1.5 sm:px-3 sm:py-2 animate-fade-in">
+            <ShieldOff className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-400 shrink-0" />
             <p className="text-[10px] sm:text-xs text-orange-200/90 leading-snug flex-1">
               <b className="text-orange-300">Ad protection off</b> on {activeProvider?.label ?? "this provider"} — it doesn&apos;t allow blocking, so pop-ups/ads may appear. For a clean experience, use an ad-blocker like{" "}
               <a href="https://ublockorigin.com" target="_blank" rel="noreferrer" className="underline hover:text-orange-100">uBlock Origin</a>, or pick another provider.
@@ -584,7 +791,7 @@ export default function IframePlayer({
             <button
               onClick={() => setNoticeDismissed(true)}
               aria-label="Dismiss notice"
-              className="flex-shrink-0 text-orange-300/60 hover:text-orange-200 transition-colors cursor-pointer"
+              className="shrink-0 text-orange-300/60 hover:text-orange-200 transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
