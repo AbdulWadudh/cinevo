@@ -23,7 +23,7 @@ import { site } from "@/config";
 
 interface PageProps {
   params: Promise<{ type: string; id: string }>;
-  searchParams: Promise<{ season?: string; episode?: string; t?: string; source?: string; sandbox?: string; theme?: string }>;
+  searchParams: Promise<{ season?: string; episode?: string; t?: string; source?: string; sandbox?: string; theme?: string; preview?: string }>;
 }
 
 // Sets the browser tab title to "{Title} · <app>" via the layout template
@@ -67,6 +67,9 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
   const season = search.season ? parseInt(search.season) : 1;
   const episode = search.episode ? parseInt(search.episode) : 1;
   const queryTime = search.t ? parseInt(search.t) : undefined;
+  // `?preview=1` — opened to look at someone else's title (from the admin Users
+  // panel), so nothing here should land in the viewer's own watch history.
+  const preview = search.preview === "1";
   // Provider selection and sandbox state are resolved client-side once the
   // provider list loads (from localStorage / DB). We just forward the raw
   // ?source= key and explicit ?sandbox= preference (if any).
@@ -176,7 +179,8 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
 
       <section className="relative z-20 w-full px-3 pt-16 sm:px-6 md:px-12 md:pt-18">
 
-        {/* Records this view into the user's watch history (no-op when signed out) */}
+        {/* Records this view into the user's watch history (no-op when signed
+            out, and no-op in preview — see `?preview=1` above) */}
         <TrackWatch
           mediaId={id}
           mediaType={mediaType}
@@ -184,6 +188,7 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
           posterPath={details.poster_path || details.backdrop_path || undefined}
           season={isTV ? season : undefined}
           episode={isTV ? episode : undefined}
+          preview={preview}
         />
 
         {/* Sandboxed Video Player Component */}
@@ -199,6 +204,7 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
           initialSandbox={initialSandbox}
           seasons={isTV && details.seasons ? (details.seasons as any[]).filter((s: any) => s.season_number > 0) : undefined}
           runtimeMinutes={details.runtime || undefined}
+          preview={preview}
         />
       </section>
 
@@ -259,6 +265,7 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
           currentSeason={season}
           currentEpisode={episode}
           backdropPath={details.backdrop_path}
+          preview={preview}
         />
       )}
 

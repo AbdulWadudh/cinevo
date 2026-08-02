@@ -40,6 +40,8 @@ interface IframePlayerProps {
   initialSandbox?: SandboxMode;
   seasons?: SeasonInfo[];
   runtimeMinutes?: number;
+  /** `?preview=1` — play normally, but keep it out of the watch history. */
+  preview?: boolean;
 }
 
 /* ─── Custom animated dropdown ─────────────────────────────── */
@@ -215,6 +217,7 @@ export default function IframePlayer({
   initialSandbox,
   seasons = [],
   runtimeMinutes,
+  preview = false,
 }: IframePlayerProps) {
   const router = useRouter();
   const playerRef = useRef<HTMLDivElement>(null);
@@ -279,8 +282,11 @@ export default function IframePlayer({
     const d = Math.floor(dur);
     if (Number.isNaN(p) || Number.isNaN(d) || d <= 0) return;
 
+    // The refs still track position — the player's own resume and next-episode
+    // logic reads them — but in preview the store never hears about it.
     progressRef.current = p;
     durationRef.current = d;
+    if (preview) return;
 
     // Update local watch history
     updateWatchProgressLocal(
@@ -295,7 +301,7 @@ export default function IframePlayer({
       p,
       d
     );
-  }, [mediaId, mediaType, title, posterPath, currentSeason, currentEpisode]);
+  }, [mediaId, mediaType, title, posterPath, currentSeason, currentEpisode, preview]);
 
   // postMessage Listener for standard and provider-specific progress broadcasts
   useEffect(() => {
@@ -403,9 +409,10 @@ export default function IframePlayer({
     const base = mediaType === "tv"
       ? `/watch/tv/${mediaId}?season=${s}&episode=${e}&source=${srcKey}`
       : `/watch/movie/${mediaId}?source=${srcKey}`;
-    // Always persist the explicit sandbox mode so a manual change survives navigation.
-    return `${base}&sandbox=${sb}`;
-  }, [currentSeason, currentEpisode, selectedProvider, sandboxMode, providers, mediaType, mediaId]);
+    // Always persist the explicit sandbox mode so a manual change survives
+    // navigation — and preview, or changing episode would start recording.
+    return `${base}&sandbox=${sb}${preview ? "&preview=1" : ""}`;
+  }, [currentSeason, currentEpisode, selectedProvider, sandboxMode, providers, mediaType, mediaId, preview]);
 
   const validSeasons = seasons
     .filter((s) => s.season_number > 0)

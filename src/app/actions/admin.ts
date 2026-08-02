@@ -164,6 +164,74 @@ export async function getAdminUsersAction(opts: {
   }
 }
 
+export interface UserWatchEntry {
+  id: string;
+  mediaId: string;
+  mediaType: string;
+  title: string;
+  posterPath: string | null;
+  season: number | null;
+  episode: number | null;
+  /** Seconds. */
+  progress: number;
+  duration: number;
+  /** Epoch ms — formatted in the client, which is the only place it renders. */
+  watchedAt: number;
+}
+
+export interface UserWatchPage {
+  entries: UserWatchEntry[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+const WATCH_PAGE_SIZE = 20;
+
+/** Admin: what a given user has been watching, newest first. */
+export async function getUserWatchHistoryAction(
+  userId: string,
+  page = 1
+): Promise<{ success: boolean; data?: UserWatchPage; error?: string }> {
+  try {
+    await requireAdmin();
+
+    const current = Math.max(1, Math.floor(page));
+    const [entries, total] = await Promise.all([
+      db.watchProgress.findMany({
+        where: { profileId: userId },
+        orderBy: { updatedAt: "desc" },
+        skip: (current - 1) * WATCH_PAGE_SIZE,
+        take: WATCH_PAGE_SIZE,
+      }),
+      db.watchProgress.count({ where: { profileId: userId } }),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        entries: entries.map((e) => ({
+          id: e.id,
+          mediaId: e.mediaId,
+          mediaType: e.mediaType,
+          title: e.title,
+          posterPath: e.posterPath,
+          season: e.season,
+          episode: e.episode,
+          progress: e.progress,
+          duration: e.duration,
+          watchedAt: e.updatedAt.getTime(),
+        })),
+        total,
+        page: current,
+        pageSize: WATCH_PAGE_SIZE,
+      },
+    };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+}
+
 /**
  * Promote or demote a user.
  *

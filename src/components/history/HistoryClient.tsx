@@ -11,6 +11,7 @@ import { deleteWatchEntries, clearWatchProgress } from "@/app/actions/progress";
 import {
   useWatchHistory, removeEntries, clearAll, mergeFromDb, entryKey, type WatchEntry,
 } from "@/lib/watchStore";
+import { relativeTime } from "@/lib/relativeTime";
 
 export interface HistoryItem {
   id: string;
@@ -23,21 +24,6 @@ export interface HistoryItem {
   progress: number;
   duration: number;
   updatedAt: string;
-}
-
-function relativeTime(ms: number): string {
-  const diff = Date.now() - ms;
-  const sec = Math.floor(diff / 1000);
-  if (sec < 60) return "just now";
-  const min = Math.floor(sec / 60);
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  const day = Math.floor(hr / 24);
-  if (day < 7) return `${day}d ago`;
-  const wk = Math.floor(day / 7);
-  if (wk < 5) return `${wk}w ago`;
-  return new Date(ms).toLocaleDateString();
 }
 
 function watchUrl(item: WatchEntry): string {

@@ -36,6 +36,8 @@ interface SeasonListProps {
   currentSeason: number;
   currentEpisode: number;
   backdropPath?: string | null;
+  /** Carried onto every episode link, or picking one would drop preview mode. */
+  preview?: boolean;
 }
 
 interface DragState {
@@ -142,7 +144,9 @@ export default function SeasonList({
   currentSeason,
   currentEpisode,
   backdropPath,
+  preview = false,
 }: SeasonListProps) {
+  const previewParam = preview ? "&preview=1" : "";
   const [expandedSeasonNum, setExpandedSeasonNum] = useState<number | null>(null);
   const [loadedSeasons, setLoadedSeasons] = useState<Record<number, any>>({});
   const [loadingSeasonNum, setLoadingSeasonNum] = useState<number | null>(null);
@@ -545,7 +549,7 @@ export default function SeasonList({
                             >
                               {/* Thumbnail */}
                               <Link
-                                href={`/watch/tv/${seriesId}?season=${s.season_number}&episode=${ep.episode_number}`}
+                                href={`/watch/tv/${seriesId}?season=${s.season_number}&episode=${ep.episode_number}${previewParam}`}
                                 className={`relative flex-none w-[120px] sm:w-[156px] aspect-video rounded-xl overflow-hidden bg-surface border-2 transition-all duration-300 cursor-pointer select-none block ${
                                   isCurrentPlaying ? "border-accent now-playing-glow" : "border-white/[0.05] group-hover/row:border-accent/40"
                                 }`}
@@ -588,7 +592,7 @@ export default function SeasonList({
                               <div className="flex-1 min-w-0 flex flex-col gap-1">
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <Link
-                                    href={`/watch/tv/${seriesId}?season=${s.season_number}&episode=${ep.episode_number}`}
+                                    href={`/watch/tv/${seriesId}?season=${s.season_number}&episode=${ep.episode_number}${previewParam}`}
                                     onClick={(e) => handleLinkClick(e, s.season_number)}
                                     draggable={false}
                                     className="cursor-pointer"
@@ -625,7 +629,7 @@ export default function SeasonList({
 
                               {/* Right: play circle */}
                               <Link
-                                href={`/watch/tv/${seriesId}?season=${s.season_number}&episode=${ep.episode_number}`}
+                                href={`/watch/tv/${seriesId}?season=${s.season_number}&episode=${ep.episode_number}${previewParam}`}
                                 onClick={(e) => handleLinkClick(e, s.season_number)}
                                 draggable={false}
                                 className="flex-none w-9 h-9 rounded-full border border-white/[0.08] group-hover/row:border-accent/50 flex items-center justify-center text-muted group-hover/row:text-accent transition-all duration-300 group-hover/row:bg-accent/10 hidden sm:flex"

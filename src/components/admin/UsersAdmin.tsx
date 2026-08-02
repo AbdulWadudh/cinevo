@@ -5,8 +5,9 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { toast } from "sonner";
 import {
   Users as UsersIcon, Search, X, Loader2, ShieldCheck, ShieldOff, RotateCcw, Trash2,
-  ChevronLeft, ChevronRight, Clock, Heart, Star, Radio, BellRing, Check,
+  ChevronLeft, ChevronRight, Clock, Heart, Star, Radio, BellRing, Check, History,
 } from "lucide-react";
+import UserWatchDialog from "./UserWatchDialog";
 import {
   getAdminUsersAction,
   setUserRoleAction,
@@ -38,6 +39,7 @@ export default function UsersAdmin({ currentUserId }: { currentUserId: string })
 
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<Confirming>(null);
+  const [viewing, setViewing] = useState<AdminUser | null>(null);
   /** Bumped to force a refetch after a mutation. */
   const [revision, setRevision] = useState(0);
 
@@ -321,6 +323,12 @@ export default function UsersAdmin({ currentUserId }: { currentUserId: string })
                     ) : (
                       <>
                         <RowAction
+                          label="View watch history"
+                          onClick={() => setViewing(user)}
+                        >
+                          <History className="size-3.5" />
+                        </RowAction>
+                        <RowAction
                           label={
                             isSelf
                               ? "You can't change your own role"
@@ -394,6 +402,8 @@ export default function UsersAdmin({ currentUserId }: { currentUserId: string })
           </div>
         </div>
       )}
+
+      <UserWatchDialog user={viewing} onClose={() => setViewing(null)} />
     </motion.section>
   );
 }
