@@ -1,35 +1,49 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-import { safeStorage } from "@/lib/safeStorage";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { persistStorage, useStoreHydration } from "@/lib/stores/persistOptions";
 import { storageKey } from "@/config";
 import { DEFAULT_EFFECT_KEY, getEffect } from "./effects";
 
-// Which holo effect the Mystery reveal uses. Admin picks it in Profile; it's
-// stored in localStorage and shared across the app via useSyncExternalStore.
+// Which holo effect the Mystery reveal uses. An admin picks it in Profile and
+// it applies to everyone on the device.
 
-const KEY = storageKey("revealEffect:v1");
-const listeners = new Set<() => void>();
-let cached: string | null = null;
-
-function read(): string {
-  if (cached !== null) return cached;
-  cached = safeStorage.get(KEY) || DEFAULT_EFFECT_KEY;
-  return cached;
+interface RevealEffectState {
+  effectKey: string;
+  setEffect: (key: string) => void;
 }
 
-export function setRevealEffect(key: string) {
-  cached = getEffect(key).key; // validate
-  safeStorage.set(KEY, cached);
-  listeners.forEach((l) => l());
-}
-
-function subscribe(cb: () => void) {
-  listeners.add(cb);
-  return () => listeners.delete(cb);
-}
+const useStore = create<RevealEffectState>()(
+  persist(
+    (set) => ({
+      effectKey: DEFAULT_EFFECT_KEY,
+      // Validated on the way in, so an unknown key from an older build (or a
+      // hand-edited storage value) falls back rather than rendering nothing.
+      setEffect: (key) => set({ effectKey: getEffect(key).key }),
+    }),
+    {
+      name: storageKey("revealEffect:v2"),
+      storage: persistStorage,
+      skipHydration: true,
+      partialize: (s) => ({ effectKey: s.effectKey }),
+      // Same guard on the way out — the stored key is only as trustworthy as
+      // the build that wrote it.
+      merge: (persisted, current) => ({
+        ...current,
+        effectKey: getEffect((persisted as Partial<RevealEffectState>)?.effectKey ?? "").key,
+      }),
+    }
+  )
+);
 
 /** Reactive selected effect key (defaults to DEFAULT_EFFECT_KEY). */
 export function useRevealEffect(): string {
-  return useSyncExternalStore(subscribe, read, () => DEFAULT_EFFECT_KEY);
+  useStoreHydration(useStore);
+  return useStore((s) => s.effectKey);
+}
+
+/** Callable from anywhere, including outside React. */
+export function setRevealEffect(key: string) {
+  useStore.getState().setEffect(key);
 }

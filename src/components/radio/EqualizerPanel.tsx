@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { SlidersHorizontal, Loader2, RotateCcw } from "lucide-react";
 import { EQ_PRESETS, type EqBand, type EqPreset } from "./useRadioEqualizer";
-import type { EqSettings } from "./radioStorage";
+import type { EqSettings } from "./eqStore";
 
 interface EqualizerPanelProps {
   settings: EqSettings;

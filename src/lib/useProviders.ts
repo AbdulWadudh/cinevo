@@ -1,48 +1,91 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { useShallow } from "zustand/react/shallow";
 import { getPublicProviders } from "@/app/actions/providers";
-import { safeStorage } from "@/lib/safeStorage";
+import { persistStorage, useStoreHydration } from "@/lib/stores/persistOptions";
 import {
   PROVIDERS_CACHE_KEY,
   PROVIDERS_CACHE_TTL_MS,
   PROVIDERS_CACHE_VERSION,
   type PlayerProvider,
-  type ProvidersCache,
 } from "@/lib/providers";
 
-/** Read a still-valid (matching version, not past TTL) cache, or null. */
-function readCache(): PlayerProvider[] | null {
-  try {
-    const raw = safeStorage.get(PROVIDERS_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as ProvidersCache;
-    if (parsed.version !== PROVIDERS_CACHE_VERSION) return null;
-    if (Date.now() - parsed.fetchedAt > PROVIDERS_CACHE_TTL_MS) return null;
-    if (!Array.isArray(parsed.providers) || parsed.providers.length === 0) return null;
-    return parsed.providers;
-  } catch {
-    return null;
-  }
+interface ProvidersState {
+  providers: PlayerProvider[];
+  /** When the list was last pulled from the DB — drives the TTL. */
+  fetchedAt: number;
+  loading: boolean;
+  refreshing: boolean;
+  load: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
-/** Wipe the cached provider list (e.g. after an admin edit) so the next
- *  player load refetches fresh config from the DB. */
-export function clearProvidersCache() {
-  safeStorage.remove(PROVIDERS_CACHE_KEY);
-}
+const isFresh = (fetchedAt: number, providers: PlayerProvider[]) =>
+  providers.length > 0 && Date.now() - fetchedAt <= PROVIDERS_CACHE_TTL_MS;
 
-function writeCache(providers: PlayerProvider[]) {
-  try {
-    const payload: ProvidersCache = {
+/** Shared so two players mounting at once make one request, not two. */
+let inFlight: Promise<void> | null = null;
+
+const useStore = create<ProvidersState>()(
+  persist(
+    (set, get) => ({
+      providers: [],
+      fetchedAt: 0,
+      loading: true,
+      refreshing: false,
+
+      /** No-op when a fresh list is already in hand — every player mounts this. */
+      load: async () => {
+        const { providers, fetchedAt } = get();
+        if (isFresh(fetchedAt, providers)) {
+          set({ loading: false });
+          return;
+        }
+        if (inFlight) return inFlight;
+
+        inFlight = (async () => {
+          try {
+            const fresh = await getPublicProviders();
+            set({ providers: fresh, fetchedAt: Date.now(), loading: false });
+          } finally {
+            inFlight = null;
+          }
+        })();
+        return inFlight;
+      },
+
+      refresh: async () => {
+        set({ refreshing: true });
+        try {
+          const fresh = await getPublicProviders();
+          set({ providers: fresh, fetchedAt: Date.now(), loading: false });
+        } finally {
+          set({ refreshing: false });
+        }
+      },
+    }),
+    {
+      name: PROVIDERS_CACHE_KEY,
+      storage: persistStorage,
+      skipHydration: true,
+      // `loading` and `refreshing` describe this session, not the cache.
+      partialize: ({ providers, fetchedAt }) => ({ providers, fetchedAt }),
+      // Bumped when the provider shape changes; a mismatch drops the cache.
       version: PROVIDERS_CACHE_VERSION,
-      fetchedAt: Date.now(),
-      providers,
-    };
-    safeStorage.set(PROVIDERS_CACHE_KEY, JSON.stringify(payload));
-  } catch {
-    /* storage full / unavailable — ignore, we'll just refetch next time */
-  }
+    }
+  )
+);
+
+/**
+ * Wipes the cached provider list (e.g. after an admin edit) so the next player
+ * load pulls fresh config from the DB. Safe to call outside React.
+ */
+export function clearProvidersCache() {
+  useStore.setState({ providers: [], fetchedAt: 0 });
+  void useStore.persist.clearStorage();
 }
 
 interface UseProviders {
@@ -50,46 +93,34 @@ interface UseProviders {
   loading: boolean;
   /** True while a manual refresh (cache wipe → DB fetch) is in flight. */
   refreshing: boolean;
-  /** Wipe the localStorage cache and re-fetch fresh providers from the DB. */
+  /** Wipe the cache and re-fetch fresh providers from the DB. */
   refresh: () => Promise<void>;
 }
 
 /**
- * Loads the active providers once and caches them in localStorage (version + TTL).
- * Subsequent mounts read straight from the cache until it expires; `refresh()`
- * force-clears the cache and pulls a fresh copy from the database.
+ * The active providers, cached in localStorage behind a version and a 24h TTL.
+ *
+ * State lives in one store rather than per-hook, so several players mounted at
+ * once share a single list and a single fetch — the previous `useState` version
+ * gave each caller its own copy and its own round trip.
  */
 export function useProviders(): UseProviders {
-  const [providers, setProviders] = useState<PlayerProvider[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  useStoreHydration(useStore);
 
-  const fetchFromDb = useCallback(async () => {
-    const fresh = await getPublicProviders();
-    setProviders(fresh);
-    writeCache(fresh);
-    return fresh;
+  const { providers, loading, refreshing } = useStore(
+    useShallow((s) => ({ providers: s.providers, loading: s.loading, refreshing: s.refreshing }))
+  );
+
+  // Mount-only, as before: `load` decides for itself whether the hydrated
+  // cache is still fresh. `useStoreHydration` above declares its effect first,
+  // so the cache is already in the store by the time this runs.
+  useEffect(() => {
+    void useStore.getState().load();
   }, []);
 
-  useEffect(() => {
-    const cached = readCache();
-    if (cached) {
-      setProviders(cached);
-      setLoading(false);
-      return;
-    }
-    fetchFromDb().finally(() => setLoading(false));
-  }, [fetchFromDb]);
-
   const refresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      safeStorage.remove(PROVIDERS_CACHE_KEY);
-      await fetchFromDb();
-    } finally {
-      setRefreshing(false);
-    }
-  }, [fetchFromDb]);
+    await useStore.getState().refresh();
+  }, []);
 
   return { providers, loading, refreshing, refresh };
 }

@@ -13,10 +13,8 @@ import type { RadioCategoryData, RadioStationData } from "@/app/actions/radio";
  */
 
 const FAVORITES_KEY = "cinevo_radio_favorites";
-const VOLUME_KEY = "cinevo_radio_volume";
 const STATIONS_KEY = "cinevo_radio_stations";
 const CATEGORIES_KEY = "cinevo_radio_categories";
-const EQ_KEY = "cinevo_radio_eq";
 const LAST_KEY = "cinevo_radio_last";
 
 /** Stable identity for the server/initial snapshot — a new [] each call would loop. */
@@ -31,9 +29,9 @@ function emit() {
 
 function subscribe(listener: Listener) {
   listeners.add(listener);
-  // Another tab changed the value.
+  // Another tab changed the value. (`key === null` is a whole-store clear.)
   const onStorage = (e: StorageEvent) => {
-    if (e.key === FAVORITES_KEY || e.key === VOLUME_KEY || e.key === null) {
+    if (e.key === FAVORITES_KEY || e.key === null) {
       favoritesCache.raw = undefined;
       listener();
     }
@@ -102,33 +100,9 @@ function writeFavorites(next: RadioStationData[]) {
   emit();
 }
 
-/* ── Volume ────────────────────────────────────────────────────────────── */
-
-const DEFAULT_VOLUME = 0.8;
-
-function getVolumeSnapshot(): number {
-  try {
-    const raw = localStorage.getItem(VOLUME_KEY);
-    if (raw === null) return DEFAULT_VOLUME;
-    const parsed = Number(raw);
-    return Number.isFinite(parsed) ? Math.min(1, Math.max(0, parsed)) : DEFAULT_VOLUME;
-  } catch {
-    return DEFAULT_VOLUME;
-  }
-}
-
-function getVolumeServerSnapshot(): number {
-  return DEFAULT_VOLUME;
-}
-
-function writeVolume(value: number) {
-  try {
-    localStorage.setItem(VOLUME_KEY, String(value));
-  } catch {
-    /* non-fatal — volume just won't persist */
-  }
-  emit();
-}
+// Volume and equaliser settings moved to Zustand stores — see `volumeStore.ts`
+// and `eqStore.ts`. Favourites stay here: they carry a merge-on-sign-in policy
+// against the server, which is not a plain preference.
 
 /* ── Station cache ─────────────────────────────────────────────────────── */
 
@@ -321,89 +295,11 @@ function writeLastStation(station: RadioStationData) {
   }
 }
 
-/* ── Equaliser settings ────────────────────────────────────────────────── */
-
-export interface EqSettings {
-  enabled: boolean;
-  /** Gain in dB per band, -12…+12. */
-  bass: number;
-  mid: number;
-  treble: number;
-  preset: string;
-}
-
-export const DEFAULT_EQ: EqSettings = {
-  enabled: false,
-  bass: 0,
-  mid: 0,
-  treble: 0,
-  preset: "flat",
-};
-
-function parseEq(raw: string | null): EqSettings {
-  if (!raw) return DEFAULT_EQ;
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") return DEFAULT_EQ;
-    const p = parsed as Partial<EqSettings>;
-    const clamp = (n: unknown) =>
-      typeof n === "number" && Number.isFinite(n) ? Math.min(12, Math.max(-12, n)) : 0;
-    return {
-      enabled: Boolean(p.enabled),
-      bass: clamp(p.bass),
-      mid: clamp(p.mid),
-      treble: clamp(p.treble),
-      preset: typeof p.preset === "string" ? p.preset : "custom",
-    };
-  } catch {
-    return DEFAULT_EQ;
-  }
-}
-
-/** Memoised against the raw string so getSnapshot stays referentially stable. */
-const eqCache: { raw?: string | null; parsed: EqSettings } = { raw: undefined, parsed: DEFAULT_EQ };
-
-function getEqSnapshot(): EqSettings {
-  let raw: string | null = null;
-  try {
-    raw = localStorage.getItem(EQ_KEY);
-  } catch {
-    return DEFAULT_EQ;
-  }
-  if (raw !== eqCache.raw) {
-    eqCache.raw = raw;
-    eqCache.parsed = parseEq(raw);
-  }
-  return eqCache.parsed;
-}
-
-function getEqServerSnapshot(): EqSettings {
-  return DEFAULT_EQ;
-}
-
-function writeEq(settings: EqSettings) {
-  const raw = JSON.stringify(settings);
-  try {
-    localStorage.setItem(EQ_KEY, raw);
-  } catch {
-    /* non-fatal */
-  }
-  eqCache.raw = raw;
-  eqCache.parsed = settings;
-  emit();
-}
-
 export const radioStorage = {
   subscribe,
-  getEqSnapshot,
-  getEqServerSnapshot,
-  writeEq,
   getFavoritesSnapshot,
   getFavoritesServerSnapshot,
   writeFavorites,
-  getVolumeSnapshot,
-  getVolumeServerSnapshot,
-  writeVolume,
   readLastStation,
   writeLastStation,
   readStations,
@@ -413,5 +309,4 @@ export const radioStorage = {
   readCategories,
   writeCategories,
   invalidateCategories,
-  DEFAULT_VOLUME,
 };

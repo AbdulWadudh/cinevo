@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { radioStorage, type EqSettings } from "./radioStorage";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useEqSettings, setEqSettings, type EqSettings } from "./eqStore";
 
 export interface EqPreset {
   id: string;
@@ -38,13 +38,7 @@ export function useRadioEqualizer(
   /** Tells the player its element is captured and must be replaced next play. */
   markElementTainted: () => void
 ) {
-  // Persisted settings read straight through the store, so they're present on
-  // the first client render without a load-then-setState round trip.
-  const settings = useSyncExternalStore(
-    radioStorage.subscribe,
-    radioStorage.getEqSnapshot,
-    radioStorage.getEqServerSnapshot
-  );
+  const settings = useEqSettings();
 
   const [unsupported, setUnsupported] = useState(false);
   const [pending, setPending] = useState(false);
@@ -110,9 +104,9 @@ export function useRadioEqualizer(
     bands.treble.gain.setTargetAtTime(gain.treble, now, 0.02);
   }, [settings]);
 
-  /** Writing to the store re-renders every consumer via useSyncExternalStore. */
+  /** Writing to the store re-renders every consumer subscribed to it. */
   const persist = useCallback((next: EqSettings) => {
-    radioStorage.writeEq(next);
+    setEqSettings(next);
   }, []);
 
   /**

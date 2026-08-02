@@ -11,7 +11,7 @@ import VolumeSlider from "./VolumeSlider";
 import Equalizer from "./Equalizer";
 import EqualizerPanel from "./EqualizerPanel";
 import type { EqBand, EqPreset } from "./useRadioEqualizer";
-import type { EqSettings } from "./radioStorage";
+import type { EqSettings } from "./eqStore";
 
 interface PlayerBarProps {
   station: RadioStationData | null;

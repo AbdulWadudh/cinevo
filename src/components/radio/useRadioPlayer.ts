@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { RadioStationData } from "@/app/actions/radio";
 import { radioStorage } from "./radioStorage";
+import { useVolume, setVolume } from "./volumeStore";
 
 /**
  * `blocked` is autoplay refusal — a user-gesture problem, not a dead stream.
@@ -38,13 +39,7 @@ export function useRadioPlayer() {
   const [status, setStatus] = useState<PlaybackStatus>("idle");
   const [isMuted, setIsMuted] = useState(false);
 
-  // Read through the external store so the persisted value is available on the
-  // first client render, with no load-then-setState round trip.
-  const volume = useSyncExternalStore(
-    radioStorage.subscribe,
-    radioStorage.getVolumeSnapshot,
-    radioStorage.getVolumeServerSnapshot
-  );
+  const volume = useVolume();
 
   /**
    * Builds an audio element with all listeners attached. Volume is applied by
@@ -102,7 +97,7 @@ export function useRadioPlayer() {
 
   const changeVolume = useCallback((next: number) => {
     const clamped = Math.min(1, Math.max(0, next));
-    radioStorage.writeVolume(clamped);
+    setVolume(clamped);
     if (clamped > 0) setIsMuted(false);
   }, []);
 
