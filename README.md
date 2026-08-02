@@ -42,7 +42,7 @@ The newest wing of the building, and the one with the most machinery behind it.
 - 🔀 **Surprise me** — a random station from whatever list you're looking at.
 - 💀 **Dead-stream handling** — flag a station as broken, and a stream that fails to open steps automatically to the next one.
 - ⌨️ `Space` to play/pause, `← / →` to change station.
-- 🛠️ **Admin moderation** — rename, repoint, disable or delete any station from your profile.
+- 🛠️ **Admin moderation** — add, rename, repoint, disable or delete any station from your profile, filing it under an existing category or one you create on the spot.
 
 ### ❤️ Personal
 
@@ -66,7 +66,7 @@ The newest wing of the building, and the one with the most machinery behind it.
 - 📊 **Overview dashboard** — users, providers, reports, ratings, devices.
 - 🗂️ **Provider management** — add, edit, enable, reorder.
 - 🚩 **Report triage** for user-reported broken providers.
-- 📻 **Radio catalogue** — search, filter and moderate the whole station list.
+- 📻 **Radio catalogue** — search, filter and moderate the whole station list, and add new stations and categories by hand.
 
 ---
 

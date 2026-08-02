@@ -5,17 +5,19 @@ import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { toast } from "sonner";
 import {
   Radio as RadioIcon, Search, X, Loader2, Pencil, Trash2, Flag, Power,
-  ChevronLeft, ChevronRight, ExternalLink,
+  ChevronLeft, ChevronRight, ExternalLink, Plus,
 } from "lucide-react";
 import {
   getAdminRadioStationsAction,
   updateRadioStationAction,
   deleteRadioStationAction,
+  createRadioStationAction,
   type AdminRadioStation,
   type AdminStationFilter,
   type AdminStationPage,
 } from "@/app/actions/radio";
 import StationEditDialog, { type DialogMode } from "@/components/radio/StationEditDialog";
+import StationCreateDialog, { type NewStationInput } from "./StationCreateDialog";
 
 const FILTERS: { id: AdminStationFilter; label: string }[] = [
   { id: "all", label: "All" },
@@ -42,6 +44,10 @@ export default function RadioStationAdmin() {
   const [dialogMode, setDialogMode] = useState<DialogMode>("edit");
   const [dialogBusy, setDialogBusy] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createBusy, setCreateBusy] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   /** Bumped to force a refetch after a mutation. */
   const [revision, setRevision] = useState(0);
@@ -146,6 +152,27 @@ export default function RadioStationAdmin() {
     }
   }, [dialogStation, refresh]);
 
+  const handleCreate = useCallback(
+    async (input: NewStationInput) => {
+      setCreateBusy(true);
+      setCreateError(null);
+
+      const res = await createRadioStationAction(input);
+      setCreateBusy(false);
+
+      if (res.success && res.data) {
+        setCreateOpen(false);
+        toast.success(`Added “${res.data.name}”`, {
+          description: `Filed under ${res.data.categoryName}.`,
+        });
+        refresh();
+      } else {
+        setCreateError(res.error ?? "Could not add station");
+      }
+    },
+    [refresh]
+  );
+
   const openDialog = useCallback((station: AdminRadioStation, mode: DialogMode) => {
     setDialogStation(station);
     setDialogMode(mode);
@@ -175,6 +202,21 @@ export default function RadioStationAdmin() {
             </p>
           </div>
         </div>
+
+        <motion.button
+          type="button"
+          onClick={() => {
+            setCreateError(null);
+            setCreateOpen(true);
+          }}
+          whileHover={reduceMotion ? undefined : { scale: 1.04, y: -1 }}
+          whileTap={reduceMotion ? undefined : { scale: 0.96 }}
+          transition={{ type: "spring", stiffness: 440, damping: 26 }}
+          className="flex flex-none cursor-pointer items-center gap-1.5 rounded-lg bg-linear-to-r from-purple-600 to-fuchsia-600 px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:from-purple-500 hover:to-fuchsia-500"
+        >
+          <Plus className="size-3.5" />
+          Add station
+        </motion.button>
       </div>
 
       {/* Search + filters */}
@@ -366,6 +408,14 @@ export default function RadioStationAdmin() {
           </div>
         </div>
       )}
+
+      <StationCreateDialog
+        open={createOpen}
+        busy={createBusy}
+        error={createError}
+        onCreate={handleCreate}
+        onClose={() => !createBusy && setCreateOpen(false)}
+      />
 
       <StationEditDialog
         station={dialogStation}

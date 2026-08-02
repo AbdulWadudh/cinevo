@@ -146,12 +146,17 @@ model RadioCategory {
   // Set once the category's stations have been pulled from upstream and
   // cached. NULL means "not hydrated yet" — the first visit fetches on demand.
   hydratedAt DateTime?
+  // Created by an admin rather than imported from the upstream index. These
+  // bypass the browsability threshold, which would otherwise hide a brand new
+  // category for having too few stations.
+  isCustom   Boolean        @default(false)
   stations  RadioStation[]
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
 
   @@index([group])
   @@index([hydratedAt])
+  @@index([isCustom])
 }
 
 model RadioStation {

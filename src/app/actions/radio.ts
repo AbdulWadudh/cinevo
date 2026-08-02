@@ -58,12 +58,15 @@ export async function getRadioCategoriesAction(): Promise<ActionResult<RadioCate
         slug: true,
         group: true,
         count: true,
+        isCustom: true,
         _count: { select: { stations: true } },
       },
     });
 
     const data = categories
-      .filter((c) => isBrowsableSlug(c.slug, c.count))
+      // Admin-made categories always show; imported ones must clear the
+      // noise/size threshold.
+      .filter((c) => c.isCustom || isBrowsableSlug(c.slug, c.count))
       .map((c) => ({
         id: c.id,
         // Stored names came from an older seed; re-derive so casing is uniform.
@@ -409,6 +412,159 @@ export async function updateRadioStationAction(
 
 export interface AdminRadioStation extends RadioStationData {
   categoryName: string;
+}
+
+export interface RadioCategoryOption {
+  slug: string;
+  name: string;
+  stationCount: number;
+  isCustom: boolean;
+}
+
+/**
+ * Admin: categories matching a query, for the add-station picker. Searches the
+ * whole index — including categories with no cached stations yet — so an admin
+ * can file a station under any of them.
+ */
+export async function searchRadioCategoriesAction(
+  query: string,
+  limit = 20
+): Promise<ActionResult<RadioCategoryOption[]>> {
+  try {
+    await requireAdmin();
+    const q = query.trim();
+
+    const categories = await db.radioCategory.findMany({
+      where: q ? { slug: { contains: q.toLowerCase().replace(/\s+/g, "_") } } : {},
+      // Ones already carrying stations are the likeliest targets.
+      orderBy: [{ isCustom: "desc" }, { count: "desc" }],
+      take: limit,
+      select: {
+        slug: true,
+        isCustom: true,
+        _count: { select: { stations: true } },
+      },
+    });
+
+    return {
+      success: true,
+      data: categories.map((c) => ({
+        slug: c.slug,
+        name: prettifyName(c.slug),
+        stationCount: c._count.stations,
+        isCustom: c.isCustom,
+      })),
+    };
+  } catch (err) {
+    console.error("Failed to search radio categories:", err);
+    return { success: false, data: [], error: message(err, "Failed to load categories") };
+  }
+}
+
+/**
+ * Admin: add a station, either to an existing category or to a brand new one
+ * created on the spot.
+ */
+export async function createRadioStationAction(input: {
+  name: string;
+  url: string;
+  /** Existing category to file it under. */
+  categorySlug?: string;
+  /** Display name for a category to create, when no existing one fits. */
+  newCategoryName?: string;
+}): Promise<ActionResult<AdminRadioStation | null>> {
+  try {
+    await requireAdmin();
+
+    const name = input.name.trim();
+    const url = input.url.trim();
+
+    if (!name) return { success: false, data: null, error: "Station name is required" };
+    if (!/^https?:\/\/\S+$/i.test(url)) {
+      return { success: false, data: null, error: "Stream URL must be a valid http(s) address" };
+    }
+
+    /* Resolve the target category. */
+    let category: { id: string; slug: string } | null = null;
+
+    if (input.categorySlug) {
+      category = await db.radioCategory.findUnique({
+        where: { slug: input.categorySlug.toLowerCase().trim() },
+        select: { id: true, slug: true },
+      });
+      if (!category) return { success: false, data: null, error: "Category not found" };
+    } else {
+      const label = (input.newCategoryName ?? "").trim();
+      if (!label) {
+        return { success: false, data: null, error: "Pick a category or name a new one" };
+      }
+
+      // Match the upstream slug convention so the classifier can read it.
+      const slug = label
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+
+      if (!slug) return { success: false, data: null, error: "That category name isn't usable" };
+
+      const existing = await db.radioCategory.findUnique({
+        where: { slug },
+        select: { id: true, slug: true },
+      });
+
+      category =
+        existing ??
+        (await db.radioCategory.create({
+          data: {
+            name: prettifyName(slug),
+            slug,
+            // No upstream playlist backs a hand-made category, and marking it
+            // hydrated stops the lazy loader reaching for one.
+            url: "",
+            hydratedAt: new Date(),
+            isCustom: true,
+            group: classifySlug(slug),
+            count: 0,
+          },
+          select: { id: true, slug: true },
+        }));
+    }
+
+    const duplicate = await db.radioStation.findFirst({
+      where: { categoryId: category.id, url },
+      select: { id: true },
+    });
+    if (duplicate) {
+      return { success: false, data: null, error: "That stream is already in this category" };
+    }
+
+    const station = await db.radioStation.create({
+      data: { name, url, categoryId: category.id },
+      select: { id: true, name: true, url: true, reportCount: true, isBroken: true, isActive: true },
+    });
+
+    // Keep the displayed count honest for hand-made categories, whose `count`
+    // has no upstream figure to inherit.
+    const total = await db.radioStation.count({ where: { categoryId: category.id } });
+    await db.radioCategory.updateMany({
+      where: { id: category.id, isCustom: true },
+      data: { count: total },
+    });
+
+    revalidatePath("/radio");
+
+    return {
+      success: true,
+      data: {
+        ...station,
+        categorySlug: category.slug,
+        categoryName: prettifyName(category.slug),
+      },
+    };
+  } catch (err) {
+    console.error("Failed to create radio station:", err);
+    return { success: false, data: null, error: message(err, "Failed to add station") };
+  }
 }
 
 export interface AdminStationPage {
