@@ -74,6 +74,30 @@ Use the pointer media features instead (Tailwind v4 ships variants for them):
   correctly reports `fine` and gets the pointer UI. That's the behaviour we
   want — follow the primary pointer, not the presence of a touchscreen.
 
+# Scroll Containment
+
+A long list belongs to its panel, not to the page. Whenever a section can hold
+an unbounded number of entries — a paginated table, the station catalogue, a
+report queue, search results — cap its height and give **that container** the
+scrollbar. The page must not grow with the data.
+
+- Bound the scrolling element (`max-h-[60vh]`, or a `calc()` against the
+  viewport) and give it `overflow-y-auto` **and** `overscroll-contain`, so
+  reaching the end of the list doesn't start scrolling the page behind it.
+- Everything that frames the list — panel header, search box, filter tabs,
+  pagination — stays *outside* the scroll container and therefore stays on
+  screen. Controls scrolled out of reach are exactly the bug this prevents:
+  paging through 25 rows shouldn't mean scrolling 1,800px to find "next page".
+- Reset the container to the top when its contents are replaced (page change,
+  filter change, new query), or page 2 opens halfway down.
+- Leave room for the scrollbar (`pr-1`) so it doesn't sit on top of row content.
+- Wide content (tables, code, long URLs) scrolls sideways inside its own
+  `overflow-x-auto` container; the page body never scrolls horizontally.
+
+`/radio` already applies this at screen level — the masthead, section tabs and
+category chips are fixed furniture and the station grid owns the only
+scrollbar. Any panel that can fill up gets the same treatment.
+
 # React Hooks & Code Standards
 
 - Always wrap functions in `useCallback` when they are passed as dependencies to `useEffect` or other hooks to prevent cascading triggers and maintain reference stability.

@@ -44,7 +44,7 @@ export default function ProviderReportsAdmin({ initial, counts }: Props) {
   };
 
   return (
-    <div className="bg-surface/40 border border-white/[0.06] rounded-2xl p-6 sm:p-8 mt-6">
+    <div className="bg-surface/40 border border-white/[0.06] rounded-2xl p-6 sm:p-8">
       <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center">
@@ -79,7 +79,9 @@ export default function ProviderReportsAdmin({ initial, counts }: Props) {
       {rows.length === 0 ? (
         <p className="text-sm text-muted py-8 text-center">No reports — every provider is behaving.</p>
       ) : (
-        <div className="flex flex-col gap-2">
+        // Up to 200 reports come back at once, so the rows own the scrollbar
+        // rather than pushing the rest of the page down.
+        <div className="flex max-h-[60vh] flex-col gap-2 overflow-y-auto overscroll-contain pr-1">
           <AnimatePresence initial={false}>
             {rows.map((r) => (
               <motion.div

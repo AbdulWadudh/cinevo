@@ -193,11 +193,20 @@ export default function RadioClient({
         Boolean(loadSlug) &&
         stations === undefined;
 
+  // The rail is exactly "stations still flagged recommended", so it is derived
+  // rather than trusted as fetched — un-starring one drops it from the tab and
+  // the tab badge straight away, with no refetch and no stale card left behind.
+  const recommended = useMemo(
+    () => (stationsBySlug[RECOMMENDED_SLUG] ?? []).filter((s) => s.isRecommended),
+    [stationsBySlug]
+  );
+
   const displayed = useMemo(() => {
     if (mode === "search") return searchData ?? [];
     if (mode === "favorites") return favorites;
+    if (mode === "recommended") return recommended;
     return stations ?? [];
-  }, [mode, searchData, favorites, stations]);
+  }, [mode, searchData, favorites, recommended, stations]);
 
   /* ── Cue a station on arrival ────────────────────────────────────────── */
 
@@ -447,15 +456,23 @@ export default function RadioClient({
 
       patchStation(station.id, { isRecommended: next });
 
-      // The rail is cached like any other list; drop it so the tab rebuilds
-      // from the server on next visit.
-      radioStorage.invalidateStations(RECOMMENDED_SLUG);
-      setStationsBySlug((prev) => {
-        if (prev[RECOMMENDED_SLUG] === undefined) return prev;
-        return Object.fromEntries(
-          Object.entries(prev).filter(([slug]) => slug !== RECOMMENDED_SLUG)
-        );
-      });
+      // Starring can't be placed client-side — the rail is ordered by
+      // `recommendedOrder` on the server — so evict the cached rail and let it
+      // rebuild. Un-starring needs no refetch: the flag patch above is enough,
+      // because the rail renders only stations still flagged recommended.
+      //
+      // Evicting on un-star would in fact *undo* itself: `patchStation` writes
+      // each list it touches back to localStorage during the state update, so
+      // it would re-seed the key this cleared and the station would come back.
+      if (next) {
+        radioStorage.invalidateStations(RECOMMENDED_SLUG);
+        setStationsBySlug((prev) => {
+          if (prev[RECOMMENDED_SLUG] === undefined) return prev;
+          return Object.fromEntries(
+            Object.entries(prev).filter(([slug]) => slug !== RECOMMENDED_SLUG)
+          );
+        });
+      }
 
       toast.success(
         next ? `“${station.name}” added to Recommended` : `“${station.name}” removed from Recommended`
@@ -740,7 +757,7 @@ export default function RadioClient({
             categories={categories}
             featured={featured}
             favoritesCount={favorites.length}
-            recommendedCount={stationsBySlug[RECOMMENDED_SLUG]?.length ?? 0}
+            recommendedCount={recommended.length}
             activeTab={activeTab}
             activeSlug={activeSlug}
             onTabChange={handleTabChange}

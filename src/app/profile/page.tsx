@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Heart, Clock, LogOut, Mail, ArrowLeft } from "lucide-react";
+import { ArrowLeft, LogOut, RefreshCw, User } from "lucide-react";
 import Nav from "@/components/Nav";
 import EditProfileForm from "@/components/auth/EditProfileForm";
 import { getOrCreateProfile } from "@/lib/auth";
@@ -17,14 +17,26 @@ import RadioStationAdmin from "@/components/admin/RadioStationAdmin";
 import ForceSyncButton from "@/components/watch/ForceSyncButton";
 import ClearCacheButton from "@/components/settings/ClearCacheButton";
 import EffectPlayground from "@/components/reveal/EffectPlayground";
+import ProfileWorkspace, { type ProfileSection } from "@/components/profile/ProfileWorkspace";
+import PanelCard from "@/components/profile/PanelCard";
+import SettingRow from "@/components/profile/SettingRow";
 
-export default async function ProfilePage() {
+// Formatted here rather than in the client, so the rail doesn't hydrate against
+// a different locale/timezone than the server rendered.
+const JOINED = new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
+
+export default async function ProfilePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   const profile = await getOrCreateProfile();
   if (!profile) redirect("/login?redirect=/profile");
 
   const isAdmin = profile.role === "admin";
 
-  const [wishlistCount, watchingCount, providersRes, reportsRes, statsRes] = await Promise.all([
+  const [{ tab }, wishlistCount, watchingCount, providersRes, reportsRes, statsRes] = await Promise.all([
+    searchParams,
     db.wishlist.count({ where: { profileId: profile.id } }),
     db.watchProgress.count({ where: { profileId: profile.id } }),
     isAdmin ? getAllProviders() : Promise.resolve({ success: true, data: [] as const }),
@@ -33,132 +45,143 @@ export default async function ProfilePage() {
   ]);
 
   const displayName = profile.username || profile.email.split("@")[0];
-  const initial = displayName.charAt(0).toUpperCase();
+  const openReports =
+    isAdmin && reportsRes.success ? [...reportsRes.data].filter((r) => !r.resolved).length : 0;
+
+  const sections: ProfileSection[] = [
+    {
+      id: "profile",
+      label: "Profile",
+      icon: "user",
+      group: "account",
+      content: (
+        <PanelCard
+          icon={<User className="size-4.5" />}
+          title="Profile"
+          subtitle="How you appear across Cinevo"
+        >
+          <EditProfileForm
+            username={profile.username || ""}
+            avatarUrl={profile.avatarUrl || ""}
+            email={profile.email}
+          />
+        </PanelCard>
+      ),
+    },
+    {
+      id: "appearance",
+      label: "Appearance",
+      icon: "palette",
+      group: "account",
+      content: <EffectPlayground />,
+    },
+    {
+      id: "data",
+      label: "Data & Sync",
+      icon: "sync",
+      group: "account",
+      content: (
+        <PanelCard
+          icon={<RefreshCw className="size-4.5" />}
+          title="Data & Sync"
+          subtitle="Keep your history in step across devices"
+          tone="blue"
+        >
+          <div className="flex flex-col gap-3">
+            <SettingRow
+              title="Watch history"
+              description="History saves locally and syncs every 10 min. Force a sync to push/pull now."
+            >
+              <ForceSyncButton />
+            </SettingRow>
+            <SettingRow
+              title="Reset & resync"
+              description="Push any pending changes to your account, clear the local cache, and reload so everything is re-fetched fresh from the database and TMDB."
+            >
+              <ClearCacheButton />
+            </SettingRow>
+          </div>
+        </PanelCard>
+      ),
+    },
+  ];
+
+  if (isAdmin) {
+    if (statsRes.success && "data" in statsRes && statsRes.data) {
+      sections.push({
+        id: "overview",
+        label: "Overview",
+        icon: "shield",
+        group: "admin",
+        content: <AdminDashboard stats={statsRes.data} />,
+      });
+    }
+    sections.push({
+      id: "radio",
+      label: "Radio",
+      icon: "radio",
+      group: "admin",
+      content: <RadioStationAdmin />,
+    });
+    if (providersRes.success) {
+      sections.push({
+        id: "providers",
+        label: "Providers",
+        icon: "server",
+        group: "admin",
+        content: <ProviderAdmin initial={[...providersRes.data]} />,
+      });
+    }
+    if (reportsRes.success) {
+      sections.push({
+        id: "reports",
+        label: "Reports",
+        icon: "flag",
+        group: "admin",
+        badge: openReports,
+        content: (
+          <ProviderReportsAdmin initial={[...reportsRes.data]} counts={[...reportsRes.counts]} />
+        ),
+      });
+    }
+
+  }
 
   return (
     <div className="flex-1 w-full bg-bg min-h-screen pb-16">
       <Nav />
 
-      <section className="pt-24 md:pt-28 px-6 md:px-12 max-w-4xl mx-auto">
+      <section className="pt-24 md:pt-28 px-6 md:px-12 max-w-7xl mx-auto">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs text-fg-secondary bg-white/4 border border-white/[0.06] hover:bg-white/[0.08] hover:text-fg px-3.5 py-2 rounded-lg transition-all mb-8"
+          className="mb-6 inline-flex items-center gap-1.5 rounded-lg border border-white/6 bg-white/4 px-3.5 py-2 text-xs text-fg-secondary transition-all hover:bg-white/8 hover:text-fg"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
+          <ArrowLeft className="size-3.5" />
           <span>Back to Home</span>
         </Link>
 
-        {/* Header card */}
-        <div className="flex flex-col sm:flex-row items-center sm:items-end gap-5 mb-10">
-          {profile.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={profile.avatarUrl}
-              alt={displayName}
-              referrerPolicy="no-referrer"
-              className="w-24 h-24 rounded-2xl object-cover border border-white/10 shadow-lg"
-            />
-          ) : (
-            <div className="w-24 h-24 rounded-2xl bg-accent/20 border border-accent/30 flex items-center justify-center text-4xl font-extrabold text-accent shadow-lg">
-              {initial}
-            </div>
-          )}
-          <div className="text-center sm:text-left">
-            <h1 className="font-display text-3xl md:text-4xl font-extrabold tracking-tight">{displayName}</h1>
-            <div className="flex items-center justify-center sm:justify-start gap-1.5 text-sm text-fg-secondary mt-1.5">
-              <Mail className="w-3.5 h-3.5" />
-              <span>{profile.email}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-4 mb-10">
-          <Link
-            href="/wishlist"
-            className="group bg-surface/60 border border-white/8 rounded-2xl p-5 transition-all"
-          >
-            <div className="flex items-center gap-2 text-muted mb-1">
-              <Heart className="w-4 h-4 text-accent" />
-              <span className="text-[10px] font-bold uppercase tracking-widest">Wishlist</span>
-            </div>
-            <div className="text-3xl font-extrabold font-display text-fg group-hover:text-accent transition-colors">{wishlistCount}</div>
-            <div className="text-xs text-muted mt-0.5">saved titles</div>
-          </Link>
-
-          <Link
-            href="/history"
-            className="group bg-surface/60 border border-white/[0.08] rounded-2xl p-5 hover:border-accent/40 transition-all"
-          >
-            <div className="flex items-center gap-2 text-muted mb-1">
-              <Clock className="w-4 h-4 text-accent" />
-              <span className="text-[10px] font-bold uppercase tracking-widest">History</span>
-            </div>
-            <div className="text-3xl font-extrabold font-display text-fg group-hover:text-accent transition-colors">{watchingCount}</div>
-            <div className="text-xs text-muted mt-0.5">titles watched</div>
-          </Link>
-        </div>
-
-        {/* Edit + Sign out */}
-        <div className="bg-surface/40 border border-white/[0.06] rounded-2xl p-6 sm:p-8">
-          <h2 className="font-display text-lg font-bold mb-5">Account Settings</h2>
-          <EditProfileForm username={profile.username || ""} avatarUrl={profile.avatarUrl || ""} />
-
-          {/* Watch history sync */}
-          <div className="border-t border-white/[0.06] mt-8 pt-6">
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <div>
-                <h3 className="text-sm font-bold text-fg">Watch history</h3>
-                <p className="text-xs text-muted mt-0.5">History saves locally and syncs every 10 min. Force a sync to push/pull now.</p>
-              </div>
-              <ForceSyncButton />
-            </div>
-          </div>
-
-          {/* Clear cached data + sync */}
-          <div className="border-t border-white/[0.06] mt-8 pt-6">
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <div>
-                <h3 className="text-sm font-bold text-fg">Reset &amp; resync</h3>
-                <p className="text-xs text-muted mt-0.5">Push any pending changes to your account, clear the local cache, and reload so everything is re-fetched fresh from the database and TMDB.</p>
-              </div>
-              <ClearCacheButton />
-            </div>
-          </div>
-
-          {/* Holo reveal effect picker + live demo */}
-          <EffectPlayground />
-
-          <div className="border-t border-white/[0.06] mt-8 pt-6">
+        <ProfileWorkspace
+          displayName={displayName}
+          email={profile.email}
+          avatarUrl={profile.avatarUrl}
+          memberSince={`Joined ${JOINED.format(profile.createdAt)}`}
+          isAdmin={isAdmin}
+          wishlistCount={wishlistCount}
+          watchingCount={watchingCount}
+          sections={sections}
+          initialSection={tab ?? ""}
+          footer={
             <form action={signOut}>
               <button
                 type="submit"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-transparent text-red-400 border border-red-500/30 hover:bg-red-500/10 transition-all cursor-pointer"
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-transparent px-5 py-3 text-sm font-semibold text-red-400 transition-all hover:bg-red-500/10"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="size-4" />
                 Sign Out
               </button>
             </form>
-          </div>
-        </div>
-
-        {/* Admin-only: overview stats + role management */}
-        {isAdmin && statsRes.success && "data" in statsRes && statsRes.data && (
-          <AdminDashboard stats={statsRes.data} />
-        )}
-
-        {/* Admin-only: stream provider management */}
-        {isAdmin && providersRes.success && (
-          <ProviderAdmin initial={[...providersRes.data]} />
-        )}
-
-        {/* Admin-only: provider trouble reports */}
-        {isAdmin && reportsRes.success && (
-          <ProviderReportsAdmin initial={[...reportsRes.data]} counts={[...reportsRes.counts]} />
-        )}
-
-        {/* Admin-only: radio station catalogue management */}
-        {isAdmin && <RadioStationAdmin />}
+          }
+        />
       </section>
     </div>
   );

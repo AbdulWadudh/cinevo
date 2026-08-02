@@ -30,7 +30,7 @@ export default function AdminDashboard({ stats }: { stats: AdminStats }) {
   };
 
   return (
-    <div className="bg-surface/40 border border-white/[0.06] rounded-2xl p-6 sm:p-8 mt-6">
+    <div className="bg-surface/40 border border-white/[0.06] rounded-2xl p-6 sm:p-8">
       <div className="flex items-center gap-2.5 mb-5">
         <div className="w-9 h-9 rounded-xl bg-accent/15 border border-accent/25 flex items-center justify-center">
           <ShieldCheck className="w-4.5 h-4.5 text-accent" />

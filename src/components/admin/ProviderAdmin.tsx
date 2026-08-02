@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition, useRef } from "react";
+import React, { useEffect, useState, useTransition, useRef } from "react";
 import { motion, AnimatePresence, Reorder, useDragControls } from "motion/react";
 import {
   Plus, Pencil, Trash2, Check, X, Server, Shield, ShieldOff,
@@ -31,6 +31,16 @@ export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  // Editing a row low in the list expands the form inside the scroll area, so
+  // pull it into view. Deferred past the 250ms expand — measured any earlier
+  // the editor is still `height: 0` and the scroll lands short.
+  const editorRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!editingId) return;
+    const handle = setTimeout(() => editorRef.current?.scrollIntoView({ block: "nearest" }), 260);
+    return () => clearTimeout(handle);
+  }, [editingId]);
 
   const openNew = () => {
     setForm({ ...emptyForm, sortOrder: providers.length });
@@ -133,6 +143,7 @@ export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }
 
   const editor = (
     <motion.div
+      ref={editorRef}
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: "auto" }}
       exit={{ opacity: 0, height: 0 }}
@@ -234,7 +245,7 @@ export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }
   );
 
   return (
-    <div className="bg-surface/40 border border-white/[0.06] rounded-2xl p-6 sm:p-8 mt-6">
+    <div className="bg-surface/40 border border-white/[0.06] rounded-2xl p-6 sm:p-8">
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-accent/15 border border-accent/25 flex items-center justify-center">
@@ -253,12 +264,14 @@ export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }
 
       <AnimatePresence>{editingId === "new" && editor}</AnimatePresence>
 
+      {/* The list owns the scrollbar — the header and Add Provider stay put
+          however many providers are configured. */}
       <Reorder.Group
         as="div"
         axis="y"
         values={providers}
         onReorder={setProviders}
-        className="flex flex-col gap-2.5 mt-4"
+        className="flex flex-col gap-2.5 mt-4 max-h-[60vh] overflow-y-auto overscroll-contain pr-1"
       >
         {providers.map((p, i) => (
           <ProviderRow

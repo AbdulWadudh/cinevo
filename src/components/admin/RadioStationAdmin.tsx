@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { toast } from "sonner";
 import {
@@ -74,6 +74,13 @@ export default function RadioStationAdmin() {
   }, [q, filter, page, revision]);
 
   const refresh = useCallback(() => setRevision((r) => r + 1), []);
+
+  // Paging or refiltering replaces every row — start at the top of the new set
+  // rather than wherever the last one was left scrolled to.
+  const listRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    listRef.current?.scrollTo({ top: 0 });
+  }, [q, filter, page]);
 
   const totalPages = useMemo(
     () => (data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1),
@@ -206,7 +213,7 @@ export default function RadioStationAdmin() {
       initial={reduceMotion ? false : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="mt-8 rounded-2xl border border-white/6 bg-surface/40 p-6 sm:p-8"
+      className="rounded-2xl border border-white/6 bg-surface/40 p-6 sm:p-8"
     >
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
@@ -323,7 +330,13 @@ export default function RadioStationAdmin() {
           No stations match this filter.
         </p>
       ) : (
-        <motion.div layout={!reduceMotion} className="space-y-2">
+        // The catalogue runs to thousands of stations, so the rows own the
+        // scrollbar — the header, search, filters and pagination stay put.
+        <motion.div
+          ref={listRef}
+          layout={!reduceMotion}
+          className="max-h-[60vh] space-y-2 overflow-y-auto overscroll-contain pr-1"
+        >
           <AnimatePresence mode="popLayout">
             {data.stations.map((station) => (
               <motion.div
