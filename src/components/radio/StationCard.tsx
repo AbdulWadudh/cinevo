@@ -166,9 +166,10 @@ function StationCardBase({
         </span>
 
         {/* Name + status */}
-        {/* Right padding reserves room for the action buttons, which are
-            absolutely positioned and now always visible. */}
-        <span className="min-w-0 flex-1 pr-20 md:pr-0">
+        {/* Reserves room for the menu button, which is absolutely positioned
+            and always visible on touch. Desktop needs none: its icons only
+            appear on hover, over the play affordance's own space. */}
+        <span className="min-w-0 flex-1 pr-11 pointer-fine:pr-0">
           <span className="flex items-center gap-1.5">
             {isFavorite && (
               <motion.span
@@ -218,7 +219,7 @@ function StationCardBase({
 
         {/* Play / pause affordance */}
         <span
-          className={`hidden size-7 flex-none items-center justify-center rounded-full transition-all duration-200 md:flex ${isCurrent
+          className={`hidden size-7 flex-none items-center justify-center rounded-full transition-all duration-200 pointer-fine:flex ${isCurrent
             ? "bg-white text-black"
             : "bg-white/8 text-white opacity-0 group-hover:opacity-100"
             }`}
@@ -231,32 +232,35 @@ function StationCardBase({
         </span>
       </motion.button>
 
-      {/* Actions pinned to the card's right edge. Always visible: hover is a
-          pointer-only affordance, and favouriting must work on touch. */}
-      <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-0.5 md:right-11">
-        <IconAction
-          label={isFavorite ? "Remove from favourites" : "Add to favourites"}
-          pressed={isFavorite}
-          onClick={() => onToggleFavorite(station)}
+      {/* Two mutually exclusive presentations of the same actions, so neither
+          breakpoint shows a control twice:
+            · pointer (md+) — icons revealed on hover
+            · touch (<md)   — a single menu, since a finger can't hover        */}
+      <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-0.5 pointer-fine:right-11">
+        <span
+          className={`hidden items-center gap-0.5 transition-opacity duration-200 focus-within:opacity-100 group-hover:opacity-100 pointer-fine:flex ${
+            menuOpen ? "opacity-100" : "opacity-0"
+          }`}
         >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.span
-              key={isFavorite ? "on" : "off"}
-              initial={reduceMotion ? false : { scale: 0.4, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={reduceMotion ? undefined : { scale: 0.4, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 600, damping: 20 }}
-              className="block"
-            >
-              <Heart className={`size-3.5 ${isFavorite ? "fill-pink-500 text-pink-500" : ""}`} />
-            </motion.span>
-          </AnimatePresence>
-        </IconAction>
+          <IconAction
+            label={isFavorite ? "Remove from favourites" : "Add to favourites"}
+            pressed={isFavorite}
+            onClick={() => onToggleFavorite(station)}
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span
+                key={isFavorite ? "on" : "off"}
+                initial={reduceMotion ? false : { scale: 0.4, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={reduceMotion ? undefined : { scale: 0.4, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 600, damping: 20 }}
+                className="block"
+              >
+                <Heart className={`size-3.5 ${isFavorite ? "fill-pink-500 text-pink-500" : ""}`} />
+              </motion.span>
+            </AnimatePresence>
+          </IconAction>
 
-        {/* Shortcuts for pointers. Everything here is also in the menu, which
-            is what touch uses — a finger can't hover, and these are too small
-            to be comfortable tap targets. */}
-        <span className="hidden items-center gap-0.5 md:flex">
           <IconAction label="Report not working" onClick={() => onReport(station)}>
             <Flag className="size-3.5" />
           </IconAction>
@@ -277,10 +281,20 @@ function StationCardBase({
           )}
         </span>
 
-        {/* The menu carries the non-primary actions, so touch has a path to
-            them. Favourite is deliberately absent — the heart beside it is
-            always visible, so a menu entry would only duplicate it. */}
-        <div className="relative" ref={menuRef}>
+        {/* On touch this is the only control, so it's always visible. On
+            desktop it joins the hover set, and carries just the two actions
+            that need a written label. Non-admins have none of those, so it
+            disappears entirely there. */}
+        <div
+          ref={menuRef}
+          className={`relative ${
+            isAdmin
+              ? `transition-opacity duration-200 pointer-fine:group-hover:opacity-100 ${
+                  menuOpen ? "opacity-100" : "pointer-fine:opacity-0"
+                }`
+              : "pointer-fine:hidden"
+          }`}
+        >
           <IconAction label="Station actions" onClick={() => setMenuOpen((o) => !o)}>
             <MoreVertical className="size-3.5" />
           </IconAction>
@@ -294,7 +308,21 @@ function StationCardBase({
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 className="absolute right-0 top-full z-30 mt-1 w-48 origin-top-right overflow-hidden rounded-xl border border-white/10 bg-bg-elevated/95 py-1 shadow-2xl shadow-black/60 backdrop-blur-xl"
               >
+                {/* Touch-only: these have hover icons on desktop, and
+                    repeating them there is the redundancy we're avoiding. */}
                 <MenuItem
+                  className="pointer-fine:hidden"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onToggleFavorite(station);
+                  }}
+                >
+                  <Heart className={`size-3.5 ${isFavorite ? "fill-pink-500 text-pink-500" : ""}`} />
+                  {isFavorite ? "Remove favourite" : "Add to favourites"}
+                </MenuItem>
+
+                <MenuItem
+                  className="pointer-fine:hidden"
                   onClick={() => {
                     setMenuOpen(false);
                     onReport(station);
@@ -314,6 +342,7 @@ function StationCardBase({
                 {isAdmin && (
                   <>
                     <MenuItem
+                      className="pointer-fine:hidden"
                       onClick={() => {
                         setMenuOpen(false);
                         onToggleRecommended(station);
@@ -382,7 +411,7 @@ function IconAction({
       transition={{ type: "spring", stiffness: 500, damping: 20 }}
       // Roomier on touch, where a ~24px target is unusable; tightened from md
       // up, where the pointer is precise and the row is denser.
-      className="tv-focusable cursor-pointer rounded-md border border-white/8 bg-black/45 p-2.5 text-fg-secondary outline-none backdrop-blur-sm transition-colors hover:text-white md:p-1.5"
+      className="tv-focusable cursor-pointer rounded-md border border-white/8 bg-black/45 p-2.5 text-fg-secondary outline-none backdrop-blur-sm transition-colors hover:text-white pointer-fine:p-1.5"
     >
       {children}
     </motion.button>
@@ -392,10 +421,13 @@ function IconAction({
 function MenuItem({
   onClick,
   danger,
+  className = "",
   children,
 }: {
   onClick: () => void;
   danger?: boolean;
+  /** Lets a caller drop an entry at the breakpoint where an icon replaces it. */
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -405,8 +437,9 @@ function MenuItem({
         e.stopPropagation();
         onClick();
       }}
-      className={`flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs font-medium transition-colors ${danger ? "text-red-400 hover:bg-red-500/12" : "text-fg-secondary hover:bg-white/6 hover:text-white"
-        }`}
+      // Taller rows on touch, tighter once a pointer is doing the aiming.
+      className={`flex w-full cursor-pointer items-center gap-2 px-3 py-2.5 text-left text-xs font-medium transition-colors pointer-fine:py-2 ${danger ? "text-red-400 hover:bg-red-500/12" : "text-fg-secondary hover:bg-white/6 hover:text-white"
+        } ${className}`}
     >
       {children}
     </button>

@@ -189,7 +189,7 @@ function SlideIn({
       transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 36 }}
       onPointerDown={onPointerDown}
       aria-hidden={!open}
-      className="hidden items-center gap-1.5 overflow-hidden md:flex"
+      className="hidden items-center gap-1.5 overflow-hidden pointer-fine:flex"
     >
       {children}
     </motion.div>

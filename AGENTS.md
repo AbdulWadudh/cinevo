@@ -51,9 +51,28 @@ simply missing on phones.
   either always visible or reachable from a tap-opened sheet or menu.
 - Tap targets are at least **44×44px** on touch; the compact desktop sizes
   (`size-6`, `p-1.5`) are too small for a finger.
-- Gate hover-only reveals behind `md:` and provide the touch path below it,
-  rather than relying on `:hover`, which many mobile browsers emulate
-  inconsistently on first tap.
+
+**Gate on input capability, never on width.** `md:` describes how wide the
+viewport is, which says nothing about whether the device can hover. An iPad in
+landscape is 1024–1366px CSS pixels — comfortably past `md` — so width-based
+gating hands a tablet the mouse-only UI and the controls become unreachable.
+A touch laptop is the mirror image: wide *and* touch-capable, but it has a
+real pointer and should get the hover UI.
+
+Use the pointer media features instead (Tailwind v4 ships variants for them):
+
+| Variant              | Media query                    | Matches                          |
+| -------------------- | ------------------------------ | -------------------------------- |
+| `pointer-fine:`      | `(pointer: fine)`              | mouse / trackpad / stylus        |
+| `pointer-coarse:`    | `(pointer: coarse)`            | finger — phones, tablets, iPad   |
+| `any-pointer-fine:`  | `(any-pointer: fine)`          | *some* precise input is attached |
+
+- `hover:` is already wrapped in `@media (hover: hover)` by Tailwind v4, so
+  hover *styles* are safe on their own. It's the visibility gating that has to
+  be pointer-based.
+- `pointer:` reflects the **primary** input, so an iPad with a Magic Keyboard
+  correctly reports `fine` and gets the pointer UI. That's the behaviour we
+  want — follow the primary pointer, not the presence of a touchscreen.
 
 # React Hooks & Code Standards
 
