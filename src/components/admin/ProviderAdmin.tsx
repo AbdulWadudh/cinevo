@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useEffect, useState, useTransition, useRef } from "react";
+import React, {
+  useCallback, useEffect, useImperativeHandle, useState, useTransition, useRef,
+} from "react";
 import { motion, AnimatePresence, Reorder, useDragControls } from "motion/react";
 import {
-  Plus, Pencil, Trash2, Check, X, Server, Shield, ShieldOff,
+  Pencil, Trash2, Check, X, Shield, ShieldOff,
   Eye, EyeOff, ArrowUp, ArrowDown, Save, Loader2, AlertCircle, Star, GripVertical,
 } from "lucide-react";
 import {
@@ -24,8 +26,19 @@ const inputCls =
   "w-full bg-bg/60 border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-fg placeholder-muted outline-none focus:border-accent/60 transition-colors";
 const labelCls = "text-[10px] font-extrabold uppercase tracking-widest text-muted mb-1.5 block";
 
-export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }) {
-  const [providers, setProviders] = useState<PlayerProvider[]>(initial);
+export interface ProviderAdminHandle {
+  /** Opens the blank editor. Driven from the panel header, which owns the button. */
+  openNew: () => void;
+}
+
+interface ProviderAdminProps {
+  /** Owned by the panel, so switching tabs doesn't discard an added provider. */
+  providers: PlayerProvider[];
+  setProviders: React.Dispatch<React.SetStateAction<PlayerProvider[]>>;
+  ref?: React.Ref<ProviderAdminHandle>;
+}
+
+export default function ProviderAdmin({ providers, setProviders, ref }: ProviderAdminProps) {
   const [editingId, setEditingId] = useState<string | "new" | null>(null);
   const [form, setForm] = useState<ProviderInput>(emptyForm);
   const [error, setError] = useState<string | null>(null);
@@ -42,11 +55,15 @@ export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }
     return () => clearTimeout(handle);
   }, [editingId]);
 
-  const openNew = () => {
+  // Guarded so a second click on "Add provider" can't wipe a half-filled form.
+  const openNew = useCallback(() => {
+    if (editingId === "new") return;
     setForm({ ...emptyForm, sortOrder: providers.length });
     setError(null);
     setEditingId("new");
-  };
+  }, [editingId, providers.length]);
+
+  useImperativeHandle(ref, () => ({ openNew }), [openNew]);
 
   const openEdit = (p: PlayerProvider) => {
     setForm({
@@ -245,33 +262,17 @@ export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }
   );
 
   return (
-    <div className="bg-surface/40 border border-white/[0.06] rounded-2xl p-6 sm:p-8">
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-accent/15 border border-accent/25 flex items-center justify-center">
-            <Server className="w-4.5 h-4.5 text-accent" />
-          </div>
-          <div>
-            <h2 className="font-display text-lg font-bold leading-tight">Stream Providers</h2>
-            <p className="text-xs text-muted">{providers.length} configured &bull; admin only</p>
-          </div>
-        </div>
-        <button onClick={openNew} disabled={editingId === "new"}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-bold bg-accent text-white hover:bg-accent-hover transition-all cursor-pointer disabled:opacity-50">
-          <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Add Provider</span>
-        </button>
-      </div>
-
+    <>
       <AnimatePresence>{editingId === "new" && editor}</AnimatePresence>
 
-      {/* The list owns the scrollbar — the header and Add Provider stay put
-          however many providers are configured. */}
+      {/* The list owns the scrollbar — the panel header, its Add provider
+          button and the tabs stay put however many providers are configured. */}
       <Reorder.Group
         as="div"
         axis="y"
         values={providers}
         onReorder={setProviders}
-        className="flex flex-col gap-2.5 mt-4 max-h-[60vh] overflow-y-auto overscroll-contain pr-1"
+        className="flex flex-col gap-2.5 max-h-[60vh] overflow-y-auto overscroll-contain pr-1"
       >
         {providers.map((p, i) => (
           <ProviderRow
@@ -292,7 +293,7 @@ export default function ProviderAdmin({ initial }: { initial: PlayerProvider[] }
           />
         ))}
       </Reorder.Group>
-    </div>
+    </>
   );
 }
 

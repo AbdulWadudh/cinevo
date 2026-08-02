@@ -1,7 +1,6 @@
 import React from "react";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, LogOut, RefreshCw, User } from "lucide-react";
+import { LogOut, RefreshCw, User } from "lucide-react";
 import Nav from "@/components/Nav";
 import EditProfileForm from "@/components/auth/EditProfileForm";
 import { getOrCreateProfile } from "@/lib/auth";
@@ -11,8 +10,7 @@ import { getProviderReports } from "@/app/actions/reports";
 import { getAdminStats } from "@/app/actions/admin";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import { db } from "@/lib/db";
-import ProviderAdmin from "@/components/admin/ProviderAdmin";
-import ProviderReportsAdmin from "@/components/admin/ProviderReportsAdmin";
+import ProvidersPanel from "@/components/admin/ProvidersPanel";
 import RadioStationAdmin from "@/components/admin/RadioStationAdmin";
 import ForceSyncButton from "@/components/watch/ForceSyncButton";
 import ClearCacheButton from "@/components/settings/ClearCacheButton";
@@ -116,6 +114,24 @@ export default async function ProfilePage({
         content: <AdminDashboard stats={statsRes.data} />,
       });
     }
+
+    if (providersRes.success && reportsRes.success) {
+      sections.push({
+        id: "providers",
+        label: "Providers",
+        icon: "server",
+        group: "admin",
+        badge: openReports,
+        content: (
+          <ProvidersPanel
+            providers={[...providersRes.data]}
+            reports={[...reportsRes.data]}
+            reportCounts={[...reportsRes.counts]}
+          />
+        ),
+      });
+    }
+
     sections.push({
       id: "radio",
       label: "Radio",
@@ -123,43 +139,12 @@ export default async function ProfilePage({
       group: "admin",
       content: <RadioStationAdmin />,
     });
-    if (providersRes.success) {
-      sections.push({
-        id: "providers",
-        label: "Providers",
-        icon: "server",
-        group: "admin",
-        content: <ProviderAdmin initial={[...providersRes.data]} />,
-      });
-    }
-    if (reportsRes.success) {
-      sections.push({
-        id: "reports",
-        label: "Reports",
-        icon: "flag",
-        group: "admin",
-        badge: openReports,
-        content: (
-          <ProviderReportsAdmin initial={[...reportsRes.data]} counts={[...reportsRes.counts]} />
-        ),
-      });
-    }
-
   }
 
   return (
     <div className="flex-1 w-full bg-bg min-h-screen pb-16">
       <Nav />
-
-      <section className="pt-24 md:pt-28 px-6 md:px-12 max-w-7xl mx-auto">
-        <Link
-          href="/"
-          className="mb-6 inline-flex items-center gap-1.5 rounded-lg border border-white/6 bg-white/4 px-3.5 py-2 text-xs text-fg-secondary transition-all hover:bg-white/8 hover:text-fg"
-        >
-          <ArrowLeft className="size-3.5" />
-          <span>Back to Home</span>
-        </Link>
-
+      <section className="pt-24 px-6 md:px-12 max-w-7xl mx-auto">
         <ProfileWorkspace
           displayName={displayName}
           email={profile.email}

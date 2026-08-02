@@ -2,23 +2,22 @@
 
 import React, { useState, useTransition } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Flag, Check, RotateCcw, Trash2, Loader2, AlertTriangle } from "lucide-react";
+import { Check, RotateCcw, Trash2, Loader2, AlertTriangle } from "lucide-react";
 import {
-  resolveProviderReport, deleteProviderReport, clearResolvedReports,
+  resolveProviderReport, deleteProviderReport,
   type ProviderReportRow,
 } from "@/app/actions/reports";
 
 interface Props {
-  initial: ProviderReportRow[];
+  /** Owned by the panel, so a tab switch doesn't discard resolved reports. */
+  rows: ProviderReportRow[];
+  setRows: React.Dispatch<React.SetStateAction<ProviderReportRow[]>>;
   counts: { providerKey: string; count: number }[];
 }
 
-export default function ProviderReportsAdmin({ initial, counts }: Props) {
-  const [rows, setRows] = useState<ProviderReportRow[]>(initial);
+export default function ProviderReportsAdmin({ rows, setRows, counts }: Props) {
   const [, startTransition] = useTransition();
   const [busy, setBusy] = useState<string | null>(null);
-
-  const unresolved = rows.filter((r) => !r.resolved).length;
 
   const toggle = (id: string, resolved: boolean) => {
     setBusy(id);
@@ -38,36 +37,11 @@ export default function ProviderReportsAdmin({ initial, counts }: Props) {
     });
   };
 
-  const clearResolved = () => {
-    setRows((prev) => prev.filter((r) => !r.resolved));
-    startTransition(async () => { await clearResolvedReports(); });
-  };
-
   return (
-    <div className="bg-surface/40 border border-white/[0.06] rounded-2xl p-6 sm:p-8">
-      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center">
-            <Flag className="w-4.5 h-4.5 text-orange-400" />
-          </div>
-          <div>
-            <h2 className="font-display text-lg font-bold leading-tight">Provider Reports</h2>
-            <p className="text-xs text-muted">{unresolved} open &bull; {rows.length} total</p>
-          </div>
-        </div>
-        {rows.some((r) => r.resolved) && (
-          <button
-            onClick={clearResolved}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white/[0.05] border border-white/[0.1] text-fg-secondary hover:text-fg transition-all cursor-pointer"
-          >
-            <Trash2 className="w-3.5 h-3.5" /> Clear resolved
-          </button>
-        )}
-      </div>
-
+    <>
       {/* Per-provider tally of open reports */}
       {counts.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-5">
+        <div className="flex flex-wrap gap-2 mb-4">
           {counts.map((c) => (
             <span key={c.providerKey} className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-orange-500/10 text-orange-300 border border-orange-500/20 px-2.5 py-1 rounded-full">
               <AlertTriangle className="w-3 h-3" /> {c.providerKey}: {c.count}
@@ -126,6 +100,6 @@ export default function ProviderReportsAdmin({ initial, counts }: Props) {
           </AnimatePresence>
         </div>
       )}
-    </div>
+    </>
   );
 }
