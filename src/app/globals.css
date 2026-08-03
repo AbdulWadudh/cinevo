@@ -24,13 +24,10 @@
   --color-blue: #2563eb;
   --color-emerald-400: #34d399;
 
+  --font-display: "Plus Jakarta Sans", sans-serif;
+
   --radius-lg: 12px;
   --radius-md: 8px;
-}
-
-@theme inline {
-  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {

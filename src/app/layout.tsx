@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Hanken_Grotesk } from "next/font/google";
+import { Plus_Jakarta_Sans, Geist } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import WishlistProvider from "@/components/wishlist/WishlistProvider";
@@ -13,11 +13,15 @@ import RadioPlayerProvider from "@/components/radio/RadioPlayerProvider";
 import RadioMiniPlayer from "@/components/radio/RadioMiniPlayer";
 import { site } from "@/config";
 
-
-const hankenGrotesk = Hanken_Grotesk({
-  variable: "--font-hanken",
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-display",
   subsets: ["latin"],
-  display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+const geistSans = Geist({
+  variable: "--font-sans",
+  subsets: ["latin"],
 });
 
 const siteUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -60,7 +64,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${hankenGrotesk.variable} h-full antialiased`}
+      className={`${plusJakarta.variable} ${geistSans.variable} h-full antialiased`}
     >
       <head>
         {/* Every poster and backdrop comes from here, and the hero's is the LCP

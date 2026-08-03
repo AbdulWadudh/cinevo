@@ -111,11 +111,6 @@ All changes to the Cinevo project are documented chronologically below in a time
   - Reduced empty space above the Back button by lowering padding on browse views from `pt-24` to `pt-18`.
   - Simplified repetitive subtitles (e.g. *"Popular releases in Bollywood Cinema"* -> *"Popular movies & TV shows"*).
   - Cleaned up redundant name headers (e.g. `MARVEL COLLECTION` -> `COLLECTION`).
-- **Hanken Grotesk is now the single typeface**, replacing Plus Jakarta Sans (headings) and Geist (body). Both `font-display` and `font-sans` map to it, so headings and copy share one family and the type reads as one system rather than two.
-  - Loaded through `next/font/google`, which self-hosts it as a static asset — no request reaches Google from the browser, and the generated `size-adjust` fallback metrics mean no layout shift on swap. Rejected the alternatives deliberately: a `fonts.googleapis.com` `<link>` adds a third-party DNS + TLS round trip in front of render-blocking CSS and a GDPR question, and a hand-managed `.ttf` through `next/font/local` would ship a file 3–5× the size of the woff2 with subsetting and fallback metrics left to do by hand.
-  - **No `weight` is passed.** Hanken Grotesk is variable across 100–900, so the full range the UI already uses (`font-medium` through `font-black`) comes out of one file. The previous pair pulled five static Plus Jakarta weights plus Geist — two families down to one, and the widest weight range of the three.
-  - Registered in `globals.css` under **`@theme inline`** rather than plain `@theme`. The values reference `--font-hanken`, and Tailwind v4 resolves a non-inline theme variable in whatever scope the utility lands in; `inline` bakes the value into the generated utility instead. The family name is never spelled out, since `next/font` self-hosts under a hashed name.
-  - `StudioHubs` studio logos are the one place the two old families were played against each other — HBO and Animation opted into `font-sans` to break from the display face. Their identity carries on the uppercase / italic / tracking treatments and the `font-serif` and `font-mono` variants, all untouched; those two now sit in the same grotesque as the rest of the card.
 
 #### Fixed
 
