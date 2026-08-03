@@ -582,6 +582,17 @@ export default function IframePlayer({
         @keyframes splashPop  { from{opacity:0;transform:scale(0.6)} to{opacity:1;transform:scale(1)} }
         @keyframes splashFade { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
         @keyframes dropDown   { from{opacity:0;transform:translateY(-8px) scale(0.96)} to{opacity:1;transform:translateY(0) scale(1)} }
+
+        .player-stage:fullscreen {
+          max-height: none; aspect-ratio: auto; height: 100%;
+          border: 0; border-radius: 0; box-shadow: none;
+        }
+        .player-stage:-webkit-full-screen {
+          max-height: none; aspect-ratio: auto; height: 100%;
+          border: 0; border-radius: 0; box-shadow: none;
+        }
+        .player-stage:fullscreen::backdrop { background: #000; }
+        .player-stage:-webkit-full-screen::backdrop { background: #000; }
       `}</style>
 
       <div className="flex flex-col gap-0 w-full">
@@ -589,7 +600,7 @@ export default function IframePlayer({
         {/* ── Player ── */}
         <div
           ref={playerRef}
-          className="relative w-full aspect-video max-h-[70vh] bg-black rounded-t-xl overflow-hidden select-none shadow-2xl border border-white/4 border-b-0 group"
+          className="player-stage relative w-full aspect-video max-h-[70vh] bg-black rounded-t-xl overflow-hidden select-none shadow-2xl border border-white/4 border-b-0 group"
         >
           <div className="w-full h-full relative">
             {embedUrl && (
