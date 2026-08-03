@@ -24,10 +24,13 @@
   --color-blue: #2563eb;
   --color-emerald-400: #34d399;
 
-  --font-display: "Plus Jakarta Sans", sans-serif;
-  
   --radius-lg: 12px;
   --radius-md: 8px;
+}
+
+@theme inline {
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
@@ -50,6 +53,7 @@ html {
   position: relative;
   z-index: 5;
 }
+
 .tv-focusable:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px var(--color-accent), 0 0 22px rgba(229, 62, 79, 0.45);
@@ -85,9 +89,12 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 /* Glassmorphism utility */
@@ -109,6 +116,7 @@ body {
   from {
     transform: scale(1.05);
   }
+
   to {
     transform: scale(1.12);
   }
