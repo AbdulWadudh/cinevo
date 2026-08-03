@@ -1,6 +1,7 @@
 {
-  "//regions": "Singapore, to sit with the Supabase database (aws-1-ap-southeast-1). Left unset, functions default to iad1 (Washington) and every server render round-trips ~15,000km per query before a byte of HTML is sent.",
-  "regions": ["sin1"],
+  "regions": [
+    "sin1"
+  ],
   "crons": [
     {
       "path": "/api/push/run",
