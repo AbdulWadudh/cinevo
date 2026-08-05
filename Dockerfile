@@ -60,4 +60,15 @@ COPY --from=builder --chown=node:node /app/public ./public
 
 USER node
 EXPOSE 3000
+
+# Declared in the image rather than in Coolify's UI because the Docker Compose
+# build pack reads the health check from here (or from a `healthcheck:` block in
+# docker-compose.yml) and ignores the panel settings — an unhealthy container
+# keeps receiving traffic otherwise. Compose inherits this, so it isn't repeated
+# there. Probes with Node's global fetch so the check doesn't depend on curl or
+# wget surviving in the base image, and hits /api/health, which is excluded from
+# the proxy matcher and therefore costs no Supabase round-trip.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=25s --retries=3 \
+  CMD ["node", "-e", "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+
 CMD ["node", "server.js"]
