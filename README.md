@@ -179,9 +179,13 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## 🐳 Deploy with Docker / Coolify
 
-The [`Dockerfile`](./Dockerfile) builds a three-stage image on Next.js
+The [`Dockerfile`](./Dockerfile) builds a two-stage image on Next.js
 `output: "standalone"` — a pruned server plus only the dependencies it traced,
-running as a non-root user on Node 24 Alpine.
+running as the unprivileged `node` user on Node 26 (Debian slim).
+
+Debian rather than Alpine is deliberate: Next's SWC binary, `lightningcss` and
+`@tailwindcss/oxide` each ship a separate musl build, and that's a class of
+install failure not worth carrying to save ~40MB.
 
 ### Build-time vs run-time variables
 
@@ -191,21 +195,25 @@ while the image builds — setting them only at run time means the browser never
 sees them and Supabase auth fails with an empty URL. Everything else is read by
 the server at run time and can change without a rebuild.
 
-| Variable                              | Needed at   | Why                                                    |
-| ------------------------------------- | ----------- | ------------------------------------------------------ |
-| `NEXT_PUBLIC_SUPABASE_URL`            | build + run | inlined into the client; also read by the auth proxy   |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY`       | build + run | same                                                   |
-| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`        | build + run | inlined for the push subscribe call                    |
-| `TMDB_API_KEY` / `TMDB_ACCESS_TOKEN`  | build + run | `/gallery` and `/reveal` prerender against TMDB        |
-| `DATABASE_URL`                        | build + run | Prisma at run time; safe default during the build      |
-| `DIRECT_URL`                          | build + run | migrations (session-mode pooler)                       |
-| `SITE_URL`                            | run         | OAuth / email redirect origin                          |
-| `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | run         | signs Web Push payloads                                |
-| `PUSH_CRON_SECRET`                    | run         | bearer token the scheduled task sends                  |
+| Variable                              | Needed at   | Why                                                  |
+| ------------------------------------- | ----------- | ---------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`            | build + run | inlined into the client; also read by the auth proxy |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`       | build + run | same                                                 |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`        | build + run | inlined for the push subscribe call                  |
+| `TMDB_API_KEY` / `TMDB_ACCESS_TOKEN`  | build + run | `/gallery` and `/reveal` prerender against TMDB      |
+| `DATABASE_URL`                        | run         | Prisma; no prerendered route touches the database    |
+| `DIRECT_URL`                          | —           | migrations only, which run outside the container     |
+| `SITE_URL`                            | run         | OAuth / email redirect origin                        |
+| `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | run         | signs Web Push payloads                              |
+| `PUSH_CRON_SECRET`                    | run         | bearer token the scheduled task sends                |
 
-`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and `NEXT_PUBLIC_TMDB_API_KEY` are in
-`.env.example` but aren't read anywhere in the app; the Dockerfile still declares
-`ARG`s for them so they work the moment something does.
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and `NEXT_PUBLIC_TMDB_API_KEY` sit in
+`.env.example` but aren't read anywhere in the app, so the Dockerfile doesn't
+declare them.
+
+On Coolify the *Build Variable?* ticking is mostly academic — it injects its own
+`ARG`/`ENV` pair for every variable you define. The `ARG`s in the Dockerfile are
+what keep a plain `docker build` (and `docker compose`) behaving identically.
 
 Prefer `SITE_URL` over `NEXT_PUBLIC_SITE_URL` when self-hosting — it's a plain
 server variable, so the public origin can change without a rebuild. Left unset,

@@ -1,11 +1,11 @@
-# Local verification of the production image before pushing to Coolify.
-# Coolify itself doesn't need this file — point it at the Dockerfile build pack
-# instead (README → "Deploy with Docker / Coolify").
+# Local rehearsal of the production image. Coolify doesn't use this file — point
+# it at the Dockerfile build pack instead (README → "Deploy with Docker / Coolify").
 #
 #   docker compose up --build      # http://localhost:3000
 #
-# Build args and runtime env are both read from .env, so the NEXT_PUBLIC_* values
-# get inlined into the bundle exactly the way they will be in production.
+# The build args below are the ones next build inlines into the client bundle, so
+# they're passed at build time exactly as they will be in production; everything
+# else is read from .env at run time.
 
 services:
   cinevo:
@@ -14,14 +14,9 @@ services:
       args:
         NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}
-        NEXT_PUBLIC_TMDB_API_KEY: ${NEXT_PUBLIC_TMDB_API_KEY}
         NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
         TMDB_API_KEY: ${TMDB_API_KEY}
         TMDB_ACCESS_TOKEN: ${TMDB_ACCESS_TOKEN}
-        DATABASE_URL: ${DATABASE_URL}
-        DIRECT_URL: ${DIRECT_URL}
     env_file: .env
     environment:
       SITE_URL: ${SITE_URL:-http://localhost:3000}
