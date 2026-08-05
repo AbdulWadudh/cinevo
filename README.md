@@ -252,28 +252,36 @@ Then check <http://localhost:3000> and `curl localhost:3000/api/health`.
    http://localhost:3000/api/push/run`, frequency `0 13 * * *`. That's the
    `crons` entry in [`vercel.json`](./vercel.json), which Coolify doesn't read.
 
-### ⚠️ Don't commit a lockfile regenerated on Windows unchecked
+### ⚠️ The lockfile, `npm ci`, and Windows
 
-`npm install` on Windows can rewrite `package-lock.json` with **only** the
-`win32` platform binaries, silently dropping the `linux` builds of
-`@next/swc`, `@tailwindcss/oxide`, `lightningcss`, `@unrs/resolver-binding` and
-`sharp`. Local dev never notices. The Docker build dies instantly, because
-`npm ci` — unlike `npm install` — refuses a lockfile that isn't in sync:
+The image installs with `npm install`, not `npm ci`. That's deliberate, and worth
+understanding before anyone "fixes" it back.
+
+npm generating this lockfile **on Windows cannot produce a tree that satisfies
+`npm ci` on Linux**. The wasm32 fallbacks of `@tailwindcss/oxide` and `sharp`
+require a hoisted `@emnapi/core` and `@emnapi/runtime`; npm won't write either
+from a Windows host — not even with `--package-lock-only --os=linux --cpu=x64` —
+and `npm ci` then refuses the whole install:
 
 ```text
 npm error code EUSAGE
-npm error Missing: @next/swc-linux-x64-gnu@16.2.6 from lock file
+npm error Missing: @emnapi/runtime@1.11.3 from lock file
 ```
 
-After any change that touches the lockfile, check it still carries the other
-platforms before committing:
+`npm install` honours every version the lockfile *does* pin and resolves only
+those gaps. It's also what Vercel runs by default, which is why the gap never
+surfaced there. To go back to `npm ci`, regenerate the lockfile on Linux (CI, a
+container, or WSL) and commit that.
+
+Separately: a Windows `npm install` can strip **every** non-Windows platform
+binary from the lockfile — 78 packages, in the incident this note came from.
+Local dev never notices. Check before committing a regenerated lockfile:
 
 ```bash
 node -e "const k=Object.keys(require('./package-lock.json').packages);console.log('linux:',k.filter(x=>/linux/.test(x)).length)"
 ```
 
-Expect ~42, never 0. `npm ci --dry-run` catches the same problem and validates
-the whole tree. If it's already broken, restore the previous lockfile
+Expect ~42, never 0. If it reads 0, restore the previous lockfile
 (`git checkout HEAD~1 -- package-lock.json`) rather than regenerating, so no
 resolved version moves.
 

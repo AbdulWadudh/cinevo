@@ -15,7 +15,16 @@ WORKDIR /app
 # along because `postinstall` runs `prisma generate` and needs the schema.
 COPY package.json package-lock.json prisma.config.ts ./
 COPY prisma ./prisma
-RUN npm ci
+
+# `npm install`, not `npm ci`, and not by preference. npm generating this lockfile
+# on Windows cannot record a tree that satisfies `npm ci` on Linux: the wasm32
+# fallbacks of @tailwindcss/oxide and sharp need a hoisted @emnapi/core and
+# @emnapi/runtime, and npm won't add either from a Windows host — not even with
+# --package-lock-only --os=linux. `npm ci` then aborts with EUSAGE before the
+# build starts. `npm install` honours every version the lockfile does pin and
+# resolves only those gaps, which is exactly what Vercel has been doing all along
+# (its default install command), hence why this never surfaced there.
+RUN npm install --no-audit --no-fund
 
 COPY . .
 
