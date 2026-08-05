@@ -240,8 +240,13 @@ Then check <http://localhost:3000> and `curl localhost:3000/api/health`.
 4. In **Configuration → Network**, set the port to `3000` and add your domain
    (e.g. `https://cinevo.example.com`). Coolify's Traefik/Caddy proxy terminates
    TLS and issues the certificate.
-5. **Health check**: path `/api/health`, port `3000`. That route is excluded from
-   the auth proxy, so probes cost no Supabase round-trip.
+5. **Health check** — nothing to configure. The image declares its own
+   `HEALTHCHECK` against `/api/health`, which is what the **Docker Compose build
+   pack** requires: it reads the check from the Dockerfile (or a compose
+   `healthcheck:` block) and ignores the panel settings, and an unhealthy
+   resource keeps receiving traffic if no check is defined. Compose inherits the
+   image's, so it isn't declared twice. That route is excluded from the auth
+   proxy, so probes cost no Supabase round-trip.
 6. **Deploy.** The first build is the slow one; later deploys reuse the layer
    cache as long as `package-lock.json` is unchanged.
 7. Add the redirect origin in **Supabase → Authentication → URL Configuration**:
