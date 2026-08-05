@@ -1,0 +1,42 @@
+# Keeps the build context small and secrets out of image layers.
+
+# Rebuilt inside the image
+node_modules
+.next
+out
+build
+*.tsbuildinfo
+
+# Secrets — values arrive as build args / runtime env, never baked into a layer
+.env*
+
+# VCS & tooling
+.git
+.gitignore
+.github
+.vscode
+.idea
+.claude
+.agents
+skills-lock.json
+
+# Docker itself
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Vercel
+.vercel
+vercel.json
+
+# Android TWA and release artefacts — nothing the server needs
+android-twa
+releases
+*.apk
+*.aab
+*.idsig
+*.keystore
+*.jks
+
+# Docs
+*.md

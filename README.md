@@ -177,6 +177,90 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
+## 🐳 Deploy with Docker / Coolify
+
+The [`Dockerfile`](./Dockerfile) builds a three-stage image on Next.js
+`output: "standalone"` — a pruned server plus only the dependencies it traced,
+running as a non-root user on Node 24 Alpine.
+
+### Build-time vs run-time variables
+
+This is the one thing worth getting right. `next build` **inlines every
+`NEXT_PUBLIC_*` value into the browser bundle**, so those have to be present
+while the image builds — setting them only at run time means the browser never
+sees them and Supabase auth fails with an empty URL. Everything else is read by
+the server at run time and can change without a rebuild.
+
+| Variable                              | Needed at   | Why                                                    |
+| ------------------------------------- | ----------- | ------------------------------------------------------ |
+| `NEXT_PUBLIC_SUPABASE_URL`            | build + run | inlined into the client; also read by the auth proxy   |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`       | build + run | same                                                   |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`        | build + run | inlined for the push subscribe call                    |
+| `TMDB_API_KEY` / `TMDB_ACCESS_TOKEN`  | build + run | `/gallery` and `/reveal` prerender against TMDB        |
+| `DATABASE_URL`                        | build + run | Prisma at run time; safe default during the build      |
+| `DIRECT_URL`                          | build + run | migrations (session-mode pooler)                       |
+| `SITE_URL`                            | run         | OAuth / email redirect origin                          |
+| `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | run         | signs Web Push payloads                                |
+| `PUSH_CRON_SECRET`                    | run         | bearer token the scheduled task sends                  |
+
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and `NEXT_PUBLIC_TMDB_API_KEY` are in
+`.env.example` but aren't read anywhere in the app; the Dockerfile still declares
+`ARG`s for them so they work the moment something does.
+
+Prefer `SITE_URL` over `NEXT_PUBLIC_SITE_URL` when self-hosting — it's a plain
+server variable, so the public origin can change without a rebuild. Left unset,
+[`getSiteURL`](./src/lib/site-url.ts) falls back to the proxy's forwarded host
+headers, which Coolify sets correctly on its own.
+
+### Try it locally first
+
+```bash
+docker compose up --build      # reads .env for both build args and runtime env
+```
+
+Then check <http://localhost:3000> and `curl localhost:3000/api/health`.
+
+### Coolify
+
+1. **New resource → Application → Public/Private Repository**, pointing at this
+   repo and branch.
+2. Set **Build Pack** to `Dockerfile`. Leave the Dockerfile location at
+   `/Dockerfile` and the base directory at `/`.
+3. Under **Environment Variables**, add every variable from the table above.
+   Tick **Build Variable?** on each one marked *build* — Coolify passes those to
+   `docker build --build-arg`, and the `ARG` lines in the Dockerfile receive them.
+4. In **Configuration → Network**, set the port to `3000` and add your domain
+   (e.g. `https://cinevo.example.com`). Coolify's Traefik/Caddy proxy terminates
+   TLS and issues the certificate.
+5. **Health check**: path `/api/health`, port `3000`. That route is excluded from
+   the auth proxy, so probes cost no Supabase round-trip.
+6. **Deploy.** The first build is the slow one; later deploys reuse the layer
+   cache as long as `package-lock.json` is unchanged.
+7. Add the redirect origin in **Supabase → Authentication → URL Configuration**:
+   your new domain as Site URL, plus `https://your-domain/auth/callback` under
+   redirect URLs. OAuth sign-in fails silently until this is done.
+8. Replace the Vercel cron with a **Scheduled Task** on the application —
+   command `curl -fsS -H "Authorization: Bearer $PUSH_CRON_SECRET"
+   http://localhost:3000/api/push/run`, frequency `0 13 * * *`. That's the
+   `crons` entry in [`vercel.json`](./vercel.json), which Coolify doesn't read.
+
+### Database migrations
+
+The image doesn't ship the Prisma CLI, so migrations aren't applied on boot —
+deliberately, since concurrent containers racing `migrate deploy` on startup is
+its own class of outage. Run them against `DIRECT_URL` from your machine or CI
+before deploying a schema change:
+
+```bash
+npx prisma migrate deploy
+```
+
+> ℹ️ `@vercel/analytics` stays in the bundle and simply collects nothing off
+> Vercel — its script 404s harmlessly. Remove `<Analytics />` from
+> [`src/app/layout.tsx`](./src/app/layout.tsx) if you'd rather not ship the request.
+
+---
+
 ## 📜 Scripts
 
 | Command                  | Description                                              |

@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Emits .next/standalone — a self-contained server plus only the node_modules
+  // it actually traced. This is what the Dockerfile's runtime stage copies, and
+  // it keeps the image small enough to redeploy quickly on Coolify.
+  output: "standalone",
   images: {
     // Bypass Vercel's metered Image Optimization (/_next/image, which 402s once
     // the plan quota is hit) by serving images straight from their origin CDN.
