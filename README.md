@@ -252,6 +252,31 @@ Then check <http://localhost:3000> and `curl localhost:3000/api/health`.
    http://localhost:3000/api/push/run`, frequency `0 13 * * *`. That's the
    `crons` entry in [`vercel.json`](./vercel.json), which Coolify doesn't read.
 
+### ⚠️ Don't commit a lockfile regenerated on Windows unchecked
+
+`npm install` on Windows can rewrite `package-lock.json` with **only** the
+`win32` platform binaries, silently dropping the `linux` builds of
+`@next/swc`, `@tailwindcss/oxide`, `lightningcss`, `@unrs/resolver-binding` and
+`sharp`. Local dev never notices. The Docker build dies instantly, because
+`npm ci` — unlike `npm install` — refuses a lockfile that isn't in sync:
+
+```text
+npm error code EUSAGE
+npm error Missing: @next/swc-linux-x64-gnu@16.2.6 from lock file
+```
+
+After any change that touches the lockfile, check it still carries the other
+platforms before committing:
+
+```bash
+node -e "const k=Object.keys(require('./package-lock.json').packages);console.log('linux:',k.filter(x=>/linux/.test(x)).length)"
+```
+
+Expect ~42, never 0. `npm ci --dry-run` catches the same problem and validates
+the whole tree. If it's already broken, restore the previous lockfile
+(`git checkout HEAD~1 -- package-lock.json`) rather than regenerating, so no
+resolved version moves.
+
 ### Database migrations
 
 The image doesn't ship the Prisma CLI, so migrations aren't applied on boot —
