@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Search, Heart } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import NotificationBell from "@/components/NotificationBell";
 import SiteMenu from "@/components/SiteMenu";
 import { FocusSection, FocusableLink, FocusableButton } from "@/components/tv/Focusable";
@@ -15,6 +16,7 @@ import { site } from "@/config";
 export default function Nav() {
   const router = useRouter();
   const pathname = usePathname();
+  const reduceMotion = useReducedMotion();
 
   const [scrolled, setScrolled] = useState(false);
 
@@ -74,8 +76,11 @@ export default function Nav() {
   return (
     <>
       {/* Desktop / tablet navbar (all links visible). Mobile uses the StaggeredMenu below. */}
-      <nav
-        className={`fixed top-0 left-0 right-0 z-40 hidden md:flex items-center justify-between px-6 md:px-12 py-4 transition-all duration-300 ${scrolled ? "bg-bg/95 backdrop-blur-xl border-b border-white/[0.04] shadow-lg" : "bg-gradient-to-b from-bg/90 to-transparent"
+      <motion.nav
+        initial={reduceMotion ? false : { opacity: 0, y: -16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className={`fixed top-0 left-0 right-0 z-40 hidden md:flex items-center justify-between px-6 md:px-12 py-4 transition-all duration-300 ${scrolled ? "bg-bg/95 backdrop-blur-xl border-b border-white/[0.04] shadow-lg" : "bg-linear-to-b from-bg/90 to-transparent"
           }`}
       >
         <div className="flex items-center gap-10">
@@ -94,7 +99,13 @@ export default function Nav() {
                     }`}
                 >
                   {link.name}
-                  {active && <span className="absolute bottom-0 left-1.5 right-1.5 h-[2px] bg-accent-strong rounded-full" />}
+                  {active && (
+                    <motion.span
+                      layoutId={reduceMotion ? undefined : "active-nav-link"}
+                      transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                      className="absolute bottom-0 left-1.5 right-1.5 h-0.5 bg-accent-strong rounded-full"
+                    />
+                  )}
                 </FocusableLink>
               );
             })}
@@ -139,7 +150,7 @@ export default function Nav() {
           )}
         </FocusSection>
 
-      </nav>
+      </motion.nav>
 
       {/* Mobile / tablet: the StaggeredMenu overlay (hidden on md+ via CSS). */}
       <SiteMenu />

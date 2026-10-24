@@ -3,8 +3,7 @@
 import React, { useTransition, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "motion/react";
-import { Loader2 } from "lucide-react";
+import { motion, AnimatePresence, MotionConfig } from "motion/react";
 
 interface HubItem {
   name: string;
@@ -110,7 +109,8 @@ export default function StudioHubs() {
   };
 
   return (
-    <section className="w-full px-6 md:px-12 mb-10 pt-4">
+    <MotionConfig reducedMotion="user">
+      <section className="w-full px-6 md:px-12 mb-10 pt-4">
       <div className="mb-4">
         <h2 className="font-display text-lg md:text-xl font-bold tracking-tight text-fg">
           Studios & Brands
@@ -118,7 +118,7 @@ export default function StudioHubs() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {HUBS.map((hub) => (
+        {HUBS.map((hub, index) => (
           <Link
             key={hub.name}
             href={hub.href}
@@ -126,6 +126,9 @@ export default function StudioHubs() {
             className="block relative group"
           >
             <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: index * 0.06, ease: "easeOut" }}
               whileHover={{
                 scale: 1.05,
                 boxShadow: `0 10px 30px ${hub.glowColor}`,
@@ -136,7 +139,6 @@ export default function StudioHubs() {
                         "rgba(245,158,11,0.4)"
               }}
               whileTap={{ scale: 0.98 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
               className={`relative overflow-hidden aspect-video rounded-2xl border border-white/6 bg-linear-to-b ${hub.bgGradient} backdrop-blur-md flex flex-col items-center justify-center p-4 cursor-pointer`}
             >
               {/* Logo Typography */}
@@ -257,6 +259,7 @@ export default function StudioHubs() {
           </motion.div>
         )}
       </AnimatePresence>
-    </section>
+      </section>
+    </MotionConfig>
   );
 }

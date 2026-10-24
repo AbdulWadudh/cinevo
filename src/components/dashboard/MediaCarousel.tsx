@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Play, Star, X, Loader2, Clapperboard } from "lucide-react";
+import { motion, AnimatePresence, MotionConfig } from "motion/react";
 import { TMDBMedia, MediaSource } from "@/lib/tmdb";
 import { loadMediaPageAction } from "@/app/actions/tmdb-actions";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
@@ -41,7 +42,12 @@ function PosterCard({
   const linkUrl = `/watch/${item.media_type || mediaType}/${item.id}`;
 
   return (
-    <div className="flex-none w-35 sm:w-45 snap-start group">
+    <motion.div
+      whileHover={{ y: -6, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      className="flex-none w-35 sm:w-45 snap-start group"
+    >
       <Link
         ref={ref}
         href={linkUrl}
@@ -49,7 +55,7 @@ function PosterCard({
         draggable={false}
         className={`tv-focusable block cursor-pointer select-none rounded-xl ${focused ? "tv-focused" : ""}`}
       >
-        <div className="relative aspect-2/3 w-full bg-surface rounded-xl overflow-hidden border border-white/[0.04] shadow-md transition-all duration-500 group-hover:-translate-y-2 group-hover:scale-[1.02] group-hover:border-accent group-hover:shadow-[0_8px_25px_rgba(0,0,0,0.8)]">
+        <div className="relative aspect-2/3 w-full bg-surface rounded-xl overflow-hidden border border-white/4 shadow-md transition-all duration-500 group-hover:border-accent group-hover:shadow-[0_8px_25px_rgba(0,0,0,0.8)]">
           <Image
             src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "https://picsum.photos/seed/cinevoposter/300/450"}
             alt={item.title || item.name || ""}
@@ -93,7 +99,7 @@ function PosterCard({
           </p>
         </div>
       </Link>
-    </div>
+    </motion.div>
   );
 }
 
@@ -131,12 +137,12 @@ export default function MediaCarousel({
   const [gridTotalPages, setGridTotalPages] = useState<number>(source ? Number.MAX_SAFE_INTEGER : 1);
   const [isLoadingMore, startLoadMore] = useTransition();
 
-  // Keep the grid in sync if the row's items change (e.g. genre filter swaps them).
-  useEffect(() => {
+  const openFullScreen = () => {
     setGridItems(items);
     setGridPage(1);
     setGridTotalPages(source ? Number.MAX_SAFE_INTEGER : 1);
-  }, [items, source]);
+    setIsFullScreen(true);
+  };
 
   // Lock background page scroll while the fullscreen "See All" grid is open
   // (otherwise the body and the modal each show their own scrollbar).
@@ -265,7 +271,8 @@ export default function MediaCarousel({
   if (items.length === 0) return null;
 
   return (
-    <section
+    <MotionConfig reducedMotion="user">
+      <section
       className="px-6 md:px-12 mb-12 relative w-full group/carousel"
       aria-label={hasTitle ? undefined : label}
     >
@@ -278,7 +285,7 @@ export default function MediaCarousel({
         )}
         <button
           type="button"
-          onClick={() => setIsFullScreen(true)}
+          onClick={openFullScreen}
           aria-label={seeAllLabel}
           className="text-xs text-accent font-semibold hover:opacity-80 cursor-pointer transition-opacity"
         >
@@ -338,8 +345,15 @@ export default function MediaCarousel({
       </div>
 
       {/* Full-Screen See All Grid Modal Overlay */}
+      <AnimatePresence>
       {isFullScreen && (
-        <div className="fixed inset-0 bg-bg/98 backdrop-blur-3xl z-50 overflow-y-auto animate-fade-in flex flex-col px-6 md:px-24 pt-20 pb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 12 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          className="fixed inset-0 bg-bg/98 backdrop-blur-3xl z-50 overflow-y-auto overscroll-contain flex flex-col px-6 md:px-24 pt-20 pb-12"
+        >
           {/* Header */}
           <div className="flex items-center justify-between w-full max-w-350 mx-auto border-b border-white/8 pb-4 mb-8">
             <div>
@@ -365,13 +379,19 @@ export default function MediaCarousel({
                 const linkUrl = `/watch/${item.media_type || mediaType}/${item.id}`;
 
                 return (
-                  <div key={item.id} className="group">
+                  <motion.div
+                    key={item.id}
+                    whileHover={{ y: -6, scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                    className="group"
+                  >
                     <Link
                       href={linkUrl}
                       onClick={() => setIsFullScreen(false)}
                       className="block cursor-pointer select-none"
                     >
-                      <div className="relative aspect-[2/3] w-full bg-surface rounded-xl overflow-hidden border border-white/[0.04] shadow-md transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] hover:border-accent hover:shadow-[0_8px_25px_rgba(0,0,0,0.8)]">
+                      <div className="relative aspect-2/3 w-full bg-surface rounded-xl overflow-hidden border border-white/4 shadow-md transition-all duration-500 hover:border-accent hover:shadow-[0_8px_25px_rgba(0,0,0,0.8)]">
                         <Image
                           src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "https://picsum.photos/seed/cinevoposter/300/450"}
                           alt={item.title || item.name || ""}
@@ -424,7 +444,7 @@ export default function MediaCarousel({
                         </p>
                       </div>
                     </Link>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
@@ -447,8 +467,10 @@ export default function MediaCarousel({
               </div>
             )}
           </div>
-        </div>
+        </motion.div>
       )}
-    </section>
+      </AnimatePresence>
+      </section>
+    </MotionConfig>
   );
 }

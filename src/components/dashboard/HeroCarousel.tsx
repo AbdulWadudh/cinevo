@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, useReducedMotion } from "motion/react";
@@ -50,27 +50,27 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
 
   const carouselItems = items.slice(0, 6); // Top 6 trending items
 
-  const startAutoPlay = () => {
+  const stopAutoPlay = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+  }, []);
+
+  const startAutoPlay = useCallback(() => {
     stopAutoPlay();
     timerRef.current = setInterval(() => {
       // Pause rotation while the user is hovering the banner.
       if (hoveredRef.current) return;
       setActiveIndex((prevIndex) => (prevIndex + 1) % carouselItems.length);
     }, 7000); // Rotate every 7 seconds
-  };
-
-  const stopAutoPlay = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-  };
+  }, [carouselItems.length, stopAutoPlay]);
 
   useEffect(() => {
     if (carouselItems.length > 0) {
       startAutoPlay();
     }
     return () => stopAutoPlay();
-  }, [carouselItems.length]);
+  }, [carouselItems.length, startAutoPlay, stopAutoPlay]);
 
   const handlePrev = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -115,6 +115,7 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
         return (
           <div
             key={item.id}
+            aria-hidden={!isActive}
             className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${
               isActive ? "opacity-100 z-10 pointer-events-auto" : "opacity-0 z-0 pointer-events-none"
             }`}
@@ -184,7 +185,12 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
             )}
 
             {/* Info details (panel ignores clicks so the banner link works; buttons re-enable them) */}
-            <div className="absolute bottom-0 left-0 right-0 z-20 px-6 md:px-12 pb-20 max-w-2xl text-left pointer-events-none">
+            <motion.div
+              initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+              animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+              transition={{ duration: reduceMotion ? 0 : 0.45, ease: "easeOut" }}
+              className="absolute bottom-0 left-0 right-0 z-20 px-6 md:px-12 pb-20 max-w-2xl text-left pointer-events-none"
+            >
               <span className="inline-block text-[10px] font-extrabold tracking-widest text-accent uppercase bg-accent/10 px-3 py-1 rounded-full border border-accent/20 mb-4 animate-pulse">
                 Trending Now
               </span>
@@ -232,26 +238,30 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
                   </FocusableButton>
                 </FocusSection>
               )}
-            </div>
+            </motion.div>
           </div>
         );
       })}
 
       {/* Navigation Arrow buttons */}
-      <button
+      <motion.button
         onClick={handlePrev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-2.5 rounded-full bg-black/40 hover:bg-accent-strong text-white border border-white/8 hover:border-accent opacity-0 group-hover/hero:opacity-100 transition-all duration-300 backdrop-blur-md cursor-pointer hover:scale-105"
+        whileHover={reduceMotion ? undefined : { scale: 1.08 }}
+        whileTap={reduceMotion ? undefined : { scale: 0.92 }}
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 flex size-11 items-center justify-center rounded-full bg-black/40 hover:bg-accent-strong text-white border border-white/8 hover:border-accent opacity-0 group-hover/hero:opacity-100 pointer-coarse:opacity-100 transition-colors duration-300 backdrop-blur-md cursor-pointer"
         aria-label="Previous Slide"
       >
         <ChevronLeft className="w-5 h-5" />
-      </button>
-      <button
+      </motion.button>
+      <motion.button
         onClick={handleNext}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-2.5 rounded-full bg-black/40 hover:bg-accent-strong text-white border border-white/8 hover:border-accent opacity-0 group-hover/hero:opacity-100 transition-all duration-300 backdrop-blur-md cursor-pointer hover:scale-105"
+        whileHover={reduceMotion ? undefined : { scale: 1.08 }}
+        whileTap={reduceMotion ? undefined : { scale: 0.92 }}
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 flex size-11 items-center justify-center rounded-full bg-black/40 hover:bg-accent-strong text-white border border-white/8 hover:border-accent opacity-0 group-hover/hero:opacity-100 pointer-coarse:opacity-100 transition-colors duration-300 backdrop-blur-md cursor-pointer"
         aria-label="Next Slide"
       >
         <ChevronRight className="w-5 h-5" />
-      </button>
+      </motion.button>
 
       {/* Indicator Dots — the dot itself stays small, but each button keeps a
           44px-tall / 28px-wide hit area so it is thumb-reachable and clears the
