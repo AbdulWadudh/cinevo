@@ -57,3 +57,4 @@ local.properties
 # Bubblewrap may persist signing-key passwords here:
 android-signing-key-info.json
 app-release-unsigned-aligned.apk
+.claude/settings.local.json
