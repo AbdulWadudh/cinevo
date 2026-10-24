@@ -61,16 +61,16 @@ export default function RadioMiniPlayer() {
           <div
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
-            className="flex items-center gap-1 rounded-full border border-white/10 bg-bg-elevated/95 py-1.5 pl-2 pr-1.5 shadow-2xl shadow-black/60 backdrop-blur-xl"
+            className="flex items-center gap-1 rounded-3xl border border-white/10 bg-bg-elevated/95 py-1.5 pl-2 pr-1.5 shadow-2xl shadow-black/60 backdrop-blur-xl"
           >
             {/* Tapping the body returns to the full player. */}
             <Link
               href="/radio"
-              className="flex min-w-0 items-center gap-2 rounded-full pl-1 pr-1 transition-opacity hover:opacity-80"
+              className="flex min-w-0 items-center gap-2 rounded-xl pl-1 pr-1 transition-opacity hover:opacity-80"
               aria-label={`Back to radio — ${station.name}`}
             >
               <span
-                className={`flex size-7 flex-none items-center justify-center rounded-full ${warn ? "bg-amber-500/15 text-amber-400" : "bg-purple-500/15 text-purple-300"
+                className={`flex size-7 flex-none items-center justify-center rounded-full ${warn ? "bg-warning/15 text-warning" : "bg-accent/15 text-accent"
                   }`}
               >
                 {warn ? (
@@ -87,7 +87,7 @@ export default function RadioMiniPlayer() {
                   {station.name}
                 </span>
                 <span
-                  className={`block text-[10px] uppercase tracking-wider ${warn ? "text-amber-400/80" : playing ? "text-purple-300" : "text-muted"
+                  className={`block text-[10px] uppercase tracking-wider ${warn ? "text-warning/80" : playing ? "text-accent" : "text-muted"
                     }`}
                 >
                   {connecting ? "Connecting…" : playing ? "On air" : warn ? "Unavailable" : "Paused"}
@@ -125,7 +125,7 @@ export default function RadioMiniPlayer() {
               whileHover={reduceMotion ? undefined : { scale: 1.08 }}
               whileTap={reduceMotion ? undefined : { scale: 0.9 }}
               transition={{ type: "spring", stiffness: 500, damping: 22 }}
-              className="tv-focusable flex size-9 flex-none cursor-pointer items-center justify-center rounded-full bg-linear-to-br from-purple-500 to-fuchsia-600 text-white shadow-lg shadow-purple-900/50 outline-none"
+              className="tv-focusable flex size-9 flex-none cursor-pointer items-center justify-center rounded-full bg-linear-to-br from-accent to-accent-hover text-white shadow-lg shadow-accent/30 outline-none"
             >
               <AnimatePresence mode="wait" initial={false}>
                 <motion.span
