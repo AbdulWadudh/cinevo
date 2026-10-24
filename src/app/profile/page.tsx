@@ -16,6 +16,7 @@ import RadioStationAdmin from "@/components/admin/RadioStationAdmin";
 import ForceSyncButton from "@/components/watch/ForceSyncButton";
 import ClearCacheButton from "@/components/settings/ClearCacheButton";
 import EffectPlayground from "@/components/reveal/EffectPlayground";
+import AppearanceTheme from "@/components/theme/AppearanceTheme";
 import ProfileWorkspace, { type ProfileSection } from "@/components/profile/ProfileWorkspace";
 import PanelCard from "@/components/profile/PanelCard";
 import SettingRow from "@/components/profile/SettingRow";
@@ -72,7 +73,12 @@ export default async function ProfilePage({
       label: "Appearance",
       icon: "palette",
       group: "account",
-      content: <EffectPlayground />,
+      content: (
+        <div className="flex flex-col gap-6">
+          <AppearanceTheme />
+          <EffectPlayground />
+        </div>
+      ),
     },
     {
       id: "data",
@@ -168,7 +174,7 @@ export default async function ProfilePage({
             <form action={signOut}>
               <button
                 type="submit"
-                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-transparent px-5 py-3 text-sm font-semibold text-red-400 transition-all hover:bg-red-500/10"
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-danger/30 bg-transparent px-5 py-3 text-sm font-semibold text-danger transition-all hover:bg-danger/10"
               >
                 <LogOut className="size-4" />
                 Sign Out
