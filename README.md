@@ -21,6 +21,8 @@ Built with **Next.js 16**, **React 19**, **Prisma** and **TMDB**.
 - 🧭 **Browse** with filters for type, genre, year, rating and sort order.
 - 🔎 **Search** across titles *and* people.
 - 💡 **"Because you watched…"** — picks that follow your history.
+- 🏠 **Your Cinevo** — a personal hub for Continue Watching, wishlist episode alerts and tailored suggestions.
+- 🎁 **Daily Five** — five fresh picks each day, revealed one card at a time.
 - 👤 **Person pages** with bio, age and known-for filmography.
 - 🌐 **3D Dome Gallery** — spin through popular titles on an interactive sphere.
 - 🎴 **Mystery Pack** — reveal random picks with filters, shuffle and selectable foil effects.

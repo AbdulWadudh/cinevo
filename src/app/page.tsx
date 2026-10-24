@@ -2,8 +2,8 @@ import React, { Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft, Film } from "lucide-react";
 import Nav from "@/components/Nav";
-import ContinueWatching from "@/components/dashboard/ContinueWatching";
-import BecauseYouWatched from "@/components/dashboard/BecauseYouWatched";
+import PersonalHub from "@/components/dashboard/PersonalHub";
+import DailyFive from "@/components/dashboard/DailyFive";
 import MediaCarousel from "@/components/dashboard/MediaCarousel";
 import BrowseSection from "@/components/dashboard/BrowseSection";
 import GenreSection from "@/components/dashboard/GenreSection";
@@ -22,6 +22,14 @@ interface HomeProps {
     languageName?: string;
     theme?: string;
   }>;
+}
+
+function dailyScore(value: string) {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i++) {
+    hash = Math.imul(hash ^ value.charCodeAt(i), 16777619);
+  }
+  return hash >>> 0;
 }
 
 export default async function Home({ searchParams }: HomeProps) {
@@ -189,6 +197,17 @@ export default async function Home({ searchParams }: HomeProps) {
   const heroTrailers: Record<number, string | null> = {};
   heroItems.forEach((m, i) => { heroTrailers[m.id] = heroTrailerKeys[i]; });
 
+  const day = new Date().toISOString().slice(0, 10);
+  const dailyPool = [
+    ...trendingMovies.slice(6).map((item) => ({ ...item, media_type: "movie" as const })),
+    ...trendingTV.map((item) => ({ ...item, media_type: "tv" as const })),
+  ].filter((item) => item.poster_path);
+  const dailyPicks = dailyPool
+    .map((item) => ({ item, score: dailyScore(`${day}:${item.media_type}:${item.id}`) }))
+    .sort((a, b) => a.score - b.score)
+    .slice(0, 5)
+    .map(({ item }) => item);
+
   return (
     <div className="flex-1 w-full bg-bg pb-12 overflow-x-hidden">
       {/* Dynamic fixed navigation */}
@@ -197,13 +216,9 @@ export default async function Home({ searchParams }: HomeProps) {
       {/* Dynamic Cinematic Hero Carousel */}
       <HeroCarousel items={trendingMovies} trailers={heroTrailers} />
 
-      {/* Continuous Watch Progress Dashboard */}
-      <ContinueWatching />
+      <PersonalHub />
 
-      {/* Personalized recommendations seeded from the latest watch */}
-      <Suspense fallback={null}>
-        <BecauseYouWatched />
-      </Suspense>
+      <DailyFive items={dailyPicks} day={day} />
 
       {/* Branded Studios & Franchises portals */}
       <StudioHubs />
