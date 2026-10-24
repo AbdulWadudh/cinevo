@@ -55,7 +55,7 @@ export default function WishlistButton({
       onClick={handleToggle}
       className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-semibold transition-all border cursor-pointer ${
         exists 
-          ? "border-emerald-500 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/15" 
+          ? "border-success text-success bg-success/10 hover:bg-success/15" 
           : "border-border text-fg-secondary bg-transparent hover:border-fg hover:text-fg"
       }`}
     >

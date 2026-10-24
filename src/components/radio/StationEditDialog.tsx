@@ -121,7 +121,7 @@ function DialogBody({
       <div className="space-y-4 px-5 py-5">
         {mode === "delete" ? (
           <div className="flex gap-3">
-            <div className="flex size-9 flex-none items-center justify-center rounded-lg bg-red-500/15 text-red-400">
+            <div className="flex size-9 flex-none items-center justify-center rounded-lg bg-danger/15 text-danger">
               <AlertTriangle className="size-4.5" />
             </div>
             <div className="min-w-0">
@@ -143,7 +143,7 @@ function DialogBody({
                 onChange={(e) => setName(e.target.value)}
                 disabled={busy}
                 autoFocus
-                className="w-full rounded-lg border border-white/8 bg-surface px-3 py-2 text-sm text-fg outline-none transition-colors focus:border-purple-500/60 disabled:opacity-50"
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg outline-none transition-colors focus:border-accent/60 disabled:opacity-50"
               />
             </Field>
             <Field label="Stream URL">
@@ -153,7 +153,7 @@ function DialogBody({
                 onChange={(e) => setUrl(e.target.value)}
                 disabled={busy}
                 spellCheck={false}
-                className="w-full rounded-lg border border-white/8 bg-surface px-3 py-2 font-mono text-xs text-fg outline-none transition-colors focus:border-purple-500/60 disabled:opacity-50"
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2 font-mono text-xs text-fg outline-none transition-colors focus:border-accent/60 disabled:opacity-50"
               />
             </Field>
           </>
@@ -165,7 +165,7 @@ function DialogBody({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs text-red-300"
+              className="rounded-lg border border-danger/25 bg-danger/10 px-3 py-2 text-xs text-danger"
             >
               {error}
             </motion.p>
@@ -193,8 +193,8 @@ function DialogBody({
           whileTap={reduceMotion || saveDisabled ? undefined : { scale: 0.96 }}
           className={`flex cursor-pointer items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
             mode === "delete"
-              ? "bg-red-600 hover:bg-red-500"
-              : "bg-linear-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500"
+              ? "bg-danger hover:bg-danger/90"
+              : "bg-linear-to-r from-accent-strong to-accent hover:from-accent-strong-hover hover:to-accent-hover"
           }`}
         >
           {busy ? (

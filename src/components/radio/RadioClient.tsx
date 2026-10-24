@@ -767,7 +767,7 @@ export default function RadioClient({
           scroll; only the station grid below does. */}
       <div
         data-radio-sticky=""
-        className="shrink-0 border-b border-white/6 bg-[#07020d]/92 backdrop-blur-xl"
+        className="shrink-0 border-b border-border bg-bg/92 backdrop-blur-xl"
       >
         <RadioHeader
           query={query}
@@ -817,9 +817,9 @@ export default function RadioClient({
             >
               <span
                 aria-hidden="true"
-                className="h-4 w-1 flex-none rounded-full bg-linear-to-b from-purple-400 to-fuchsia-500"
+                className="h-4 w-1 flex-none rounded-full bg-linear-to-b from-accent to-accent-hover"
               />
-              <h2 className="truncate font-display text-base font-bold tracking-tight text-white">
+              <h2 className="truncate font-display text-base font-bold tracking-tight text-fg">
                 {heading}
               </h2>
             </motion.div>
@@ -880,7 +880,7 @@ export default function RadioClient({
                 ref={sentinelRef}
                 className="mt-6 flex items-center justify-center gap-2 py-6 text-xs text-muted"
               >
-                <Loader2 className="size-3.5 animate-spin text-purple-400" />
+                <Loader2 className="size-3.5 animate-spin text-accent" />
                 Loading {Math.min(remaining, PAGE_SIZE)} more…
               </div>
             )}
@@ -970,7 +970,7 @@ function RadioHeader({
         onChange={(e) => onQueryChange(e.target.value)}
         placeholder="Search every station…"
         aria-label="Search stations"
-        className="w-full rounded-xl border border-white/6 bg-surface/70 py-2.5 pl-10 pr-10 text-sm text-fg outline-none transition-colors placeholder:text-muted focus:border-purple-500/50"
+        className="w-full rounded-xl border border-border bg-surface/70 py-2.5 pl-10 pr-10 text-sm text-fg outline-none transition-colors placeholder:text-muted focus:border-accent/50"
       />
       <AnimatePresence>
         {(query || searching) && (
@@ -981,7 +981,7 @@ function RadioHeader({
             className="absolute right-3 top-1/2 -translate-y-1/2"
           >
             {searching ? (
-              <Loader2 className="size-4 animate-spin text-purple-400" />
+              <Loader2 className="size-4 animate-spin text-accent" />
             ) : (
               <button
                 type="button"
@@ -1010,21 +1010,21 @@ function RadioHeader({
       >
         <div className="flex min-w-0 items-center gap-3">
           <motion.div
-            className="flex size-9 flex-none items-center justify-center rounded-xl border border-purple-500/25 bg-purple-950/50 md:size-10"
+            className="flex size-9 flex-none items-center justify-center rounded-xl border border-accent/25 bg-accent/10 md:size-10"
             animate={reduceMotion ? undefined : { scale: [1, 1.06, 1] }}
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
           >
-            <RadioIcon className="size-4.5 text-purple-300 md:size-5" />
+            <RadioIcon className="size-4.5 text-accent md:size-5" />
           </motion.div>
 
           <div className="min-w-0">
             <div className="flex items-center gap-2.5">
-              <h1 className="truncate font-display text-xl font-extrabold tracking-tight text-white md:text-3xl">
+              <h1 className="truncate font-display text-xl font-extrabold tracking-tight text-fg md:text-3xl">
                 Live Radio
               </h1>
-              <Equalizer active bars={4} className="hidden h-4 sm:flex" barClassName="bg-purple-400/70" />
+              <Equalizer active bars={4} className="hidden h-4 sm:flex" barClassName="bg-accent/70" />
               {isAdmin && (
-                <span className="hidden rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300 sm:inline">
+                <span className="hidden rounded-md border border-warning/30 bg-warning/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-warning sm:inline">
                   Admin
                 </span>
               )}
@@ -1050,7 +1050,7 @@ function RadioHeader({
             whileHover={reduceMotion || !canShuffle ? undefined : { scale: 1.06, y: -1 }}
             whileTap={reduceMotion || !canShuffle ? undefined : { scale: 0.94 }}
             transition={{ type: "spring", stiffness: 440, damping: 26 }}
-            className="tv-focusable flex flex-none cursor-pointer items-center gap-2 rounded-xl border border-purple-500/30 bg-purple-500/12 p-2.5 text-sm font-semibold text-purple-200 outline-none transition-colors hover:border-purple-400/60 hover:bg-purple-500/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 md:px-3.5"
+            className="tv-focusable flex flex-none cursor-pointer items-center gap-2 rounded-xl border border-accent/30 bg-accent/12 p-2.5 text-sm font-semibold text-accent outline-none transition-colors hover:border-accent/60 hover:bg-accent/20 hover:text-fg disabled:cursor-not-allowed disabled:opacity-40 md:px-3.5"
           >
             <motion.span
               animate={reduceMotion ? undefined : { rotate: spins * 180 }}
@@ -1124,8 +1124,8 @@ function PanelToggle({
       transition={{ type: "spring", stiffness: 440, damping: 26 }}
       className={`tv-focusable flex-none cursor-pointer rounded-xl border p-2.5 outline-none transition-colors md:hidden ${
         active
-          ? "border-purple-400/60 bg-purple-500/25 text-white"
-          : "border-white/8 bg-surface/70 text-fg-secondary"
+          ? "border-accent/60 bg-accent/25 text-fg"
+          : "border-border bg-surface/70 text-fg-secondary"
       }`}
     >
       {children}

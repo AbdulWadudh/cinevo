@@ -122,13 +122,13 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
                 <button
                   onClick={() => removeKeys([...selected])}
                   disabled={selected.size === 0}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-bold bg-red-500/15 border border-red-500/30 text-red-400 hover:bg-red-500/25 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-bold bg-danger/15 border border-danger/30 text-danger hover:bg-danger/25 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Trash2 className="w-4 h-4" /> Delete ({selected.size})
                 </button>
                 <button
                   onClick={exitSelect}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-white/[0.05] border border-white/[0.1] text-fg-secondary hover:text-fg transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-surface border border-border text-fg-secondary hover:text-fg transition-all cursor-pointer"
                 >
                   <X className="w-4 h-4" /> Cancel
                 </button>
@@ -137,7 +137,7 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
               <>
                 <button
                   onClick={() => setSelectMode(true)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-white/[0.05] border border-white/[0.1] text-fg-secondary hover:text-fg hover:bg-white/[0.09] transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-surface border border-border text-fg-secondary hover:text-fg hover:bg-surface-hover transition-all cursor-pointer"
                 >
                   <CheckSquare className="w-4 h-4" /> Select
                 </button>
@@ -145,7 +145,7 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
                   <button
                     onClick={clearEverything}
                     disabled={pending}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-bold bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 transition-all cursor-pointer disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-bold bg-danger/20 border border-danger/40 text-danger hover:bg-danger/30 transition-all cursor-pointer disabled:opacity-50"
                   >
                     {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                     Confirm clear all
@@ -153,7 +153,7 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
                 ) : (
                   <button
                     onClick={() => setConfirmClear(true)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-white/[0.05] border border-white/[0.1] text-fg-secondary hover:text-red-400 hover:border-red-500/40 transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-surface border border-border text-fg-secondary hover:text-danger hover:border-danger/40 transition-all cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4" /> Clear all
                   </button>
@@ -161,7 +161,7 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
                 {confirmClear && (
                   <button
                     onClick={() => setConfirmClear(false)}
-                    className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-white/[0.05] border border-white/[0.1] text-muted hover:text-fg transition-all cursor-pointer"
+                    className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-surface border border-border text-muted hover:text-fg transition-all cursor-pointer"
                     aria-label="Cancel clear all"
                   >
                     <X className="w-4 h-4" />
@@ -174,7 +174,7 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 mb-4 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+        <div className="flex items-center gap-2 mb-4 text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
           <AlertCircle className="w-4 h-4 flex-none" />
           <span>{error}</span>
         </div>
@@ -224,7 +224,7 @@ export default function HistoryClient({ initial }: { initial: HistoryItem[] }) {
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeKeys([key]); }}
                         title="Remove from history"
                         aria-label="Remove from history"
-                        className="absolute top-2 right-2 z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-red-500/80 border border-white/10 hover:border-red-400 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                        className="absolute top-2 right-2 z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-danger/80 border border-white/10 hover:border-danger text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

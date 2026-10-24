@@ -30,7 +30,7 @@ export default function ForceSyncButton() {
       className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-white/[0.05] border border-white/[0.1] text-fg-secondary hover:text-fg hover:bg-white/[0.09] transition-all cursor-pointer disabled:opacity-60"
     >
       {state === "done"
-        ? <><Check className="w-4 h-4 text-emerald-400" /> Synced</>
+        ? <><Check className="w-4 h-4 text-success" /> Synced</>
         : <><RefreshCw className={`w-4 h-4 ${state === "syncing" ? "animate-spin" : ""}`} /> {state === "syncing" ? "Syncing…" : "Sync watch history"}</>}
     </button>
   );

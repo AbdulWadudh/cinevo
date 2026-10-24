@@ -42,7 +42,7 @@ export default async function RadioPage() {
 
   return (
     // Locked to the viewport: the station grid owns the only scrollbar.
-    <div className="flex h-screen w-full flex-col overflow-hidden bg-[#07020d] bg-linear-to-b from-purple-950/20 via-bg to-bg text-fg">
+    <div className="flex h-screen w-full flex-col overflow-hidden bg-bg bg-linear-to-b from-accent/10 via-bg to-bg text-fg">
       <Nav />
       <RadioClient
         initialSlug={initialSlug}

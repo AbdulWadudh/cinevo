@@ -43,7 +43,7 @@ export default function ProviderReportsAdmin({ rows, setRows, counts }: Props) {
       {counts.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
           {counts.map((c) => (
-            <span key={c.providerKey} className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-orange-500/10 text-orange-300 border border-orange-500/20 px-2.5 py-1 rounded-full">
+            <span key={c.providerKey} className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-warning/10 text-warning border border-warning/20 px-2.5 py-1 rounded-full">
               <AlertTriangle className="w-3 h-3" /> {c.providerKey}: {c.count}
             </span>
           ))}
@@ -71,7 +71,7 @@ export default function ProviderReportsAdmin({ rows, setRows, counts }: Props) {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-bold text-fg">{r.providerLabel || r.providerKey}</span>
                     <span className="text-[10px] font-mono text-muted bg-white/[0.05] px-1.5 py-0.5 rounded">{r.mediaType}/{r.mediaId}</span>
-                    {r.resolved && <span className="text-[9px] font-extrabold uppercase tracking-widest text-emerald-400">resolved</span>}
+                    {r.resolved && <span className="text-[9px] font-extrabold uppercase tracking-widest text-success">resolved</span>}
                   </div>
                   <p className="text-[11px] text-muted truncate mt-0.5">
                     {r.title || "Untitled"} &bull; {new Date(r.createdAt).toLocaleString()}
@@ -82,7 +82,7 @@ export default function ProviderReportsAdmin({ rows, setRows, counts }: Props) {
                     onClick={() => toggle(r.id, !r.resolved)}
                     disabled={busy === r.id}
                     title={r.resolved ? "Mark unresolved" : "Mark resolved"}
-                    className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.1] text-fg-secondary hover:text-emerald-400 hover:border-emerald-500/40 transition-all cursor-pointer"
+                    className="flex items-center justify-center w-8 h-8 rounded-lg bg-surface border border-border text-fg-secondary hover:text-success hover:border-success/40 transition-all cursor-pointer"
                   >
                     {busy === r.id ? <Loader2 className="w-4 h-4 animate-spin" /> : r.resolved ? <RotateCcw className="w-3.5 h-3.5" /> : <Check className="w-4 h-4" />}
                   </button>
@@ -90,7 +90,7 @@ export default function ProviderReportsAdmin({ rows, setRows, counts }: Props) {
                     onClick={() => remove(r.id)}
                     disabled={busy === r.id}
                     title="Delete report"
-                    className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.1] text-fg-secondary hover:text-red-400 hover:border-red-500/40 transition-all cursor-pointer"
+                    className="flex items-center justify-center w-8 h-8 rounded-lg bg-surface border border-border text-fg-secondary hover:text-danger hover:border-danger/40 transition-all cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>

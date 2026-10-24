@@ -74,7 +74,7 @@ export default function WishlistGrid() {
         </p>
         <Link 
           href="/" 
-          className="bg-accent-strong hover:bg-accent-strong-hover text-white text-sm font-bold px-6 py-3 rounded-lg hover:shadow-[0_4px_20px_rgba(229,62,79,0.3)] transition-all cursor-pointer"
+          className="bg-accent-strong hover:bg-accent-strong-hover text-white text-sm font-bold px-6 py-3 rounded-lg hover:shadow-[0_4px_20px_rgba(var(--accent-rgb),0.3)] transition-all cursor-pointer"
         >
           Browse Content
         </Link>
@@ -108,7 +108,7 @@ export default function WishlistGrid() {
                 {/* Centered Play Button Hover Overlay */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity duration-300 z-20">
                   <Link href={watchUrl} className="absolute inset-0 z-10 cursor-pointer" />
-                  <div className="w-12 h-12 bg-accent-strong text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(229,62,79,0.45)] transform scale-75 group-hover:scale-100 transition-transform duration-300 relative z-20">
+                  <div className="w-12 h-12 bg-accent-strong text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(var(--accent-rgb),0.45)] transform scale-75 group-hover:scale-100 transition-transform duration-300 relative z-20">
                     <Play className="w-5 h-5 fill-white translate-x-0.5" />
                   </div>
                 </div>

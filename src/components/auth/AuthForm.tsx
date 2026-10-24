@@ -63,7 +63,7 @@ export default function AuthForm({ redirect = "/" }: { redirect?: string }) {
                 required
                 autoComplete="email"
                 placeholder="you@example.com"
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl pl-10 pr-3 py-2.5 text-sm text-fg outline-none focus:border-accent/60 transition-colors"
+                className="w-full bg-surface/60 border border-border rounded-xl pl-10 pr-3 py-2.5 text-sm text-fg outline-none focus:border-accent/60 transition-colors"
               />
             </div>
           </label>
@@ -79,19 +79,19 @@ export default function AuthForm({ redirect = "/" }: { redirect?: string }) {
                 minLength={6}
                 autoComplete={isSignIn ? "current-password" : "new-password"}
                 placeholder="••••••••"
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl pl-10 pr-3 py-2.5 text-sm text-fg outline-none focus:border-accent/60 transition-colors"
+                className="w-full bg-surface/60 border border-border rounded-xl pl-10 pr-3 py-2.5 text-sm text-fg outline-none focus:border-accent/60 transition-colors"
               />
             </div>
           </label>
 
           {state.error && (
-            <div className="flex items-start gap-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+            <div className="flex items-start gap-2 text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
               <AlertCircle className="w-4 h-4 flex-none mt-0.5" />
               <span>{state.error}</span>
             </div>
           )}
           {state.message && (
-            <div className="flex items-start gap-2 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
+            <div className="flex items-start gap-2 text-xs text-success bg-success/10 border border-success/20 rounded-lg px-3 py-2">
               <CheckCircle2 className="w-4 h-4 flex-none mt-0.5" />
               <span>{state.message}</span>
             </div>

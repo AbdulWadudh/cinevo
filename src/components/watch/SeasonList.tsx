@@ -300,8 +300,8 @@ export default function SeasonList({
           to   { opacity: 1; max-height: 9999px; transform: scaleY(1);   }
         }
         @keyframes glowPulse {
-          0%,100% { box-shadow: 0 0 10px rgba(229,62,79,0.3); }
-          50%      { box-shadow: 0 0 28px rgba(229,62,79,0.7), 0 0 60px rgba(229,62,79,0.2); }
+          0%,100% { box-shadow: 0 0 10px rgba(var(--accent-rgb),0.3); }
+          50%      { box-shadow: 0 0 28px rgba(var(--accent-rgb),0.7), 0 0 60px rgba(var(--accent-rgb),0.2); }
         }
         @keyframes badgePop {
           0%  { transform: scale(0.5); opacity: 0; }
@@ -321,8 +321,8 @@ export default function SeasonList({
           to   { opacity: 1; transform: translateY(0)    scale(1);    }
         }
         @keyframes cardHoverGlow {
-          0%,100% { box-shadow: 0 0 0 0 rgba(229,62,79,0); }
-          50%     { box-shadow: 0 0 0 2px rgba(229,62,79,0.25); }
+          0%,100% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb),0); }
+          50%     { box-shadow: 0 0 0 2px rgba(var(--accent-rgb),0.25); }
         }
         .season-card-enter  { animation: slideInUp  0.55s cubic-bezier(0.22,1,0.36,1) both; }
         .ep-card-enter      { animation: fadeInSlide 0.4s  cubic-bezier(0.22,1,0.36,1) both; }
@@ -388,7 +388,7 @@ export default function SeasonList({
                 ref={(el) => { seasonCardRefs.current[s.season_number] = el; }}
                 className={`flex flex-col border border-white/[0.05] bg-gradient-to-br from-surface/30 to-surface/10 rounded-2xl overflow-hidden transition-all duration-500 shadow-lg ${
                   isExpanded
-                    ? "border-accent/20 shadow-[0_4px_40px_rgba(229,62,79,0.08)]"
+                    ? "border-accent/20 shadow-[0_4px_40px_rgba(var(--accent-rgb),0.08)]"
                     : "hover:border-white/[0.12] hover:shadow-2xl"
                 } ${isVisible ? "season-card-enter" : "opacity-0"} season-card-clickable`}
                 style={{ animationDelay: isVisible ? `${idx * 80}ms` : undefined }}
@@ -452,7 +452,7 @@ export default function SeasonList({
                           {year}
                         </span>
                         {watchedInSeason(s.season_number) > 0 && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded-full">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold bg-success/15 text-success border border-success/25 px-2 py-0.5 rounded-full">
                             <Check className="w-2.5 h-2.5" />
                             {watchedInSeason(s.season_number)}/{s.episode_count} watched
                           </span>
@@ -566,7 +566,7 @@ export default function SeasonList({
                                 />
                                 {/* Hover play overlay */}
                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-all duration-300 bg-black/30">
-                                  <div className="w-9 h-9 bg-accent-strong rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(229,62,79,0.6)] scale-50 group-hover/row:scale-100 transition-transform duration-300">
+                                  <div className="w-9 h-9 bg-accent-strong rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(var(--accent-rgb),0.6)] scale-50 group-hover/row:scale-100 transition-transform duration-300">
                                     <Play className="w-3.5 h-3.5 fill-white translate-x-0.5" />
                                   </div>
                                 </div>
@@ -576,7 +576,7 @@ export default function SeasonList({
                                 </div>
                                 {/* Watched check */}
                                 {watched.has(`${s.season_number}:${ep.episode_number}`) && (
-                                  <div className="absolute bottom-1.5 right-1.5 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shadow-md badge-pop">
+                                  <div className="absolute bottom-1.5 right-1.5 w-5 h-5 rounded-full bg-success flex items-center justify-center shadow-md badge-pop">
                                     <Check className="w-3 h-3 text-white stroke-[3]" />
                                   </div>
                                 )}

@@ -87,7 +87,7 @@ export default function PlayerBar({
             {/* Ambient glow that breathes while on air. */}
             <motion.div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-r from-purple-600/15 via-fuchsia-600/8 to-transparent"
+              className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-r from-accent/15 via-accent-hover/8 to-transparent"
               animate={playing && !reduceMotion ? { opacity: [0.45, 0.9, 0.45] } : { opacity: 0.35 }}
               transition={playing ? { duration: 3.5, repeat: Infinity, ease: "easeInOut" } : { duration: 0.3 }}
             />
@@ -102,7 +102,7 @@ export default function PlayerBar({
                   exit={{ opacity: 0 }}
                 >
                   <motion.div
-                    className="h-full w-1/3 bg-linear-to-r from-transparent via-purple-400 to-transparent"
+                    className="h-full w-1/3 bg-linear-to-r from-transparent via-accent to-transparent"
                     animate={reduceMotion ? undefined : { x: ["-100%", "300%"] }}
                     transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
                   />
@@ -126,8 +126,8 @@ export default function PlayerBar({
                   <motion.div
                     className={`flex size-11 flex-none items-center justify-center rounded-xl border ${
                       warn
-                        ? "border-amber-500/30 bg-amber-950/40 text-amber-400"
-                        : "border-purple-500/25 bg-purple-950/40 text-purple-300"
+                        ? "border-warning/30 bg-warning/10 text-warning"
+                        : "border-accent/25 bg-accent/10 text-accent"
                     }`}
                     animate={playing && !reduceMotion ? { scale: [1, 1.07, 1] } : { scale: 1 }}
                     transition={playing ? { duration: 2, repeat: Infinity, ease: "easeInOut" } : { duration: 0.2 }}
@@ -149,10 +149,10 @@ export default function PlayerBar({
                       </motion.h4>
                     </AnimatePresence>
                     <div className="mt-0.5 flex items-center gap-2">
-                      {playing && <Equalizer active bars={4} className="h-3" barClassName="bg-purple-400" />}
+                      {playing && <Equalizer active bars={4} className="h-3" barClassName="bg-accent" />}
                       <p
                         className={`truncate text-xs ${
-                          warn ? "text-amber-400/90" : playing ? "text-purple-200" : "text-fg-secondary"
+                          warn ? "text-warning/90" : playing ? "text-accent" : "text-fg-secondary"
                         }`}
                       >
                         {blocked
@@ -183,7 +183,7 @@ export default function PlayerBar({
                     whileHover={reduceMotion ? undefined : { scale: 1.08 }}
                     whileTap={reduceMotion ? undefined : { scale: 0.9 }}
                     transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                    className="tv-focusable flex size-11 cursor-pointer items-center justify-center rounded-full bg-linear-to-br from-purple-500 to-fuchsia-600 text-white shadow-lg shadow-purple-900/50 outline-none"
+                    className="tv-focusable flex size-11 cursor-pointer items-center justify-center rounded-full bg-linear-to-br from-accent to-accent-hover text-white shadow-lg shadow-accent/30 outline-none"
                   >
                     <AnimatePresence mode="wait" initial={false}>
                       <motion.span
@@ -252,7 +252,7 @@ export default function PlayerBar({
                 >
                   <Flag
                     className={`size-4.5 transition-colors ${
-                      station.isBroken ? "fill-amber-500/25 text-amber-400" : "text-fg-secondary hover:text-amber-400"
+                      station.isBroken ? "fill-warning/25 text-warning" : "text-fg-secondary hover:text-warning"
                     }`}
                   />
                 </motion.button>
@@ -269,7 +269,7 @@ export default function PlayerBar({
                 >
                   <Heart
                     className={`size-5 transition-colors ${
-                      isFavorite ? "fill-pink-500 text-pink-500" : "text-fg-secondary hover:text-pink-400"
+                      isFavorite ? "fill-accent text-accent" : "text-fg-secondary hover:text-accent"
                     }`}
                   />
                 </motion.button>

@@ -76,7 +76,7 @@ export default function GenreSection({
             theme === "hbo" ? "group-hover:border-white group-hover:shadow-[0_8px_25px_rgba(255,255,255,0.15)]" :
             theme === "animation" ? "group-hover:border-purple-400 group-hover:shadow-[0_8px_25px_rgba(168,85,247,0.3)]" :
             theme === "bollywood" ? "group-hover:border-amber-500 group-hover:shadow-[0_8px_25px_rgba(245,158,11,0.3)]" :
-            "group-hover:border-accent group-hover:shadow-[0_8px_25px_rgba(229,62,79,0.3)]";
+            "group-hover:border-accent group-hover:shadow-[0_8px_25px_rgba(var(--accent-rgb),0.3)]";
 
           const playBgClass = 
             theme === "marvel" ? "bg-red-600 shadow-[0_4px_20px_rgba(239,68,68,0.55)] text-white" :
@@ -84,7 +84,7 @@ export default function GenreSection({
             theme === "hbo" ? "bg-white text-black shadow-[0_4px_20px_rgba(255,255,255,0.3)]" :
             theme === "animation" ? "bg-purple-600 shadow-[0_4px_20px_rgba(168,85,247,0.55)] text-white" :
             theme === "bollywood" ? "bg-amber-600 shadow-[0_4px_20px_rgba(245,158,11,0.55)] text-white" :
-            "bg-accent-strong shadow-[0_4px_20px_rgba(229,62,79,0.45)] text-white";
+            "bg-accent-strong shadow-[0_4px_20px_rgba(var(--accent-rgb),0.45)] text-white";
 
           const titleHoverClass = 
             theme === "marvel" ? "group-hover:text-red-500" :

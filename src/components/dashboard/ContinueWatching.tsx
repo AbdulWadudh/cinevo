@@ -104,7 +104,7 @@ export default function ContinueWatching() {
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeFromHistory(item); }}
                       title="Remove from history"
                       aria-label="Remove from history"
-                      className="absolute top-2 right-2 z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-red-500/80 border border-white/10 hover:border-red-400 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                      className="absolute top-2 right-2 z-20 w-8 h-8 rounded-lg bg-black/60 hover:bg-danger/80 border border-white/10 hover:border-danger text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

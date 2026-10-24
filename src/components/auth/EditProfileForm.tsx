@@ -135,7 +135,7 @@ export default function EditProfileForm({ username, avatarUrl, email }: EditProf
           </div>
 
           {imageBroken && (
-            <p className="flex items-center gap-1.5 text-[11px] text-orange-400">
+            <p className="flex items-center gap-1.5 text-[11px] text-warning">
               <ImageOff className="size-3.5 flex-none" />
               That image didn&apos;t load
             </p>
@@ -164,8 +164,8 @@ function Alert({
       transition={{ duration: 0.22, ease: "easeOut" }}
       className={`flex items-start gap-2 overflow-hidden rounded-lg border px-3 py-2 text-xs ${
         error
-          ? "border-red-500/20 bg-red-500/10 text-red-400"
-          : "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+          ? "border-danger/20 bg-danger/10 text-danger"
+          : "border-success/20 bg-success/10 text-success"
       }`}
     >
       {error ? (

@@ -159,7 +159,7 @@ export default function PreferencePanel({
         <button
           onClick={submit}
           disabled={loading}
-          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover active:scale-95 transition-all shadow-[0_8px_30px_rgba(229,62,79,0.35)] cursor-pointer disabled:opacity-60"
+          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover active:scale-95 transition-all shadow-[0_8px_30px_rgba(var(--accent-rgb),0.35)] cursor-pointer disabled:opacity-60"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
           Reveal {count} {count === 1 ? "pick" : "picks"}

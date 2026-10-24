@@ -148,7 +148,7 @@ export default function DailyFive({
 													: { y: -6, rotate: index % 2 === 0 ? -1 : 1 }
 											}
 											whileTap={{ scale: 0.97 }}
-											className="relative flex h-full w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-accent/25 bg-[radial-gradient(circle_at_50%_20%,rgba(229,62,79,0.2),transparent_55%),linear-gradient(145deg,#191927,#0e0e18)] text-fg shadow-xl transition-colors hover:border-accent/60"
+											className="relative flex h-full w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-accent/25 bg-[radial-gradient(circle_at_50%_20%,rgba(var(--accent-rgb),0.2),transparent_55%),linear-gradient(145deg,var(--color-card,#191927),var(--color-bg-elevated,#0e0e18))] text-fg shadow-xl transition-colors hover:border-accent/60"
 											aria-label={`Reveal daily pick ${index + 1}`}
 										>
 											<span className="mb-5 grid size-12 place-items-center rounded-2xl border border-accent/25 bg-accent/10 text-accent">

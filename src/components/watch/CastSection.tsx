@@ -34,7 +34,7 @@ export default function CastSection({ cast }: CastSectionProps) {
                   className="block text-center group cursor-pointer hover:scale-105 transition-all duration-350 p-2 rounded-2xl"
                 >
                   {/* Portrait photo */}
-                  <div className="w-full aspect-3/4 mb-3 rounded-xl overflow-hidden bg-surface border-2 border-border transition-all shadow-md relative group-hover:shadow-[0_0_15px_rgba(229,62,79,0.25)]">
+                  <div className="w-full aspect-3/4 mb-3 rounded-xl overflow-hidden bg-surface border-2 border-border transition-all shadow-md relative group-hover:shadow-[0_0_15px_rgba(var(--accent-rgb),0.25)]">
                     <Image
                       src={c.profile_path ? `https://image.tmdb.org/t/p/w500${c.profile_path}` : `https://i.pravatar.cc/500?u=${c.id}`}
                       alt={c.name}
@@ -61,7 +61,7 @@ export default function CastSection({ cast }: CastSectionProps) {
             <div className="flex justify-center mt-6">
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-full text-xs font-bold tracking-wider uppercase border border-accent/30 text-white bg-accent/10 hover:bg-accent-strong hover:border-accent hover:shadow-[0_4px_15px_rgba(229,62,79,0.3)] transition-all duration-300 cursor-pointer shadow-lg"
+                className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-full text-xs font-bold tracking-wider uppercase border border-accent/30 text-white bg-accent/10 hover:bg-accent-strong hover:border-accent hover:shadow-[0_4px_15px_rgba(var(--accent-rgb),0.3)] transition-all duration-300 cursor-pointer shadow-lg"
               >
                 {isExpanded ? (
                   <>

@@ -151,7 +151,7 @@ function DialogBody({ userId }: { userId: string }) {
             ))}
           </div>
         ) : error && !data ? (
-          <p className="py-10 text-center text-sm text-red-400">{error}</p>
+          <p className="py-10 text-center text-sm text-danger">{error}</p>
         ) : !data || data.entries.length === 0 ? (
           <div className="py-12 text-center">
             <Clock className="mx-auto mb-3 size-8 text-muted" />
@@ -227,7 +227,7 @@ function DialogBody({ userId }: { userId: string }) {
                               animate={{ width: `${pct}%` }}
                               transition={{ duration: 0.5, ease: "easeOut" }}
                               className={`h-full rounded-full ${
-                                pct >= 90 ? "bg-emerald-400" : "bg-accent-strong"
+                                pct >= 90 ? "bg-success" : "bg-accent-strong"
                               }`}
                             />
                           </div>

@@ -128,7 +128,7 @@ export default function NotificationBell({
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-bold text-fg truncate">{n.title}</p>
                         <p className="text-[11px] text-muted truncate">S{n.season} E{n.episode} · {n.episodeName}</p>
-                        <span className={`inline-flex items-center gap-1 mt-0.5 text-[9px] font-extrabold uppercase tracking-widest ${n.kind === "upcoming" ? "text-sky-400" : "text-emerald-400"}`}>
+                        <span className={`inline-flex items-center gap-1 mt-0.5 text-[9px] font-extrabold uppercase tracking-widest ${n.kind === "upcoming" ? "text-blue" : "text-success"}`}>
                           {n.kind === "upcoming" ? <CalendarClock className="w-2.5 h-2.5" /> : <Sparkles className="w-2.5 h-2.5" />}
                           {n.kind === "upcoming" ? `Airs ${n.airDate}` : "New episode"}
                         </span>

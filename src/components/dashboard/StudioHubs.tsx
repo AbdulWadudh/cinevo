@@ -20,7 +20,7 @@ const HUBS: HubItem[] = [
     name: "Marvel",
     href: "/?company=420|7505&companyName=Marvel+Universe&theme=marvel",
     theme: "marvel",
-    glowColor: "rgba(229,62,79,0.5)", // Red glow
+    glowColor: "rgba(var(--accent-rgb),0.5)", // Red glow
     logoText: "MARVEL",
     tagline: "STUDIOS",
     bgGradient: "from-red-600/20 to-red-950/40",
@@ -132,7 +132,7 @@ export default function StudioHubs() {
               whileHover={{
                 scale: 1.05,
                 boxShadow: `0 10px 30px ${hub.glowColor}`,
-                borderColor: hub.theme === "marvel" ? "rgba(229,62,79,0.4)" :
+                borderColor: hub.theme === "marvel" ? "rgba(var(--accent-rgb),0.4)" :
                   hub.theme === "dc" ? "rgba(14,165,233,0.4)" :
                     hub.theme === "hbo" ? "rgba(255,255,255,0.3)" :
                       hub.theme === "animation" ? "rgba(168,85,247,0.4)" :

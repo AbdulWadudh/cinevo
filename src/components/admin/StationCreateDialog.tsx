@@ -118,7 +118,7 @@ function CreateForm({
             disabled={busy}
             autoFocus
             placeholder="e.g. Radio Paradise"
-            className="w-full rounded-lg border border-white/8 bg-surface px-3 py-2 text-sm text-fg outline-none transition-colors placeholder:text-muted focus:border-purple-500/60 disabled:opacity-50"
+            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg outline-none transition-colors placeholder:text-muted focus:border-accent/60 disabled:opacity-50"
           />
         </Field>
 
@@ -130,7 +130,7 @@ function CreateForm({
             disabled={busy}
             spellCheck={false}
             placeholder="https://stream.example.com/listen"
-            className="w-full rounded-lg border border-white/8 bg-surface px-3 py-2 font-mono text-xs text-fg outline-none transition-colors placeholder:text-muted focus:border-purple-500/60 disabled:opacity-50"
+            className="w-full rounded-lg border border-border bg-surface px-3 py-2 font-mono text-xs text-fg outline-none transition-colors placeholder:text-muted focus:border-accent/60 disabled:opacity-50"
           />
         </Field>
 
@@ -156,7 +156,7 @@ function CreateForm({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs text-red-300"
+              className="rounded-lg border border-danger/25 bg-danger/10 px-3 py-2 text-xs text-danger"
             >
               {error}
             </motion.p>
@@ -187,7 +187,7 @@ function CreateForm({
           disabled={busy || !valid}
           whileHover={reduceMotion || !valid ? undefined : { scale: 1.03 }}
           whileTap={reduceMotion || !valid ? undefined : { scale: 0.96 }}
-          className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-linear-to-r from-purple-600 to-fuchsia-600 px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:from-purple-500 hover:to-fuchsia-500 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-linear-to-r from-accent-strong to-accent px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:from-accent-strong-hover hover:to-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
         >
           {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />}
           Add station
@@ -276,16 +276,16 @@ function CategoryPicker({
         aria-haspopup="listbox"
         aria-expanded={open}
         className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left text-sm outline-none transition-colors disabled:opacity-50 ${
-          open ? "border-purple-500/60 bg-purple-500/10" : "border-white/8 bg-surface"
+          open ? "border-accent/60 bg-accent/10" : "border-border bg-surface"
         }`}
       >
         <span className={`truncate ${selected || newCategory ? "text-fg" : "text-muted"}`}>
-          {newCategory && <Sparkles className="mr-1.5 inline size-3 text-amber-400" />}
+          {newCategory && <Sparkles className="mr-1.5 inline size-3 text-warning" />}
           {label}
         </span>
         <ChevronDown
           className={`size-3.5 flex-none text-muted transition-transform duration-200 ${
-            open ? "rotate-180 text-purple-400" : ""
+            open ? "rotate-180 text-accent" : ""
           }`}
         />
       </button>
@@ -317,7 +317,7 @@ function CategoryPicker({
                 <button
                   type="button"
                   onClick={() => choose(() => onCreateNew(q))}
-                  className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-amber-300 transition-colors hover:bg-amber-500/10"
+                  className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-warning transition-colors hover:bg-warning/10"
                 >
                   <Sparkles className="size-3.5 flex-none" />
                   Create category “{q}”
@@ -345,14 +345,14 @@ function CategoryPicker({
                       }`}
                     >
                       <span className="flex min-w-0 items-center gap-1.5">
-                        {opt.isCustom && <Sparkles className="size-3 flex-none text-amber-400" />}
+                        {opt.isCustom && <Sparkles className="size-3 flex-none text-warning" />}
                         <span className="truncate">{opt.name}</span>
                       </span>
                       <span className="flex flex-none items-center gap-1.5">
                         <span className="text-[10px] tabular-nums text-muted">
                           {opt.stationCount}
                         </span>
-                        {active && <Check className="size-3 text-purple-400" />}
+                        {active && <Check className="size-3 text-accent" />}
                       </span>
                     </button>
                   );

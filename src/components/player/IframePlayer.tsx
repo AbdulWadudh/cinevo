@@ -122,7 +122,7 @@ function CustomDropdown({ icon, label, options, value, onChange, onOpenChange, d
         className={`flex items-center gap-1.5 sm:gap-2 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl border transition-all duration-200 outline-none group/trigger ${disabled
           ? "bg-white/3 border-white/6 opacity-60 cursor-not-allowed"
           : open
-            ? "bg-accent/20 border-accent/60 shadow-[0_0_16px_rgba(229,62,79,0.15)] cursor-pointer"
+            ? "bg-accent/20 border-accent/60 shadow-[0_0_16px_rgba(var(--accent-rgb),0.15)] cursor-pointer"
             : "bg-white/5 border-white/10 hover:bg-white/9 hover:border-white/20 cursor-pointer"
           }`}
         aria-haspopup="listbox"
@@ -698,8 +698,8 @@ export default function IframePlayer({
               title={reported ? "Thanks — reported" : "Report this provider as not working"}
               aria-label="Report broken provider"
               className={`flex items-center gap-1.5 px-2 py-1.5 sm:px-2.5 rounded-lg border transition-all duration-300 cursor-pointer shrink-0 ${reported
-                ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
-                : "bg-white/4 border-white/8 text-muted hover:text-accent hover:border-accent/40"
+                ? "bg-success/10 border-success/25 text-success"
+                : "bg-surface/60 border-border text-muted hover:text-accent hover:border-accent/40"
                 }`}
             >
               <Flag className="w-3 h-3" />
@@ -800,16 +800,16 @@ export default function IframePlayer({
 
         {/* No-sandbox advisory — this provider can't be ad-protected */}
         {sandboxMode === "off" && !noticeDismissed && (
-          <div className="mt-2 flex items-center gap-2 rounded-xl border border-orange-500/25 bg-orange-500/8 px-2.5 py-1.5 sm:px-3 sm:py-2 animate-fade-in">
-            <ShieldOff className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-400 shrink-0" />
-            <p className="text-[10px] sm:text-xs text-orange-200/90 leading-snug flex-1">
-              <b className="text-orange-300">Ad protection off</b> on {activeProvider?.label ?? "this provider"} — it doesn&apos;t allow blocking, so pop-ups/ads may appear. For a clean experience, use an ad-blocker like{" "}
-              <a href="https://ublockorigin.com" target="_blank" rel="noreferrer" className="underline hover:text-orange-100">uBlock Origin</a>, or pick another provider.
+          <div className="mt-2 flex items-center gap-2 rounded-xl border border-warning/25 bg-warning/8 px-2.5 py-1.5 sm:px-3 sm:py-2 animate-fade-in">
+            <ShieldOff className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-warning shrink-0" />
+            <p className="text-[10px] sm:text-xs text-warning/90 leading-snug flex-1">
+              <b className="text-warning">Ad protection off</b> on {activeProvider?.label ?? "this provider"} — it doesn&apos;t allow blocking, so pop-ups/ads may appear. For a clean experience, use an ad-blocker like{" "}
+              <a href="https://ublockorigin.com" target="_blank" rel="noreferrer" className="underline hover:text-fg">uBlock Origin</a>, or pick another provider.
             </p>
             <button
               onClick={() => setNoticeDismissed(true)}
               aria-label="Dismiss notice"
-              className="shrink-0 text-orange-300/60 hover:text-orange-200 transition-colors cursor-pointer"
+              className="shrink-0 text-warning/60 hover:text-warning transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>

@@ -64,14 +64,14 @@ export default function EqualizerPanel({
         whileTap={reduceMotion ? undefined : { scale: 0.85 }}
         transition={{ type: "spring", stiffness: 500, damping: 18 }}
         className={`tv-focusable relative cursor-pointer outline-none transition-colors ${
-          active ? "text-purple-300" : "text-fg-secondary hover:text-white"
+          active ? "text-accent" : "text-fg-secondary hover:text-fg"
         }`}
       >
         <SlidersHorizontal className="size-4.5" />
         {active && (
           <motion.span
             layoutId={reduceMotion ? undefined : "eq-active-dot"}
-            className="absolute -right-0.5 -top-0.5 size-1.5 rounded-full bg-purple-400"
+            className="absolute -right-0.5 -top-0.5 size-1.5 rounded-full bg-accent"
           />
         )}
       </motion.button>
@@ -95,13 +95,13 @@ export default function EqualizerPanel({
             </div>
 
             {!supported ? (
-              <p className="text-xs text-amber-400/90">
+              <p className="text-xs text-warning/90">
                 Your browser doesn&apos;t support Web Audio processing.
               </p>
             ) : (
               <>
                 {pending && (
-                  <p className="mb-3 flex items-center gap-1.5 text-xs text-purple-300">
+                  <p className="mb-3 flex items-center gap-1.5 text-xs text-accent">
                     <Loader2 className="size-3 animate-spin" />
                     Reconnecting the stream…
                   </p>
@@ -151,7 +151,7 @@ export default function EqualizerPanel({
                           transition={{ type: "spring", stiffness: 460, damping: 28 }}
                           className={`cursor-pointer rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-colors ${
                             isActive
-                              ? "border-purple-400/60 bg-purple-500/25 text-white"
+                              ? "border-accent/60 bg-accent/25 text-white"
                               : "border-white/8 bg-surface/60 text-fg-secondary hover:text-white"
                           }`}
                         >
@@ -223,7 +223,7 @@ function BandSlider({
 
   return (
     <div className="flex flex-1 flex-col items-center gap-1.5">
-      <span className={`text-[11px] font-bold tabular-nums ${value === 0 ? "text-muted" : "text-purple-300"}`}>
+      <span className={`text-[11px] font-bold tabular-nums ${value === 0 ? "text-muted" : "text-accent"}`}>
         {value > 0 ? `+${value}` : value}
       </span>
 
@@ -259,7 +259,7 @@ function BandSlider({
         {/* Fill from centre toward the current gain */}
         <motion.span
           className={`absolute inset-x-1.5 rounded-full ${
-            isBoost ? "bg-linear-to-t from-purple-500 to-fuchsia-400" : "bg-linear-to-b from-sky-500 to-cyan-400"
+            isBoost ? "bg-linear-to-t from-accent to-accent-hover" : "bg-linear-to-b from-blue to-blue/60"
           }`}
           animate={{
             top: isBoost ? `${100 - pct}%` : "50%",
@@ -270,7 +270,7 @@ function BandSlider({
 
         {/* Thumb */}
         <motion.span
-          className="absolute left-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-lg ring-2 ring-purple-500/50"
+          className="absolute left-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-lg ring-2 ring-accent/50"
           animate={{ top: `${100 - pct}%`, scale: dragging ? 1.2 : 1 }}
           transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 32 }}
         />
@@ -302,7 +302,7 @@ function ToggleSwitch({
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`relative h-5 w-9 flex-none cursor-pointer rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-        checked ? "bg-purple-500" : "bg-white/15"
+        checked ? "bg-accent" : "bg-white/15"
       }`}
     >
       <motion.span

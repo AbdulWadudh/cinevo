@@ -136,7 +136,7 @@ export default function RevealClient({ pool: initialPool }: { pool: RevealItem[]
         <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
           <button
             onClick={deal}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover active:scale-95 transition-all shadow-[0_8px_30px_rgba(229,62,79,0.35)] cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover active:scale-95 transition-all shadow-[0_8px_30px_rgba(var(--accent-rgb),0.35)] cursor-pointer"
           >
             <Shuffle className="w-4 h-4" /> New pack
           </button>
@@ -160,7 +160,7 @@ export default function RevealClient({ pool: initialPool }: { pool: RevealItem[]
             className="overflow-hidden max-w-3xl mx-auto"
           >
             {prefError && (
-              <div className="mb-3 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 text-center">
+              <div className="mb-3 text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2 text-center">
                 {prefError}
               </div>
             )}
@@ -244,7 +244,7 @@ export default function RevealClient({ pool: initialPool }: { pool: RevealItem[]
               <div className="mt-1 flex items-center gap-3">
                 <Link
                   href={`/watch/${opened.mediaType}/${opened.id}`}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover active:scale-95 transition-all shadow-[0_8px_30px_rgba(229,62,79,0.4)]"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover active:scale-95 transition-all shadow-[0_8px_30px_rgba(var(--accent-rgb),0.4)]"
                 >
                   <Play className="w-4 h-4 fill-white" /> Play now
                 </Link>

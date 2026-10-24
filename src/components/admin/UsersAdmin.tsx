@@ -159,8 +159,8 @@ export default function UsersAdmin({ currentUserId }: { currentUserId: string })
     >
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex size-9 flex-none items-center justify-center rounded-xl border border-blue-500/25 bg-blue-500/15">
-            <UsersIcon className="size-4.5 text-blue-400" />
+          <div className="flex size-9 flex-none items-center justify-center rounded-xl border border-blue/25 bg-blue/15">
+            <UsersIcon className="size-4.5 text-blue" />
           </div>
           <div>
             <h2 className="font-display text-lg leading-tight font-bold">Users</h2>
@@ -190,7 +190,7 @@ export default function UsersAdmin({ currentUserId }: { currentUserId: string })
             }}
             placeholder="Search by name or email…"
             aria-label="Search users"
-            className="w-full rounded-lg border border-white/8 bg-surface py-2 pl-9 pr-8 text-sm outline-none transition-colors placeholder:text-muted focus:border-blue-500/60"
+            className="w-full rounded-lg border border-border bg-surface py-2 pl-9 pr-8 text-sm outline-none transition-colors placeholder:text-muted focus:border-blue/60"
           />
           <AnimatePresence>
             {query && (
@@ -232,7 +232,7 @@ export default function UsersAdmin({ currentUserId }: { currentUserId: string })
                 {active && (
                   <motion.span
                     layoutId={reduceMotion ? undefined : "users-admin-filter"}
-                    className="absolute inset-0 -z-10 rounded-lg bg-linear-to-r from-blue-600 to-sky-500"
+                    className="absolute inset-0 -z-10 rounded-lg bg-linear-to-r from-accent-strong to-accent"
                     transition={{ type: "spring", stiffness: 380, damping: 32 }}
                   />
                 )}
@@ -312,7 +312,7 @@ export default function UsersAdmin({ currentUserId }: { currentUserId: string })
 
                   <div className="flex flex-none items-center gap-1">
                     {pendingId === user.id ? (
-                      <Loader2 className="mx-3 size-4 animate-spin text-blue-400" />
+                      <Loader2 className="mx-3 size-4 animate-spin text-accent" />
                     ) : confirm ? (
                       <ConfirmRow
                         label={confirm === "delete" ? "Delete profile?" : "Clear library?"}
@@ -476,7 +476,7 @@ function ConfirmRow({
       animate={{ opacity: 1, x: 0 }}
       className="flex items-center gap-1.5"
     >
-      <span className="text-[11px] font-semibold text-orange-300">{label}</span>
+      <span className="text-[11px] font-semibold text-warning">{label}</span>
       <RowAction label="Confirm" tone="danger" onClick={onConfirm}>
         <Check className="size-3.5" />
       </RowAction>
@@ -501,8 +501,8 @@ function RowAction({
   children: React.ReactNode;
 }) {
   const tones = {
-    default: "text-fg-secondary hover:border-white/20 hover:text-white",
-    danger: "text-fg-secondary hover:border-red-500/40 hover:text-red-400",
+    default: "text-fg-secondary hover:border-border hover:text-fg",
+    danger: "text-fg-secondary hover:border-danger/40 hover:text-danger",
     admin: "border-accent/30 text-accent hover:border-accent/60",
   };
   return (

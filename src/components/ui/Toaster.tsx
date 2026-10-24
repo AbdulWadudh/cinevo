@@ -27,8 +27,8 @@ export default function Toaster() {
           description: "text-fg-secondary",
           actionButton: "bg-accent-strong text-white",
           cancelButton: "bg-white/10 text-fg-secondary",
-          error: "!border-red-500/30",
-          success: "!border-emerald-500/30",
+          error: "!border-danger/30",
+          success: "!border-success/30",
         },
       }}
     />

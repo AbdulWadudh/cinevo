@@ -118,7 +118,7 @@ export default function TrailerProvider({ children }: { children: React.ReactNod
                     <Link
                       href={`/watch/${media.mediaType}/${media.id}`}
                       onClick={close}
-                      className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover hover:shadow-[0_6px_20px_rgba(229,62,79,0.35)] transition-all cursor-pointer"
+                      className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover hover:shadow-[0_6px_20px_rgba(var(--accent-rgb),0.35)] transition-all cursor-pointer"
                     >
                       <Play className="w-4 h-4 fill-white" />
                       <span className="hidden sm:inline">Play {media.mediaType === "tv" ? "Show" : "Movie"}</span>

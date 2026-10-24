@@ -211,8 +211,8 @@ export default function ProviderAdmin({ providers, setProviders, ref }: Provider
                   type="button"
                   onClick={() => set("sandboxMode", m)}
                   className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold transition-all cursor-pointer ${form.sandboxMode === m
-                    ? (m === "off" ? "bg-orange-500/20 text-orange-300" : m === "strict" ? "bg-sky-500/20 text-sky-300" : "bg-emerald-500/20 text-emerald-300")
-                    : "text-muted hover:text-fg hover:bg-white/[0.04]"}`}
+                    ? (m === "off" ? "bg-warning/20 text-warning" : m === "strict" ? "bg-blue/20 text-blue" : "bg-success/20 text-success")
+                    : "text-muted hover:text-fg hover:bg-surface-hover"}`}
                 >
                   {m === "off" ? <ShieldOff className="w-3.5 h-3.5" /> : <Shield className="w-3.5 h-3.5" />}
                   {SB_LABEL[m]}
@@ -224,7 +224,7 @@ export default function ProviderAdmin({ providers, setProviders, ref }: Provider
             <button type="button" onClick={() => set("enabled", !form.enabled)}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-bold transition-all cursor-pointer ${form.enabled
                 ? "bg-accent/10 border-accent/25 text-accent"
-                : "bg-white/[0.04] border-white/[0.1] text-muted"}`}>
+                : "bg-surface border-border text-muted"}`}>
               {form.enabled ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
               {form.enabled ? "Enabled" : "Hidden"}
             </button>
@@ -232,7 +232,7 @@ export default function ProviderAdmin({ providers, setProviders, ref }: Provider
               title="The default provider is used when a link has no ?source="
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-bold transition-all cursor-pointer ${form.isDefault
                 ? "bg-gold/10 border-gold/30 text-gold"
-                : "bg-white/[0.04] border-white/[0.1] text-muted"}`}>
+                : "bg-surface border-border text-muted"}`}>
               <Star className={`w-3.5 h-3.5 ${form.isDefault ? "fill-gold" : ""}`} />
               {form.isDefault ? "Default" : "Set default"}
             </button>
@@ -240,7 +240,7 @@ export default function ProviderAdmin({ providers, setProviders, ref }: Provider
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 mt-4 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+          <div className="flex items-center gap-2 mt-4 text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
             <AlertCircle className="w-4 h-4 flex-none" />
             <span>{error}</span>
           </div>
@@ -373,12 +373,12 @@ function ProviderRow({
           {/* badges */}
           <div className="hidden sm:flex items-center gap-1.5 flex-none">
             <span title={`Sandbox: ${SB_LABEL[p.sandboxMode]}`}
-              className={`flex items-center gap-1 px-2 h-7 rounded-lg border text-[9px] font-extrabold uppercase tracking-wider ${p.sandboxMode === "off" ? "bg-orange-500/10 border-orange-500/20 text-orange-400" : p.sandboxMode === "strict" ? "bg-sky-500/10 border-sky-500/20 text-sky-400" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"}`}>
+              className={`flex items-center gap-1 px-2 h-7 rounded-lg border text-[9px] font-extrabold uppercase tracking-wider ${p.sandboxMode === "off" ? "bg-warning/10 border-warning/20 text-warning" : p.sandboxMode === "strict" ? "bg-blue/10 border-blue/20 text-blue" : "bg-success/10 border-success/20 text-success"}`}>
               {p.sandboxMode === "off" ? <ShieldOff className="w-3.5 h-3.5" /> : <Shield className="w-3.5 h-3.5" />}
               <span className="hidden md:inline">{SB_LABEL[p.sandboxMode]}</span>
             </span>
             <span title={p.enabled ? "Visible" : "Hidden"}
-              className={`flex items-center justify-center w-7 h-7 rounded-lg border ${p.enabled ? "bg-accent/10 border-accent/20 text-accent" : "bg-white/[0.04] border-white/[0.08] text-muted"}`}>
+              className={`flex items-center justify-center w-7 h-7 rounded-lg border ${p.enabled ? "bg-accent/10 border-accent/20 text-accent" : "bg-surface border-border text-muted"}`}>
               {p.enabled ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
             </span>
           </div>
@@ -388,11 +388,11 @@ function ProviderRow({
             {confirmDelete === p.id ? (
               <>
                 <button onClick={() => onConfirmDelete(p.id)} disabled={pending}
-                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-500/15 border border-red-500/30 text-red-400 hover:bg-red-500/25 transition-all cursor-pointer" aria-label="Confirm delete">
+                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-danger/15 border border-danger/30 text-danger hover:bg-danger/25 transition-all cursor-pointer" aria-label="Confirm delete">
                   {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                 </button>
                 <button onClick={() => onAskDelete(null)}
-                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.1] text-muted hover:text-fg transition-all cursor-pointer" aria-label="Cancel delete">
+                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-surface border border-border text-muted hover:text-fg transition-all cursor-pointer" aria-label="Cancel delete">
                   <X className="w-4 h-4" />
                 </button>
               </>
@@ -402,16 +402,16 @@ function ProviderRow({
                   title={p.isDefault ? "This is the default provider" : "Set as default provider"}
                   className={`flex items-center justify-center w-8 h-8 rounded-lg border transition-all cursor-pointer ${p.isDefault
                     ? "bg-gold/15 border-gold/30 text-gold cursor-default"
-                    : "bg-white/[0.05] border-white/[0.1] text-fg-secondary hover:text-gold hover:border-gold/40"}`}
+                    : "bg-surface border-border text-fg-secondary hover:text-gold hover:border-gold/40"}`}
                   aria-label="Set as default">
                   <Star className={`w-3.5 h-3.5 ${p.isDefault ? "fill-gold" : ""}`} />
                 </button>
                 <button onClick={() => onEdit(p)}
-                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.1] text-fg-secondary hover:text-accent hover:border-accent/40 transition-all cursor-pointer" aria-label="Edit">
+                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-surface border border-border text-fg-secondary hover:text-accent hover:border-accent/40 transition-all cursor-pointer" aria-label="Edit">
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
                 <button onClick={() => onAskDelete(p.id)}
-                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.05] border border-white/[0.1] text-fg-secondary hover:text-red-400 hover:border-red-500/40 transition-all cursor-pointer" aria-label="Delete">
+                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-surface border border-border text-fg-secondary hover:text-danger hover:border-danger/40 transition-all cursor-pointer" aria-label="Delete">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </>

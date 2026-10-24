@@ -235,7 +235,7 @@ export default function SearchClient() {
                     <h3 className="text-sm font-bold text-white leading-tight">{selectedActor.name}</h3>
                   </div>
                   {selectedActor.profile_path ? (
-                    <div className="w-12 h-12 rounded-xl overflow-hidden border border-accent/30 shadow-[0_0_12px_rgba(229,62,79,0.25)] flex-none">
+                    <div className="w-12 h-12 rounded-xl overflow-hidden border border-accent/30 shadow-[0_0_12px_rgba(var(--accent-rgb),0.25)] flex-none">
                       <Image src={`https://image.tmdb.org/t/p/w185${selectedActor.profile_path}`} alt={selectedActor.name} width={48} height={48} className="w-full h-full object-cover" />
                     </div>
                   ) : (
@@ -419,7 +419,7 @@ function CreditCategory({
         <div className="flex justify-center mt-6">
           <button
             onClick={onMore}
-            className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase border border-accent/30 text-white bg-accent/10 hover:bg-accent-strong hover:border-accent hover:shadow-[0_4px_15px_rgba(229,62,79,0.35)] transition-all duration-300 cursor-pointer shadow-lg"
+            className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase border border-accent/30 text-white bg-accent/10 hover:bg-accent-strong hover:border-accent hover:shadow-[0_4px_15px_rgba(var(--accent-rgb),0.35)] transition-all duration-300 cursor-pointer shadow-lg"
           >
             Load More
           </button>

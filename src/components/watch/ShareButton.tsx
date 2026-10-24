@@ -42,7 +42,7 @@ export default function ShareButton({ title }: ShareButtonProps) {
     >
       {copied ? (
         <>
-          <Check className="w-4 h-4 text-emerald-400" /> Link copied!
+          <Check className="w-4 h-4 text-success" /> Link copied!
         </>
       ) : (
         <>

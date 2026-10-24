@@ -70,8 +70,8 @@ export default function WatchActions({
         onClick={() => touchWatch({ mediaId, mediaType, title, posterPath, season, episode })}
         disabled={isWatched}
         className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all w-fit ${isWatched
-          ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 cursor-default"
-          : "bg-white/[0.05] border border-white/[0.1] text-fg-secondary hover:text-fg hover:bg-white/[0.09] cursor-pointer"
+          ? "bg-success/15 border border-success/30 text-success cursor-default"
+          : "bg-surface border border-border text-fg-secondary hover:text-fg hover:bg-surface-hover cursor-pointer"
           }`}
       >
         {isWatched ? <Check className="w-4 h-4" /> : <Eye className="w-4 h-4" />}

@@ -51,11 +51,11 @@ export default function SiteMenu() {
       headerExtras={headerExtras}
       logoUrl="/full_logo.png"
       logoHref="/"
-      menuButtonColor="#ffffff"
-      openMenuButtonColor="#ffffff"
+      menuButtonColor="var(--color-fg)"
+      openMenuButtonColor="var(--color-fg)"
       changeMenuColorOnOpen
-      accentColor="#e53e4f"
-      colors={["#1a1430", "#e53e4f"]}
+      accentColor="var(--color-accent)"
+      colors={["var(--color-surface)", "var(--color-accent)"]}
     />
   );
 }

@@ -33,6 +33,10 @@ const ClickSpark = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sparksRef = useRef<Spark[]>([]);
   const startTimeRef = useRef<number | null>(null);
+  // Canvas can't paint a CSS variable, so resolve `var(--token)` to its computed
+  // value. Done per click, not per frame, so a theme change takes effect on the
+  // next spark without repainting this loop.
+  const colorRef = useRef(sparkColor);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -114,7 +118,7 @@ const ClickSpark = ({
         const x2 = spark.x + (distance + lineLength) * Math.cos(spark.angle);
         const y2 = spark.y + (distance + lineLength) * Math.sin(spark.angle);
 
-        ctx.strokeStyle = sparkColor;
+        ctx.strokeStyle = colorRef.current;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(x1, y1);
@@ -132,7 +136,7 @@ const ClickSpark = ({
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, [sparkColor, sparkSize, sparkRadius, sparkCount, duration, easeFunc, extraScale]);
+  }, [sparkSize, sparkRadius, sparkCount, duration, easeFunc, extraScale]);
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const canvas = canvasRef.current;
@@ -140,6 +144,14 @@ const ClickSpark = ({
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+
+    const token = /^var\((--[\w-]+)\)$/.exec(sparkColor.trim());
+    if (token) {
+      const resolved = getComputedStyle(document.documentElement).getPropertyValue(token[1]).trim();
+      if (resolved) colorRef.current = resolved;
+    } else {
+      colorRef.current = sparkColor;
+    }
 
     const now = performance.now();
     const newSparks: Spark[] = Array.from({ length: sparkCount }, (_, i) => ({

@@ -11,15 +11,16 @@ import { prettifyName } from "@/lib/radio/categories";
 import type { PlaybackStatus } from "./useRadioPlayer";
 import Equalizer from "./Equalizer";
 
-/** Deterministic accent so a station keeps the same colour between visits. */
+/** Deterministic accent so a station keeps the same colour between visits.
+ *  The hues come from the active preset, so a station tile recolours with the
+ *  theme instead of pinning the old purple family. */
 const ACCENTS = [
-  { tile: "bg-pink-500/15 text-pink-300", ring: "ring-pink-500/40" },
-  { tile: "bg-purple-500/15 text-purple-300", ring: "ring-purple-500/40" },
-  { tile: "bg-sky-500/15 text-sky-300", ring: "ring-sky-500/40" },
-  { tile: "bg-emerald-500/15 text-emerald-300", ring: "ring-emerald-500/40" },
-  { tile: "bg-amber-500/15 text-amber-300", ring: "ring-amber-500/40" },
-  { tile: "bg-rose-500/15 text-rose-300", ring: "ring-rose-500/40" },
-  { tile: "bg-violet-500/15 text-violet-300", ring: "ring-violet-500/40" },
+  { tile: "bg-accent/15 text-accent", ring: "ring-accent/40" },
+  { tile: "bg-secondary/15 text-secondary", ring: "ring-secondary/40" },
+  { tile: "bg-blue/15 text-blue", ring: "ring-blue/40" },
+  { tile: "bg-success/15 text-success", ring: "ring-success/40" },
+  { tile: "bg-warning/15 text-warning", ring: "ring-warning/40" },
+  { tile: "bg-danger/15 text-danger", ring: "ring-danger/40" },
 ];
 
 function accentFor(name: string) {
@@ -117,10 +118,10 @@ function StationCardBase({
         whileTap={reduceMotion ? undefined : { scale: 0.985 }}
         transition={{ type: "spring", stiffness: 500, damping: 30 }}
         className={`tv-focusable relative flex w-full cursor-pointer items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 text-left outline-none transition-colors ${isCurrent
-          ? "border-purple-400/70 bg-purple-500/15 shadow-lg shadow-purple-900/40 ring-2 ring-purple-500/50"
+          ? "border-accent/70 bg-accent/15 shadow-lg shadow-accent/25 ring-2 ring-accent/50"
           : isFavorite
-            ? "border-pink-500/30 bg-pink-500/6 hover:border-pink-400/50 hover:bg-pink-500/10"
-            : "border-white/6 bg-surface/50 hover:border-white/14 hover:bg-surface-hover/60"
+            ? "border-accent/30 bg-accent/6 hover:border-accent/50 hover:bg-accent/10"
+            : "border-border bg-surface/50 hover:border-border hover:bg-surface-hover/60"
           } ${station.isBroken && !isCurrent ? "opacity-55" : ""}`}
       >
         {/* Breathing halo marks the station that's actually on air, so it
@@ -128,7 +129,7 @@ function StationCardBase({
         {isCurrent && !reduceMotion && (
           <motion.span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 rounded-xl bg-linear-to-r from-purple-500/12 via-fuchsia-500/8 to-transparent"
+            className="pointer-events-none absolute inset-0 rounded-xl bg-linear-to-r from-accent/12 via-accent-hover/8 to-transparent"
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
           />
@@ -144,14 +145,14 @@ function StationCardBase({
               animate={{ scaleY: 1, opacity: 1 }}
               exit={reduceMotion ? { opacity: 0 } : { scaleY: 0, opacity: 0 }}
               transition={{ type: "spring", stiffness: 480, damping: 30 }}
-              className="absolute inset-y-0 left-0 w-0.75 origin-center rounded-r-full bg-linear-to-b from-pink-400 to-rose-500"
+              className="absolute inset-y-0 left-0 w-0.75 origin-center rounded-r-full bg-linear-to-b from-accent to-accent-hover"
             />
           )}
         </AnimatePresence>
 
         {/* Icon / state tile */}
         <span
-          className={`relative flex size-9 flex-none items-center justify-center rounded-lg ${isFavorite && !isCurrent ? "bg-pink-500/15 text-pink-300" : accent.tile
+          className={`relative flex size-9 flex-none items-center justify-center rounded-lg ${isFavorite && !isCurrent ? "bg-accent/15 text-accent" : accent.tile
             }`}
         >
           {connecting ? (
@@ -159,7 +160,7 @@ function StationCardBase({
           ) : playing ? (
             <Equalizer active bars={4} className="h-3.5" barClassName="bg-current" />
           ) : errored ? (
-            <AlertTriangle className="size-4 text-amber-400" />
+            <AlertTriangle className="size-4 text-warning" />
           ) : (
             <RadioIcon className="size-4" />
           )}
@@ -178,7 +179,7 @@ function StationCardBase({
                 transition={{ type: "spring", stiffness: 600, damping: 18 }}
                 className="flex-none"
               >
-                <Heart className="size-3 fill-pink-500 text-pink-500" aria-label="Favourite" />
+                <Heart className="size-3 fill-accent text-accent" aria-label="Favourite" />
               </motion.span>
             )}
             {station.isRecommended && (
@@ -188,12 +189,12 @@ function StationCardBase({
                 transition={{ type: "spring", stiffness: 600, damping: 18 }}
                 className="flex-none"
               >
-                <Star className="size-3 fill-amber-400 text-amber-400" aria-label="Recommended" />
+                <Star className="size-3 fill-warning text-warning" aria-label="Recommended" />
               </motion.span>
             )}
-            <span className="truncate text-[13px] font-semibold text-white">{station.name}</span>
+            <span className="truncate text-[13px] font-semibold text-fg">{station.name}</span>
             {station.isBroken && (
-              <Flag className="size-3 flex-none text-amber-500/80" aria-label="Reported not working" />
+              <Flag className="size-3 flex-none text-warning/80" aria-label="Reported not working" />
             )}
           </span>
           <span className="mt-0.5 flex items-center gap-1.5">
@@ -206,9 +207,9 @@ function StationCardBase({
             )}
             <span
               className={`truncate text-[10px] uppercase tracking-wider ${errored || station.isBroken
-                ? "text-amber-400/80"
+                ? "text-warning/80"
                 : playing
-                  ? "text-purple-300"
+                  ? "text-accent"
                   : "text-muted"
                 }`}
             >
@@ -256,7 +257,7 @@ function StationCardBase({
                 transition={{ type: "spring", stiffness: 600, damping: 20 }}
                 className="block"
               >
-                <Heart className={`size-3.5 ${isFavorite ? "fill-pink-500 text-pink-500" : ""}`} />
+                <Heart className={`size-3.5 ${isFavorite ? "fill-accent text-accent" : ""}`} />
               </motion.span>
             </AnimatePresence>
           </IconAction>
@@ -274,7 +275,7 @@ function StationCardBase({
               onClick={() => onToggleRecommended(station)}
             >
               <Star
-                className={`size-3.5 ${station.isRecommended ? "fill-amber-400 text-amber-400" : ""
+                className={`size-3.5 ${station.isRecommended ? "fill-warning text-warning" : ""
                   }`}
               />
             </IconAction>
@@ -317,7 +318,7 @@ function StationCardBase({
                     onToggleFavorite(station);
                   }}
                 >
-                  <Heart className={`size-3.5 ${isFavorite ? "fill-pink-500 text-pink-500" : ""}`} />
+                  <Heart className={`size-3.5 ${isFavorite ? "fill-accent text-accent" : ""}`} />
                   {isFavorite ? "Remove favourite" : "Add to favourites"}
                 </MenuItem>
 
@@ -349,7 +350,7 @@ function StationCardBase({
                       }}
                     >
                       <Star
-                        className={`size-3.5 ${station.isRecommended ? "fill-amber-400 text-amber-400" : ""
+                        className={`size-3.5 ${station.isRecommended ? "fill-warning text-warning" : ""
                           }`}
                       />
                       {station.isRecommended ? "Unrecommend" : "Recommend"}
@@ -438,7 +439,7 @@ function MenuItem({
         onClick();
       }}
       // Taller rows on touch, tighter once a pointer is doing the aiming.
-      className={`flex w-full cursor-pointer items-center gap-2 px-3 py-2.5 text-left text-xs font-medium transition-colors pointer-fine:py-2 ${danger ? "text-red-400 hover:bg-red-500/12" : "text-fg-secondary hover:bg-white/6 hover:text-white"
+      className={`flex w-full cursor-pointer items-center gap-2 px-3 py-2.5 text-left text-xs font-medium transition-colors pointer-fine:py-2 ${danger ? "text-danger hover:bg-danger/12" : "text-fg-secondary hover:bg-surface-hover hover:text-fg"
         } ${className}`}
     >
       {children}

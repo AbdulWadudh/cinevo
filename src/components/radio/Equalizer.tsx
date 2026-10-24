@@ -21,7 +21,7 @@ export default function Equalizer({
   active,
   bars = 5,
   className = "",
-  barClassName = "bg-purple-400",
+  barClassName = "bg-accent",
 }: EqualizerProps) {
   const reduceMotion = useReducedMotion();
 

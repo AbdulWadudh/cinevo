@@ -90,23 +90,23 @@ export default function CategoryRail({
               {active && (
                 <motion.span
                   layoutId={reduceMotion ? undefined : "radio-tab-pill"}
-                  className="absolute inset-0 -z-10 rounded-xl bg-linear-to-r from-purple-600 to-fuchsia-600 shadow-lg shadow-purple-900/40"
+                  className="absolute inset-0 -z-10 rounded-xl bg-linear-to-r from-accent-strong to-accent shadow-lg shadow-accent/30"
                   transition={{ type: "spring", stiffness: 380, damping: 32 }}
                 />
               )}
               {!active && <span className="absolute inset-0 -z-10 rounded-xl border border-white/6 bg-surface" />}
 
               {tab.id === "favorites" && (
-                <Heart className={`size-3.5 ${active ? "fill-white text-white" : "text-pink-500"}`} />
+                <Heart className={`size-3.5 ${active ? "fill-white text-white" : "text-accent"}`} />
               )}
               {tab.id === "recommended" && (
-                <Star className={`size-3.5 ${active ? "fill-white text-white" : "fill-amber-400/30 text-amber-400"}`} />
+                <Star className={`size-3.5 ${active ? "fill-white text-white" : "fill-warning/30 text-warning"}`} />
               )}
               {tab.id === "all" && (
-                <Library className={`size-3.5 ${active ? "text-white" : "text-sky-400"}`} />
+                <Library className={`size-3.5 ${active ? "text-white" : "text-blue"}`} />
               )}
               {tab.id === "featured" && (
-                <Sparkles className={`size-3.5 ${active ? "text-white" : "text-amber-400"}`} />
+                <Sparkles className={`size-3.5 ${active ? "text-white" : "text-warning"}`} />
               )}
               {tab.label}
               {tab.badge !== null && (
@@ -143,7 +143,7 @@ export default function CategoryRail({
                   }}
                   placeholder="Filter categories…"
                   aria-label="Filter categories"
-                  className="w-full rounded-lg border border-white/6 bg-surface/70 py-1.5 pl-9 pr-8 text-xs text-fg outline-none transition-colors placeholder:text-muted focus:border-purple-500/50"
+                  className="w-full rounded-lg border border-border bg-surface/70 py-1.5 pl-9 pr-8 text-xs text-fg outline-none transition-colors placeholder:text-muted focus:border-accent/50"
                 />
                 <AnimatePresence>
                   {filter && (
@@ -201,7 +201,7 @@ export default function CategoryRail({
                     onClick={() => onSelectCategory(cat.slug)}
                     className={`tv-focusable cursor-pointer rounded-lg border px-3 py-1.5 text-xs font-medium outline-none transition-colors ${
                       active
-                        ? "border-purple-400/60 bg-purple-500/25 text-white"
+                        ? "border-accent/60 bg-accent/25 text-white"
                         : "border-white/6 bg-surface/60 text-fg-secondary hover:border-white/15 hover:text-white"
                     }`}
                   >

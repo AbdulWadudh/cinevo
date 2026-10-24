@@ -217,7 +217,7 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
                 <FocusSection className="flex items-center gap-3 pointer-events-auto" focusKey="HERO_ACTIONS" saveChild={false}>
                   <FocusableLink
                     href={`/watch/${item.media_type || "movie"}/${item.id}`}
-                    className="relative z-20 inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover hover:shadow-[0_6px_20px_rgba(229,62,79,0.35)] transition-all cursor-pointer"
+                    className="relative z-20 inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover hover:shadow-[0_6px_20px_rgba(var(--accent-rgb),0.35)] transition-all cursor-pointer"
                   >
                     <Play className="w-4 h-4 fill-white" /> Play Now
                   </FocusableLink>

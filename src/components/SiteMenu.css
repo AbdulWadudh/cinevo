@@ -10,11 +10,11 @@
 .cinevo-menu .sm-toggle {
   padding: 9px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   backdrop-filter: blur(6px);
 }
-.cinevo-menu .sm-toggle:hover { background: rgba(255, 255, 255, 0.12); }
+.cinevo-menu .sm-toggle:hover { background: var(--color-surface-hover); }
 .cinevo-menu .sm-icon { width: 22px; height: 22px; flex-basis: 22px; }
 .cinevo-menu .sm-icon-glyph { width: 22px; height: 22px; }
 
@@ -34,15 +34,15 @@
   display: grid;
   place-items: center;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #e9e9ef;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-fg, #e9e9ef);
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
 }
-.cinevo-menu .sm-hdr-btn:hover { background: rgba(255, 255, 255, 0.12); color: var(--sm-accent, #e53e4f); }
+.cinevo-menu .sm-hdr-btn:hover { background: var(--color-surface-hover); color: var(--sm-accent, #e53e4f); }
 /* The bell renders its own button; keep its icon light in the bar */
-.cinevo-menu .sm-header-actions .sm-icon { color: #e9e9ef; }
+.cinevo-menu .sm-header-actions .sm-icon { color: var(--color-fg, #e9e9ef); }
 
 /* While a card is revealed full-screen, hide the menu so its toggle doesn't
    sit on top of the reveal's close button. */
@@ -53,14 +53,14 @@ body.reveal-open .cinevo-menu {
 
 /* Dark, on-brand panel instead of the default white sheet */
 .cinevo-menu .staggered-menu-panel {
-  background: #0e0e18; /* --color-bg-elevated */
-  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--color-bg-elevated);
+  border-left: 1px solid var(--color-border);
   align-items: center;
   justify-content: center;
 }
 [data-position='left'] .cinevo-menu .staggered-menu-panel {
   border-left: none;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  border-right: 1px solid var(--color-border);
 }
 
 .cinevo-menu .sm-panel-inner {
@@ -77,7 +77,7 @@ body.reveal-open .cinevo-menu {
 
 /* Items: smaller, Title Case, centered, light → accent on hover/active */
 .cinevo-menu .sm-panel-item {
-  color: #f4f4f8;
+  color: var(--color-fg, #f4f4f8);
   font-size: 1.9rem;
   font-weight: 700;
   letter-spacing: -0.5px;
@@ -96,7 +96,7 @@ body.reveal-open .cinevo-menu {
   width: 100%;
   display: flex;
   justify-content: center;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--color-border);
 }
 .cinevo-menu .sm-footer-actions {
   display: flex;
@@ -110,14 +110,14 @@ body.reveal-open .cinevo-menu {
   display: grid;
   place-items: center;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #e9e9ef;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-fg, #e9e9ef);
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 .cinevo-menu .sm-footer-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--color-surface-hover);
   color: var(--sm-accent, #e53e4f);
   transform: translateY(-2px);
 }

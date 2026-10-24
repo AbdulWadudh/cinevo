@@ -95,7 +95,7 @@ export default function VolumeSlider({ value, onChange, className = "" }: Volume
       {/* Rail */}
       <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 overflow-hidden rounded-full bg-white/12">
         <motion.div
-          className="h-full rounded-full bg-linear-to-r from-purple-500 to-fuchsia-400"
+          className="h-full rounded-full bg-linear-to-r from-accent to-accent-hover"
           animate={{ width: pct }}
           transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 38 }}
         />
@@ -103,7 +103,7 @@ export default function VolumeSlider({ value, onChange, className = "" }: Volume
 
       {/* Thumb */}
       <motion.div
-        className="pointer-events-none absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-lg shadow-purple-900/50 ring-2 ring-purple-500/60"
+        className="pointer-events-none absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-lg shadow-accent/30 ring-2 ring-accent/60"
         animate={{
           left: pct,
           scale: reduceMotion ? 1 : active ? 1.25 : 0.85,

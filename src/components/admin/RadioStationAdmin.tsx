@@ -226,8 +226,8 @@ export default function RadioStationAdmin() {
     >
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex size-9 items-center justify-center rounded-xl border border-purple-500/25 bg-purple-950/40">
-            <RadioIcon className="size-4.5 text-purple-300" />
+          <div className="flex size-9 items-center justify-center rounded-xl border border-accent/25 bg-accent/10">
+            <RadioIcon className="size-4.5 text-accent" />
           </div>
           <div>
             <h2 className="font-display text-lg font-bold">Radio Stations</h2>
@@ -248,7 +248,7 @@ export default function RadioStationAdmin() {
           whileHover={reduceMotion ? undefined : { scale: 1.04, y: -1 }}
           whileTap={reduceMotion ? undefined : { scale: 0.96 }}
           transition={{ type: "spring", stiffness: 440, damping: 26 }}
-          className="flex flex-none cursor-pointer items-center gap-1.5 rounded-lg bg-linear-to-r from-purple-600 to-fuchsia-600 px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:from-purple-500 hover:to-fuchsia-500"
+          className="flex flex-none cursor-pointer items-center gap-1.5 rounded-lg bg-linear-to-r from-accent-strong to-accent px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:from-accent-strong-hover hover:to-accent-hover"
         >
           <Plus className="size-3.5" />
           Add station
@@ -268,7 +268,7 @@ export default function RadioStationAdmin() {
             }}
             placeholder="Search stations by name…"
             aria-label="Search stations"
-            className="w-full rounded-lg border border-white/8 bg-surface py-2 pl-9 pr-8 text-sm outline-none transition-colors placeholder:text-muted focus:border-purple-500/60"
+            className="w-full rounded-lg border border-border bg-surface py-2 pl-9 pr-8 text-sm outline-none transition-colors placeholder:text-muted focus:border-accent/60"
           />
           <AnimatePresence>
             {query && (
@@ -310,7 +310,7 @@ export default function RadioStationAdmin() {
                 {active && (
                   <motion.span
                     layoutId={reduceMotion ? undefined : "radio-admin-filter"}
-                    className="absolute inset-0 -z-10 rounded-lg bg-linear-to-r from-purple-600 to-fuchsia-600"
+                    className="absolute inset-0 -z-10 rounded-lg bg-linear-to-r from-accent-strong to-accent"
                     transition={{ type: "spring", stiffness: 380, damping: 32 }}
                   />
                 )}
@@ -387,7 +387,7 @@ export default function RadioStationAdmin() {
 
                 <div className="flex flex-none items-center gap-1">
                   {pendingId === station.id ? (
-                    <Loader2 className="mx-3 size-4 animate-spin text-purple-400" />
+                    <Loader2 className="mx-3 size-4 animate-spin text-accent" />
                   ) : (
                     <>
                       <RowAction
@@ -496,8 +496,8 @@ function Badge({
   children: React.ReactNode;
 }) {
   const tones = {
-    warn: "border-amber-500/30 bg-amber-500/10 text-amber-300",
-    star: "border-purple-400/40 bg-purple-500/15 text-purple-200",
+    warn: "border-warning/30 bg-warning/10 text-warning",
+    star: "border-accent/40 bg-accent/15 text-accent",
     muted: "border-white/10 bg-white/5 text-muted",
   };
   return (
@@ -522,11 +522,11 @@ function RowAction({
 }) {
   const reduceMotion = useReducedMotion();
   const tones = {
-    default: "text-fg-secondary hover:text-white hover:bg-white/8",
-    danger: "text-red-400 hover:bg-red-500/12",
-    warn: "text-amber-400 hover:bg-amber-500/12",
-    success: "text-emerald-400 hover:bg-emerald-500/12",
-    star: "text-amber-300 hover:bg-amber-500/12",
+    default: "text-fg-secondary hover:text-fg hover:bg-surface-hover",
+    danger: "text-danger hover:bg-danger/12",
+    warn: "text-warning hover:bg-warning/12",
+    success: "text-success hover:bg-success/12",
+    star: "text-warning hover:bg-warning/12",
   };
   return (
     <motion.button

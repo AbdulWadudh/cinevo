@@ -5,10 +5,10 @@ type Tone = "accent" | "purple" | "orange" | "blue" | "emerald";
 
 const TONES: Record<Tone, string> = {
   accent: "border-accent/25 bg-accent/15 text-accent",
-  purple: "border-purple-500/25 bg-purple-950/40 text-purple-300",
-  orange: "border-orange-500/25 bg-orange-500/15 text-orange-400",
-  blue: "border-blue-500/25 bg-blue-500/15 text-blue-400",
-  emerald: "border-emerald-500/25 bg-emerald-500/15 text-emerald-400",
+  purple: "border-accent/25 bg-accent/10 text-accent",
+  orange: "border-warning/25 bg-warning/15 text-warning",
+  blue: "border-blue/25 bg-blue/15 text-blue",
+  emerald: "border-success/25 bg-success/15 text-success",
 };
 
 interface PanelCardProps {

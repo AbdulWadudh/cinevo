@@ -81,7 +81,7 @@ export default function WishlistEpisodeAlerts() {
                   </p>
                   <p
                     className={`mt-2 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider ${
-                      item.kind === "upcoming" ? "text-sky-400" : "text-emerald-400"
+                      item.kind === "upcoming" ? "text-blue" : "text-success"
                     }`}
                   >
                     {item.kind === "upcoming" ? (
