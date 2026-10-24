@@ -58,6 +58,7 @@ The newest wing of the building, and the one with the most machinery behind it.
 
 ### 📱 Platform
 
+- 🎨 **Theme Studio** — a live panel for twenty dark cinematic palettes, eleven colour tokens, heading and body fonts (including a searchable 2,000-family Fontsource catalogue), corner radius and elevation. Admins open it from the palette shortcut in the top nav; everyone can reach it from Profile → Appearance. Everything is saved to a cookie and restored on the server before first paint, and admins can publish any preset and its overrides as the site-wide default for visitors who have not saved their own.
 - 📲 **PWA** — installable, with app icon and splash screen.
 - 🌐 **Web Push** — alerts that arrive with the app closed.
 - 📺 **TV & remote** — spatial navigation via arrow keys / D-pad, Enter and Back.
