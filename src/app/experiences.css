@@ -1,0 +1,2732 @@
+/* Experience chrome.
+   An experience is the structural half of the look: wordmark, nav treatment,
+   hero composition, card geometry and motion timing. Palette tokens still come
+   from Theme Studio, so edits layered there keep working inside every skin. */
+
+html[data-experience] {
+  --xp-fast: 160ms;
+  --xp-base: 280ms;
+  --xp-slow: 480ms;
+  --xp-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Derived from the studio radius token, so a radius edit still reshapes
+     every card inside every experience. */
+  --xp-card-radius: var(--radius-lg, 0.75rem);
+}
+
+html[data-experience="netflix"] {
+  --xp-fast: 140ms;
+  --xp-base: 240ms;
+  --xp-slow: 420ms;
+}
+
+html[data-experience="disney-hotstar"] {
+  --xp-fast: 170ms;
+  --xp-base: 300ms;
+  --xp-slow: 520ms;
+}
+
+html[data-experience="apple-tv"] {
+  --xp-fast: 220ms;
+  --xp-base: 380ms;
+  --xp-slow: 700ms;
+}
+
+/* Mobile-menu logo slot. */
+.xp-mobile-brand {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* ── Experience previews (Appearance + Studio) ───────────────────
+   Miniature, CSS-only versions of each service's home screen. */
+.xp-preview {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 88px;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: #0b0b12;
+  transition: border-color var(--xp-base) var(--xp-ease);
+}
+
+.xp-choice:hover .xp-preview {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.xp-preview-nav {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 17px;
+  padding: 0 8px;
+  color: #fff;
+}
+
+.xp-preview-nav > i {
+  display: block;
+  height: 2px;
+  border-radius: 99px;
+  background: currentColor;
+  opacity: 0.45;
+}
+
+.xp-preview-nav > i:first-child {
+  width: 14px;
+  opacity: 0.9;
+}
+
+.xp-preview-nav > i:nth-child(2) {
+  width: 9px;
+}
+
+.xp-preview-nav > i:nth-child(3) {
+  width: 7px;
+}
+
+.xp-preview-hero {
+  position: absolute;
+  left: 9px;
+  top: 27px;
+  z-index: 2;
+  display: flex;
+  width: 58%;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.xp-preview-kicker {
+  display: block;
+  width: 34%;
+  height: 3px;
+  border-radius: 99px;
+  background: var(--xp-preview-accent, #e53e4f);
+}
+
+.xp-preview-title {
+  display: block;
+  width: 84%;
+  height: 8px;
+  border-radius: 2px;
+  background: #fff;
+  opacity: 0.92;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.16);
+}
+
+.xp-preview-actions {
+  display: flex;
+  gap: 3px;
+  margin-top: 3px;
+}
+
+.xp-preview-actions > b {
+  display: block;
+  width: 22px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--xp-preview-accent, #e53e4f);
+}
+
+.xp-preview-actions > b:last-child {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.xp-preview-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 7px;
+  z-index: 2;
+  display: flex;
+  gap: 4px;
+  padding: 0 9px;
+}
+
+.xp-preview-row > i {
+  flex: 1;
+  height: 24px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05));
+  transition: transform var(--xp-base) var(--xp-ease);
+}
+
+.xp-preview-glow {
+  position: absolute;
+  right: -20%;
+  bottom: -42%;
+  z-index: 1;
+  width: 82%;
+  height: 95%;
+  background: radial-gradient(closest-side, var(--xp-preview-glow, rgba(229, 62, 79, 0.45)), transparent 72%);
+  opacity: 0.75;
+  transition: opacity var(--xp-base) var(--xp-ease);
+}
+
+.xp-choice:hover .xp-preview-glow {
+  opacity: 1;
+}
+
+.xp-choice:hover .xp-preview-row > i {
+  transform: translateY(-3px);
+}
+
+.xp-choice:hover .xp-preview-row > i:nth-child(2) {
+  transition-delay: 35ms;
+}
+
+.xp-choice:hover .xp-preview-row > i:nth-child(3) {
+  transition-delay: 70ms;
+}
+
+.xp-choice:hover .xp-preview-row > i:nth-child(4) {
+  transition-delay: 105ms;
+}
+
+.xp-choice:active .xp-preview-row > i {
+  transform: scale(0.97);
+}
+
+.xp-preview[data-xp-preview="cinevo"] {
+  --xp-preview-accent: #e53e4f;
+  --xp-preview-glow: rgba(229, 62, 79, 0.42);
+  background: radial-gradient(120% 95% at 16% 0%, #1a1a2e, #08080f 66%);
+}
+
+.xp-preview[data-xp-preview="cinevo"] .xp-preview-nav > i:first-child {
+  width: 16px;
+  opacity: 1;
+  background: #e53e4f;
+}
+
+.xp-preview[data-xp-preview="cinevo"] .xp-preview-row > i {
+  flex: none;
+  width: 17%;
+  height: 30px;
+  border-radius: 5px;
+}
+
+.xp-preview[data-xp-preview="netflix"] {
+  --xp-preview-accent: #e50914;
+  --xp-preview-glow: rgba(229, 9, 20, 0.5);
+  background: linear-gradient(180deg, #181818 0%, #000 72%);
+}
+
+.xp-preview[data-xp-preview="netflix"] .xp-preview-nav > i:first-child {
+  width: 21px;
+  height: 3px;
+  opacity: 1;
+  background: #e50914;
+}
+
+.xp-preview[data-xp-preview="netflix"] .xp-preview-hero {
+  top: 25px;
+}
+
+.xp-preview[data-xp-preview="netflix"] .xp-preview-title {
+  height: 10px;
+  width: 92%;
+  border-radius: 1px;
+}
+
+.xp-preview[data-xp-preview="netflix"] .xp-preview-actions > b {
+  border-radius: 1px;
+  width: 24px;
+}
+
+.xp-preview[data-xp-preview="netflix"] .xp-preview-row > i {
+  height: 22px;
+  border-radius: 2px;
+}
+
+.xp-preview[data-xp-preview="disney-hotstar"] {
+  --xp-preview-accent: #1f80e0;
+  --xp-preview-glow: rgba(0, 198, 255, 0.42);
+  background: radial-gradient(125% 105% at 82% 0%, #143a63, #0f1014 64%);
+}
+
+.xp-preview[data-xp-preview="disney-hotstar"] .xp-preview-nav > i:first-child {
+  width: 18px;
+  opacity: 1;
+  background: linear-gradient(90deg, #79c9ff, #1f80e0);
+}
+
+.xp-preview[data-xp-preview="disney-hotstar"] .xp-preview-row > i {
+  height: 26px;
+  border-radius: 6px;
+}
+
+.xp-preview[data-xp-preview="apple-tv"] {
+  --xp-preview-accent: #f5f5f7;
+  --xp-preview-glow: rgba(255, 255, 255, 0.18);
+  background: radial-gradient(115% 105% at 50% -12%, #2a2a2c, #000 70%);
+}
+
+.xp-preview[data-xp-preview="apple-tv"] .xp-preview-hero {
+  left: 50%;
+  width: 62%;
+  align-items: center;
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+.xp-preview[data-xp-preview="apple-tv"] .xp-preview-kicker {
+  width: 46%;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.xp-preview[data-xp-preview="apple-tv"] .xp-preview-title {
+  width: 76%;
+  height: 9px;
+  border-radius: 3px;
+}
+
+.xp-preview[data-xp-preview="apple-tv"] .xp-preview-actions > b {
+  width: 27px;
+  border-radius: 99px;
+}
+
+.xp-preview[data-xp-preview="apple-tv"] .xp-preview-actions > b:last-child {
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.xp-preview[data-xp-preview="apple-tv"] .xp-preview-row > i {
+  height: 26px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.06));
+}
+
+/* ── Page canvas ────────────────────────────────────────────────── */
+html[data-experience="netflix"] body {
+  background-image: radial-gradient(1200px 520px at 50% -12%, rgba(229, 9, 20, 0.075), transparent 62%);
+  background-repeat: no-repeat;
+}
+
+html[data-experience="disney-hotstar"] body {
+  background-image:
+    radial-gradient(1200px 600px at 12% -10%, rgba(31, 128, 224, 0.13), transparent 60%),
+    radial-gradient(900px 520px at 100% 0%, rgba(0, 198, 255, 0.075), transparent 58%);
+  background-attachment: fixed;
+}
+
+html[data-experience="apple-tv"] body {
+  background-image: radial-gradient(1100px 560px at 50% -14%, rgba(255, 255, 255, 0.06), transparent 62%);
+  background-repeat: no-repeat;
+}
+
+/* ── Scrollbar and selection ────────────────────────────────────── */
+html[data-experience="netflix"] ::-webkit-scrollbar-track {
+  background: #000;
+}
+
+html[data-experience="netflix"] ::-webkit-scrollbar-thumb {
+  background: #333;
+}
+
+html[data-experience="netflix"] ::-webkit-scrollbar-thumb:hover {
+  background: #e50914;
+}
+
+html[data-experience="netflix"] ::selection {
+  background: #e50914;
+  color: #fff;
+}
+
+html[data-experience="disney-hotstar"] ::-webkit-scrollbar-thumb {
+  background: rgba(31, 128, 224, 0.55);
+}
+
+html[data-experience="disney-hotstar"] ::-webkit-scrollbar-thumb:hover {
+  background: #1f80e0;
+}
+
+html[data-experience="disney-hotstar"] ::selection {
+  background: rgba(31, 128, 224, 0.75);
+  color: #fff;
+}
+
+html[data-experience="apple-tv"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+html[data-experience="apple-tv"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+html[data-experience="apple-tv"] ::selection {
+  background: rgba(255, 255, 255, 0.85);
+  color: #000;
+}
+
+/* ── Navigation ─────────────────────────────────────────────────── */
+html[data-experience="netflix"] [data-xp-nav] {
+  padding-block: 0.65rem;
+}
+
+html[data-experience="netflix"] [data-xp-nav][data-scrolled="false"] {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.94) 0%, rgba(0, 0, 0, 0.58) 56%, transparent 100%);
+  border-bottom-color: transparent;
+  box-shadow: none;
+}
+
+html[data-experience="netflix"] [data-xp-nav][data-scrolled="true"] {
+  background: rgba(0, 0, 0, 0.97);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+html[data-experience="netflix"] [data-xp-nav-link] {
+  font-size: 13px;
+  letter-spacing: 0;
+  color: #b3b3b3;
+}
+
+html[data-experience="netflix"] [data-xp-nav-link]:hover,
+html[data-experience="netflix"] [data-xp-nav-link][data-active="true"] {
+  color: #fff;
+}
+
+html[data-experience="netflix"] [data-xp-nav-link][data-active="true"] {
+  font-weight: 600;
+}
+
+html[data-experience="netflix"] [data-xp-nav-active] {
+  display: none;
+}
+
+html[data-experience="netflix"] [data-xp-nav-action]:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+html[data-experience="netflix"] [data-xp-signin] {
+  border: 0;
+  border-radius: var(--radius-lg, 0.25rem);
+  background: #e50914;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+}
+
+html[data-experience="netflix"] [data-xp-signin]:hover {
+  background: #f6121d;
+  color: #fff;
+}
+
+html[data-experience="disney-hotstar"] [data-xp-nav][data-scrolled="false"] {
+  background: linear-gradient(180deg, rgba(15, 16, 20, 0.92), transparent);
+  border-bottom-color: transparent;
+  box-shadow: none;
+}
+
+html[data-experience="disney-hotstar"] [data-xp-nav][data-scrolled="true"] {
+  background: rgba(15, 16, 20, 0.96);
+  border-bottom: 1px solid rgba(31, 128, 224, 0.24);
+}
+
+html[data-experience="disney-hotstar"] [data-xp-nav-link] {
+  font-size: 13px;
+  border-radius: 999px;
+}
+
+html[data-experience="disney-hotstar"] [data-xp-nav-link]:hover {
+  background: rgba(31, 128, 224, 0.14);
+  color: #fff;
+}
+
+html[data-experience="disney-hotstar"] [data-xp-nav-active] {
+  height: 2px;
+  background: #1f80e0;
+}
+
+html[data-experience="disney-hotstar"] [data-xp-nav-action]:hover {
+  background: rgba(31, 128, 224, 0.16);
+}
+
+html[data-experience="disney-hotstar"] [data-xp-signin] {
+  border: 0;
+  border-radius: 999px;
+  background: #1f80e0;
+  color: #fff;
+  font-weight: 700;
+}
+
+html[data-experience="disney-hotstar"] [data-xp-signin]:hover {
+  background: #3b95f5;
+  color: #fff;
+}
+
+html[data-experience="apple-tv"] [data-xp-nav] {
+  top: 12px;
+  left: 16px;
+  right: 16px;
+  max-width: 1180px;
+  margin-inline: auto;
+  padding: 0.6rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(22, 22, 24, 0.56);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
+}
+
+html[data-experience="apple-tv"] [data-xp-nav][data-scrolled="true"] {
+  background: rgba(14, 14, 16, 0.84);
+  border-bottom-color: rgba(255, 255, 255, 0.09);
+}
+
+html[data-experience="apple-tv"] [data-xp-nav-link] {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.66);
+}
+
+html[data-experience="apple-tv"] [data-xp-nav-link]:hover {
+  color: #fff;
+}
+
+html[data-experience="apple-tv"] [data-xp-nav-link][data-active="true"] {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-weight: 600;
+}
+
+html[data-experience="apple-tv"] [data-xp-nav-active] {
+  display: none;
+}
+
+html[data-experience="apple-tv"] [data-xp-nav-action]:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+html[data-experience="apple-tv"] [data-xp-signin] {
+  border: 0;
+  border-radius: 999px;
+  background: #f5f5f7;
+  color: #000;
+  font-weight: 600;
+  padding: 0.45rem 0.95rem;
+}
+
+html[data-experience="apple-tv"] [data-xp-signin]:hover {
+  background: #e8e8ed;
+  color: #000;
+}
+
+/* The Apple palette's accent is white, so solid accent surfaces invert. */
+html[data-experience="apple-tv"] .bg-accent-strong,
+html[data-experience="apple-tv"] .bg-accent-strong:hover {
+  color: #000;
+}
+
+html[data-experience="apple-tv"] .bg-accent-strong .fill-white {
+  fill: #000;
+}
+
+html[data-experience="apple-tv"] .bg-accent-strong .text-white {
+  color: #000;
+}
+
+html[data-experience="apple-tv"] .glass {
+  background: rgba(28, 28, 30, 0.6);
+  border-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+}
+
+/* ── Hero ───────────────────────────────────────────────────────── */
+html[data-experience="netflix"] [data-xp-hero] {
+  height: 92vh;
+  max-height: 900px;
+  min-height: 520px;
+}
+
+html[data-experience="netflix"] [data-xp-hero] img {
+  transition-duration: 2200ms;
+}
+
+html[data-experience="netflix"] [data-xp-hero-copy] {
+  max-width: 44rem;
+  padding-bottom: 6.5rem;
+}
+
+html[data-experience="netflix"] [data-xp-hero-badge] {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #e50914;
+  font-size: 11px;
+  letter-spacing: 0.34em;
+  animation: none;
+}
+
+html[data-experience="netflix"] [data-xp-hero-title] {
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.65);
+}
+
+html[data-experience="netflix"] [data-xp-hero-primary] {
+  padding: 0.7rem 1.6rem;
+  border-radius: var(--radius-lg, 0.25rem);
+  background: #fff;
+  color: #000;
+  font-weight: 700;
+}
+
+html[data-experience="netflix"] [data-xp-hero-primary]:hover {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: none;
+}
+
+html[data-experience="netflix"] [data-xp-hero-primary] .fill-white {
+  fill: #000;
+}
+
+html[data-experience="netflix"] [data-xp-hero-secondary] {
+  border: 0;
+  border-radius: var(--radius-lg, 0.25rem);
+  background: rgba(109, 109, 110, 0.72);
+  color: #fff;
+  backdrop-filter: none;
+}
+
+html[data-experience="netflix"] [data-xp-hero-secondary]:hover {
+  background: rgba(109, 109, 110, 0.5);
+}
+
+html[data-experience="netflix"] [data-xp-hero-gradient="bottom"] {
+  background: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.78) 18%, transparent 64%);
+}
+
+html[data-experience="netflix"] [data-xp-hero-gradient="side"] {
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.55) 38%, transparent 68%);
+}
+
+html[data-experience="disney-hotstar"] [data-xp-hero] img {
+  transition-duration: 1600ms;
+}
+
+html[data-experience="disney-hotstar"] [data-xp-hero-badge] {
+  border-color: rgba(31, 128, 224, 0.42);
+  background: rgba(31, 128, 224, 0.16);
+  color: #8fd0ff;
+  animation: none;
+}
+
+html[data-experience="disney-hotstar"] [data-xp-hero-primary] {
+  padding: 0.7rem 1.7rem;
+  border-radius: 999px;
+  background: #1f80e0;
+}
+
+html[data-experience="disney-hotstar"] [data-xp-hero-primary]:hover {
+  background: #3b95f5;
+  box-shadow: 0 8px 28px rgba(31, 128, 224, 0.42);
+}
+
+html[data-experience="disney-hotstar"] [data-xp-hero-secondary] {
+  border-radius: 999px;
+}
+
+html[data-experience="disney-hotstar"] [data-xp-hero-gradient="bottom"] {
+  background: linear-gradient(to top, #0f1014 0%, rgba(15, 16, 20, 0.72) 24%, transparent 70%);
+}
+
+html[data-experience="disney-hotstar"] [data-xp-hero-gradient="side"] {
+  background: linear-gradient(to right, rgba(15, 16, 20, 0.95) 0%, rgba(15, 16, 20, 0.35) 46%, transparent 74%);
+}
+
+html[data-experience="apple-tv"] [data-xp-hero-copy] {
+  left: 0;
+  right: 0;
+  display: flex;
+  max-width: 56rem;
+  margin-inline: auto;
+  flex-direction: column;
+  align-items: center;
+  padding-inline: 1.5rem;
+  padding-bottom: 4.5rem;
+  text-align: center;
+}
+
+html[data-experience="apple-tv"] [data-xp-hero-copy] > p {
+  max-width: 40rem;
+  margin-inline: auto;
+}
+
+html[data-experience="apple-tv"] [data-xp-hero-badge] {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.1);
+  color: #f5f5f7;
+  letter-spacing: 0.26em;
+  border-radius: 999px;
+  animation: none;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+html[data-experience="apple-tv"] [data-xp-hero-title] {
+  font-size: clamp(2.4rem, 5.4vw, 4.6rem);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+}
+
+html[data-experience="apple-tv"] [data-xp-hero-primary] {
+  padding: 0.7rem 1.7rem;
+  border-radius: 999px;
+  background: #f5f5f7;
+  color: #000;
+  font-weight: 600;
+}
+
+html[data-experience="apple-tv"] [data-xp-hero-primary]:hover {
+  background: #e8e8ed;
+  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.18);
+}
+
+html[data-experience="apple-tv"] [data-xp-hero-primary] .fill-white {
+  fill: #000;
+}
+
+html[data-experience="apple-tv"] [data-xp-hero-secondary] {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+html[data-experience="apple-tv"] [data-xp-hero-secondary]:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+html[data-experience="apple-tv"] [data-xp-hero-gradient="bottom"] {
+  background: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.68) 26%, transparent 76%);
+}
+
+html[data-experience="apple-tv"] [data-xp-hero-gradient="side"] {
+  background: radial-gradient(90% 90% at 50% 40%, transparent 40%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+html[data-experience="apple-tv"] [data-xp-hero] img {
+  transition-duration: 3000ms;
+}
+
+/* ── Rows and cards ─────────────────────────────────────────────── */
+html[data-experience="netflix"] [data-xp-row-title] {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+html[data-experience="netflix"] [data-xp-seeall] {
+  font-size: 12px;
+  font-weight: 600;
+  color: #b3b3b3;
+}
+
+html[data-experience="netflix"] [data-xp-seeall]:hover {
+  color: #fff;
+}
+
+html[data-experience="apple-tv"] [data-xp-row-title] {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+html[data-experience="apple-tv"] [data-xp-seeall] {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+html[data-experience="apple-tv"] [data-xp-seeall]:hover {
+  color: #fff;
+}
+
+html[data-experience="disney-hotstar"] [data-xp-seeall] {
+  color: #3b95f5;
+}
+
+html[data-experience="netflix"] [data-xp-card-media] {
+  aspect-ratio: 16 / 9;
+  border-radius: var(--xp-card-radius);
+  border-color: transparent;
+  background: #181818;
+  box-shadow: none;
+}
+
+html[data-experience="netflix"] [data-xp-card]:hover [data-xp-card-media] {
+  border-color: transparent;
+  box-shadow: var(--shadow-xl);
+}
+
+html[data-experience="netflix"] [data-xp-card-media] .bg-accent-strong {
+  background: #fff;
+  color: #000;
+}
+
+html[data-experience="netflix"] [data-xp-card-media] .bg-accent-strong .fill-white {
+  fill: #000;
+}
+
+html[data-experience="disney-hotstar"] [data-xp-card-media] {
+  border-radius: var(--xp-card-radius);
+}
+
+html[data-experience="disney-hotstar"] [data-xp-card]:hover [data-xp-card-media] {
+  border-color: rgba(31, 128, 224, 0.55);
+  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(31, 128, 224, 0.25);
+}
+
+html[data-experience="apple-tv"] [data-xp-card-media] {
+  border-radius: var(--xp-card-radius);
+  border-color: transparent;
+  box-shadow: var(--shadow-lg);
+}
+
+html[data-experience="apple-tv"] [data-xp-card]:hover [data-xp-card-media] {
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: var(--shadow-xl);
+}
+
+html[data-experience="disney-hotstar"] [data-xp-card-caption] h3 {
+  font-weight: 600;
+  color: #f9f9fb;
+}
+
+html[data-experience="apple-tv"] [data-xp-card-caption] h3 {
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+html[data-experience="apple-tv"] [data-xp-card-caption] p {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.xp-card-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  padding: 1.5rem 0.75rem 0.65rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.94), rgba(0, 0, 0, 0.45) 55%, transparent);
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity var(--xp-base) var(--xp-ease),
+    transform var(--xp-base) var(--xp-ease);
+  pointer-events: none;
+}
+
+.xp-card-overlay > span {
+  display: block;
+  overflow: hidden;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-xp-card]:hover .xp-card-overlay {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (hover: none) {
+  .xp-card-overlay {
+    display: none;
+  }
+}
+
+/* ── Focus rings follow the experience ──────────────────────────── */
+html[data-experience="netflix"] .tv-focused {
+  border-radius: var(--xp-card-radius);
+}
+
+html[data-experience="apple-tv"] .tv-focused,
+html[data-experience="apple-tv"] .tv-focusable:focus-visible {
+  box-shadow: 0 0 0 3px #f5f5f7, 0 0 24px rgba(255, 255, 255, 0.35);
+}
+
+/* ── Experience-native home structures ──────────────────────────── */
+/* Both rails are always in the HTML so the server and the skin agree; only
+   the matching experience unveils them. */
+.xp-netflix-only,
+.xp-disney-only {
+  display: none;
+}
+
+html[data-experience="netflix"] .xp-netflix-only,
+html[data-experience="disney-hotstar"] .xp-disney-only {
+  display: block;
+}
+
+/* ── Netflix Top 10 ───────────────────────────────────────────────
+   The numeral is part of the card, not a label beside it. A fixed-width
+   rank well sits under the poster; the poster covers the well's right edge,
+   so every card — including rank 10 — is exactly the same width. The row
+   pages with `translate3d`; there is no native horizontal scroll or bar. */
+.xp-top10 {
+  --poster-w: 6rem; /* 96px */
+  --poster-h: 9rem; /* 144px */
+  --rank-size: calc(var(--poster-h) * 1.36);
+  --rank-w: calc(var(--poster-w) * 0.8);
+  --rank-overlap: calc(var(--poster-w) * 0.15);
+  --top10-gap: 5px;
+  --top10-ms: 500ms;
+}
+
+@media (min-width: 640px) {
+  .xp-top10 {
+    --poster-w: 7.5rem; /* 120px */
+    --poster-h: 11.25rem; /* 180px */
+  }
+}
+
+@media (min-width: 1024px) {
+  .xp-top10 {
+    --poster-w: 8.25rem; /* 132px */
+    --poster-h: 12.375rem; /* 198px */
+  }
+}
+
+.xp-top10-viewport {
+  overflow: hidden;
+  /* The numerals are taller than the posters, so the row needs breathing room
+     above and below or their ink is cropped by the viewport. */
+  padding-block: 1.25rem;
+  touch-action: pan-y;
+}
+
+.xp-top10-track {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--top10-gap);
+  overflow: visible;
+  transform: translate3d(0, 0, 0);
+  transition: transform var(--top10-ms) cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.xp-top10-card {
+  display: flex;
+  flex: none;
+  width: calc(var(--rank-w) + var(--poster-w) - var(--rank-overlap));
+  height: var(--poster-h);
+  align-items: flex-end;
+}
+
+.xp-top10-link {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: flex-end;
+  outline: none;
+}
+
+.xp-top10-rank {
+  position: relative;
+  z-index: 0;
+  display: block;
+  width: var(--rank-w);
+  height: 100%;
+  flex: none;
+}
+
+.xp-top10-num {
+  position: absolute;
+  left: 0;
+  /* line-height crops the box above the glyph's descent; lift the box so the
+     rounded digits' ink overshoot sits on the poster's bottom edge. */
+  bottom: 0.023em;
+  display: block;
+  color: #141414;
+  font-family: var(--font-sans);
+  font-size: var(--rank-size);
+  font-weight: 900;
+  line-height: 0.72;
+  letter-spacing: -0.07em;
+  white-space: nowrap;
+  paint-order: stroke fill;
+  -webkit-text-stroke: 2px #595959;
+  user-select: none;
+}
+
+/* Two digits in a one-digit well: condense them so the card stays the same
+   width as ranks 1–9. The poster still overlaps their right edge. */
+.xp-top10-num[data-double="true"] {
+  letter-spacing: -0.1em;
+  transform: scaleX(0.585);
+  transform-origin: left bottom;
+}
+
+.xp-top10-poster {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: var(--poster-w);
+  height: 100%;
+  flex: none;
+  margin-left: calc(var(--rank-overlap) * -1);
+  overflow: hidden;
+  border-radius: 4px;
+  background: #181818;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  transition:
+    transform var(--xp-base) var(--xp-ease),
+    box-shadow var(--xp-base) var(--xp-ease);
+}
+
+.xp-top10-title {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 2;
+  overflow: hidden;
+  padding: 1.4rem 0.4rem 0.4rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.92), transparent);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity var(--xp-base) var(--xp-ease),
+    transform var(--xp-base) var(--xp-ease);
+  pointer-events: none;
+}
+
+.xp-top10-link:focus-visible .xp-top10-poster {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.xp-top10-link:focus-visible .xp-top10-title {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (hover: hover) {
+  .xp-top10-link:hover .xp-top10-poster {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.7);
+  }
+
+  .xp-top10-link:hover .xp-top10-title {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (hover: none) {
+  .xp-top10-title {
+    display: none;
+  }
+}
+
+/* Coarse pointers swipe the track instead of using arrows. */
+@media (pointer: coarse) {
+  .xp-top10-arrow {
+    display: none;
+  }
+}
+
+/* Disney+ Hotstar brand hub */
+.xp-brand-tile {
+  position: relative;
+  display: grid;
+  min-height: 104px;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg, 0.75rem);
+  transition:
+    transform var(--xp-base) var(--xp-ease),
+    border-color var(--xp-base) var(--xp-ease),
+    box-shadow var(--xp-base) var(--xp-ease);
+}
+
+.xp-brand-tile:hover {
+  transform: translateY(-3px);
+  border-color: rgba(31, 128, 224, 0.5);
+  box-shadow: var(--shadow-lg), 0 0 34px rgba(31, 128, 224, 0.2);
+}
+
+.xp-brand-glow {
+  position: absolute;
+  inset: -55% -10% auto;
+  height: 150%;
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.xp-brand-mark {
+  position: relative;
+  z-index: 1;
+  padding-inline: 0.75rem;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.xp-brand-disney {
+  background: linear-gradient(135deg, #071226 0%, #123a6b 100%);
+}
+
+.xp-brand-disney .xp-brand-glow {
+  background: radial-gradient(ellipse at 50% 0%, rgba(64, 156, 255, 0.4), transparent 70%);
+}
+
+.xp-brand-disney .xp-brand-mark {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2.1rem;
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  color: #eaf4ff;
+  text-shadow: 0 4px 24px rgba(64, 156, 255, 0.55);
+}
+
+.xp-brand-pixar {
+  background: linear-gradient(135deg, #0b1220 0%, #1b3757 100%);
+}
+
+.xp-brand-pixar .xp-brand-glow {
+  background: radial-gradient(ellipse at 50% 0%, rgba(120, 190, 255, 0.3), transparent 70%);
+}
+
+.xp-brand-pixar .xp-brand-mark {
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: 0.32em;
+  color: #ffffff;
+  text-transform: uppercase;
+  text-shadow: 0 3px 18px rgba(120, 190, 255, 0.5);
+}
+
+.xp-brand-marvel {
+  background: linear-gradient(135deg, #230306 0%, #6d0d14 100%);
+}
+
+.xp-brand-marvel .xp-brand-glow {
+  background: radial-gradient(ellipse at 50% 0%, rgba(229, 9, 20, 0.38), transparent 70%);
+}
+
+.xp-brand-marvel .xp-brand-mark {
+  padding: 0.28rem 0.7rem;
+  background: #e50914;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.xp-brand-star-wars {
+  background: linear-gradient(135deg, #04060d 0%, #101620 100%);
+}
+
+.xp-brand-star-wars .xp-brand-glow {
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 232, 31, 0.16), transparent 70%);
+}
+
+.xp-brand-star-wars .xp-brand-mark {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  color: transparent;
+  -webkit-text-stroke: 1.5px #ffe81f;
+  text-transform: uppercase;
+}
+
+.xp-brand-natgeo {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1c1c1c 100%);
+}
+
+.xp-brand-natgeo .xp-brand-glow {
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 204, 0, 0.16), transparent 70%);
+}
+
+.xp-brand-natgeo .xp-brand-mark {
+  max-width: 9rem;
+  border-left: 6px solid #ffcc00;
+  padding-left: 0.5rem;
+  text-align: left;
+  color: #f4f4f4;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+@media (max-width: 639px) {
+  .xp-brand-tile {
+    min-height: 82px;
+  }
+
+  .xp-brand-disney .xp-brand-mark {
+    font-size: 1.55rem;
+  }
+
+  .xp-brand-pixar .xp-brand-mark {
+    font-size: 1rem;
+    letter-spacing: 0.24em;
+  }
+
+  .xp-brand-marvel .xp-brand-mark {
+    font-size: 0.92rem;
+  }
+
+  .xp-brand-star-wars .xp-brand-mark {
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+  }
+
+  .xp-brand-natgeo .xp-brand-mark {
+    font-size: 0.52rem;
+    letter-spacing: 0.16em;
+  }
+}
+
+/* Rows follow each service's rhythm and heading scale. */
+html[data-experience="netflix"] [data-xp-row] {
+  margin-bottom: 2.6rem;
+}
+
+html[data-experience="netflix"] [data-xp-row-title] {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+html[data-experience="disney-hotstar"] [data-xp-row-title] {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+html[data-experience="apple-tv"] [data-xp-row] {
+  margin-bottom: 4rem;
+}
+
+html[data-experience="apple-tv"] [data-xp-row-title] {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+/* Netflix's row-level "Explore All" appears when the row is hovered. Kept out
+   of the gate on touch, where there is no hover to reveal it. */
+@media (hover: hover) {
+  html[data-experience="netflix"] [data-xp-row] [data-xp-seeall] {
+    opacity: 0;
+    transition: opacity 200ms var(--xp-ease);
+  }
+
+  html[data-experience="netflix"] [data-xp-row]:hover [data-xp-seeall],
+  html[data-experience="netflix"] [data-xp-row] [data-xp-seeall]:focus-visible {
+    opacity: 1;
+  }
+}
+
+/* Footers */
+.xp-footer-netflix {
+  background: #000;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.xp-footer-disney {
+  background: #0a0b0f;
+  border-top: 1px solid rgba(31, 128, 224, 0.16);
+}
+
+.xp-footer-apple {
+  background: #000;
+}
+
+/* ── Service-native billboards ──────────────────────────────────── */
+/* Cinevo keeps its carousel; the clones get the masthead each service
+   actually ships, so the fold itself reads as a different product. */
+.bb {
+  position: relative;
+  height: min(92vh, 940px);
+  min-height: 560px;
+  overflow: hidden;
+  background: #000;
+}
+
+html[data-experience="disney-hotstar"] .bb {
+  height: min(80vh, 820px);
+  background: #0f1014;
+}
+
+html[data-experience="apple-tv"] .bb {
+  height: min(96vh, 1010px);
+}
+
+.bb-art {
+  object-position: center 22%;
+  filter: brightness(0.74) saturate(1.05);
+  transform: scale(1.03);
+  transition:
+    opacity 1400ms var(--xp-ease),
+    transform 9000ms ease-out;
+}
+
+.bb-art-ready {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.bb-trailer iframe {
+  filter: brightness(0.62);
+}
+
+.bb-fade-bottom {
+  background: linear-gradient(
+    to top,
+    #000 0%,
+    rgba(0, 0, 0, 0.9) 12%,
+    rgba(0, 0, 0, 0.45) 42%,
+    transparent 72%
+  );
+}
+
+html[data-experience="disney-hotstar"] .bb-fade-bottom {
+  background: linear-gradient(
+    to top,
+    #0f1014 0%,
+    rgba(15, 16, 20, 0.86) 16%,
+    rgba(15, 16, 20, 0.3) 52%,
+    transparent 78%
+  );
+}
+
+.bb-fade-side {
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.92) 0%,
+    rgba(0, 0, 0, 0.55) 38%,
+    transparent 70%
+  );
+}
+
+html[data-experience="disney-hotstar"] .bb-fade-side {
+  background: linear-gradient(
+    to right,
+    rgba(15, 16, 20, 0.94) 0%,
+    rgba(15, 16, 20, 0.42) 44%,
+    transparent 76%
+  );
+}
+
+.bb-fade-apple {
+  background: radial-gradient(70% 74% at 50% 38%, transparent 32%, rgba(0, 0, 0, 0.58) 100%);
+}
+
+.bb-inner {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  padding: 0 1.5rem 5.5rem;
+}
+
+@media (min-width: 768px) {
+  .bb-inner {
+    padding: 0 3.5rem 7.5rem;
+  }
+}
+
+.bb-inner-apple {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  padding-bottom: 4.5rem;
+}
+
+.bb-copy {
+  max-width: 44rem;
+}
+
+.bb-inner-apple .bb-copy {
+  display: flex;
+  max-width: 54rem;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bb-kicker {
+  display: inline-block;
+  color: #e50914;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+
+.bb-kicker-disney {
+  color: #8fd0ff;
+}
+
+.bb-kicker-apple {
+  color: rgba(255, 255, 255, 0.62);
+  letter-spacing: 0.28em;
+}
+
+.bb-apple-brand {
+  margin-bottom: 1.1rem;
+}
+
+.xp-billboard-brand {
+  display: inline-flex;
+  height: 1.9rem;
+  width: auto;
+  align-items: center;
+  color: #fff;
+}
+
+.bb-title {
+  margin-top: 0.55rem;
+  color: #fff;
+  font-size: clamp(2.7rem, 6vw, 5.8rem);
+  font-weight: 900;
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  text-shadow: 0 6px 40px rgba(0, 0, 0, 0.65);
+}
+
+.bb-title-disney {
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.bb-title-apple {
+  font-size: clamp(2.5rem, 5.4vw, 4.9rem);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+}
+
+.bb-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: 1.1rem;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.bb-meta-apple {
+  gap: 0.75rem;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.68);
+  font-weight: 500;
+}
+
+.bb-match {
+  color: #46d369;
+  font-weight: 700;
+}
+
+.bb-chip {
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  padding: 1px 6px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.bb-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.bb-overview {
+  display: -webkit-box;
+  overflow: hidden;
+  max-width: 38rem;
+  margin-top: 1.05rem;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 1rem;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.bb-overview-apple {
+  max-width: 42rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 1.02rem;
+  -webkit-line-clamp: 2;
+}
+
+.bb-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.7rem;
+}
+
+.bb-actions-apple {
+  justify-content: center;
+}
+
+.bb-btn {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 0.6rem;
+  border-radius: 4px;
+  padding: 0.75rem 1.6rem;
+  font-size: 1rem;
+  font-weight: 700;
+  transition:
+    background-color 200ms var(--xp-ease),
+    transform 200ms var(--xp-ease);
+}
+
+.bb-btn:hover {
+  transform: translateY(-1px);
+}
+
+.bb-btn-netflix-play {
+  border-radius: var(--radius-lg, 0.25rem);
+  background: #fff;
+  color: #000;
+}
+
+.bb-btn-netflix-play:hover {
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.bb-btn-netflix-info {
+  border-radius: var(--radius-lg, 0.25rem);
+  background: rgba(109, 109, 110, 0.7);
+  color: #fff;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.bb-btn-netflix-info:hover {
+  background: rgba(109, 109, 110, 0.5);
+}
+
+.bb-btn-disney-play {
+  border-radius: 999px;
+  background: #1f80e0;
+  color: #fff;
+}
+
+.bb-btn-disney-play:hover {
+  background: #3b95f5;
+}
+
+.bb-btn-disney-trailer {
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.bb-btn-disney-trailer:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.bb-btn-apple-play {
+  border-radius: 999px;
+  background: #f5f5f7;
+  color: #000;
+  font-weight: 600;
+}
+
+.bb-btn-apple-play:hover {
+  background: #e8e8ed;
+}
+
+.bb-btn-apple-add {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-weight: 500;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.bb-btn-apple-add:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Netflix's corner furniture: the Top 10 stamp and the maturity rail. */
+.bb-top10 {
+  position: absolute;
+  top: 22%;
+  right: 1.5rem;
+  z-index: 12;
+  display: none;
+  width: 5.6rem;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.55rem 0.5rem 0.6rem;
+  background: #e50914;
+  color: #fff;
+  line-height: 1;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.bb-top10 span {
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.bb-top10 span:last-child {
+  margin-top: 0.3rem;
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  opacity: 0.85;
+}
+
+.bb-top10 strong {
+  font-size: 1.9rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+@media (min-width: 900px) {
+  .bb-top10 {
+    display: flex;
+  }
+}
+
+.bb-maturity {
+  position: absolute;
+  right: 0;
+  bottom: 9rem;
+  z-index: 12;
+  display: none;
+  align-items: center;
+  gap: 0.8rem;
+  border-left: 3px solid rgba(255, 255, 255, 0.65);
+  background: rgba(20, 20, 20, 0.55);
+  padding: 0.55rem 2.6rem 0.55rem 0.85rem;
+  color: #fff;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.bb-maturity-rating {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 0 0.3rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.bb-maturity-note {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+}
+
+@media (min-width: 1024px) {
+  .bb-maturity {
+    display: flex;
+  }
+}
+
+.bb-dashes {
+  position: absolute;
+  right: 1.5rem;
+  bottom: 1.6rem;
+  z-index: 14;
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+@media (min-width: 768px) {
+  .bb-dashes {
+    right: 3.5rem;
+  }
+}
+
+.bb-dash-hit {
+  display: grid;
+  min-height: 44px;
+  min-width: 44px;
+  place-items: center;
+  padding: 0;
+}
+
+.bb-dash {
+  display: block;
+  width: 2.4rem;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.28);
+  transition: background-color 240ms var(--xp-ease);
+}
+
+.bb-dash-on {
+  background: #fff;
+}
+
+@media (max-width: 640px) {
+  .bb-title {
+    font-size: clamp(2.1rem, 11vw, 3.2rem);
+  }
+
+  .bb-overview {
+    font-size: 0.92rem;
+    -webkit-line-clamp: 3;
+  }
+
+  .bb-btn {
+    min-height: 44px;
+    padding: 0.65rem 1.25rem;
+    font-size: 0.92rem;
+  }
+}
+
+/* ── Native header treatments ───────────────────────────────────── */
+html[data-experience="netflix"] [data-xp-nav] {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.86) 0%, transparent 100%);
+  border-bottom-color: transparent;
+  box-shadow: none;
+}
+
+html[data-experience="netflix"] [data-xp-nav][data-scrolled="true"] {
+  background: #000;
+}
+
+html[data-experience="netflix"] [data-xp-nav-link] {
+  color: #e5e5e5;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+html[data-experience="netflix"] [data-xp-nav-link]:hover {
+  color: #b3b3b3;
+}
+
+html[data-experience="netflix"] [data-xp-nav-active] {
+  display: none;
+}
+
+html[data-experience="netflix"] [data-xp-nav-heart] {
+  display: none;
+}
+
+html[data-experience="netflix"] [data-xp-signin] {
+  border: 0;
+  border-radius: 0;
+  padding: 0.35rem 0.75rem;
+  color: #fff;
+  font-weight: 700;
+}
+
+html[data-experience="disney-hotstar"] [data-xp-nav] {
+  background: #0f1014;
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
+
+html[data-experience="disney-hotstar"] [data-xp-nav-heart] {
+  display: none;
+}
+
+html[data-experience="apple-tv"] [data-xp-nav] {
+  background: rgba(0, 0, 0, 0.6);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+}
+
+html[data-experience="apple-tv"] [data-xp-nav][data-scrolled="true"] {
+  background: rgba(0, 0, 0, 0.82);
+}
+
+html[data-experience="apple-tv"] [data-xp-nav-link] {
+  font-size: 13px;
+  font-weight: 400;
+}
+
+html[data-experience="apple-tv"] [data-xp-nav-heart] {
+  display: none;
+}
+
+html[data-experience="apple-tv"] [data-xp-signin] {
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #f5f5f7;
+}
+
+/* Row cards: keep the Cinevo star strip out of the clones. */
+html[data-experience="netflix"] [data-xp-card-media] .text-gold,
+html[data-experience="disney-hotstar"] [data-xp-card-media] .text-gold,
+html[data-experience="apple-tv"] [data-xp-card-media] .text-gold {
+  display: none;
+}
+
+/* ── Netflix home grammar ───────────────────────────────────────── */
+/* The member home sits on #141414, not pure black; only the billboard and
+   footer are #000. Everything below the fold inherits this canvas. */
+html[data-experience="netflix"] body {
+  background-color: #141414;
+}
+
+html[data-experience="netflix"] .bb-fade-bottom {
+  background: linear-gradient(
+    to top,
+    #141414 0%,
+    rgba(20, 20, 20, 0.92) 12%,
+    rgba(20, 20, 20, 0.45) 44%,
+    transparent 74%
+  );
+}
+
+.xp-row-heading {
+  font-family: var(--font-sans);
+  font-size: clamp(1.05rem, 1.4vw, 1.35rem);
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+
+html[data-experience="netflix"] [data-xp-row] {
+  margin-bottom: 1.9rem;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 768px) {
+  html[data-experience="netflix"] [data-xp-row] {
+    padding-inline: 3rem;
+  }
+}
+
+/* Netflix tiles nearly touch: 4px gutters, 4px corners. */
+html[data-experience="netflix"] [data-xp-row] .scrollbar-hide {
+  gap: 0.4rem;
+}
+
+html[data-experience="netflix"] [data-xp-row-title] {
+  font-family: var(--font-sans);
+  font-weight: 600;
+}
+
+html[data-experience="netflix"] [data-xp-card-media] {
+  border-radius: 4px;
+}
+
+/* The card itself stays still; the portalled preview (delayed, like the real
+   service) is the hover state. Cinevo's play/trailer overlay and star strip
+   belong to the signature experience only. */
+html[data-experience="netflix"] [data-xp-card-hover],
+html[data-experience="netflix"] [data-xp-card-score] {
+  display: none;
+}
+
+html[data-experience="netflix"] [data-xp-card-media] > span.absolute.top-2 {
+  border-radius: 2px;
+  background: #e50914;
+  color: #fff;
+}
+
+/* ══ Service-native title / watch pages ═══════════════════════════
+   A clone does not reuse Cinevo's title stack. The same TMDb data is laid out
+   the way the service does: full-bleed backdrop, title treatment, its own
+   action pair, episodes, a More Like This section and an About block. */
+
+.xp-detail {
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.xp-detail-hero {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: 76vh;
+  padding: 9rem 4vw 3.5rem;
+  overflow: hidden;
+}
+
+/* The artwork frame. Every non-Netflix variant paints it full-bleed behind the
+   copy; Netflix promotes it to its own band above the copy. */
+.xp-detail-art {
+  position: absolute;
+  inset: 0;
+}
+
+.xp-detail-backdrop {
+  position: absolute;
+  inset: 0;
+}
+
+.xp-detail-backdrop img {
+  object-position: center 18%;
+}
+
+.xp-detail-scrim {
+  position: absolute;
+  inset: 0;
+}
+
+.xp-detail-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 90rem;
+  margin-inline: auto;
+}
+
+.xp-detail-kicker {
+  margin: 0 0 0.9rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.xp-detail-title {
+  margin: 0 0 1rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 6.4vw, 5.4rem);
+  font-weight: 900;
+  line-height: 0.96;
+  letter-spacing: -0.035em;
+  color: #fff;
+  text-shadow: 0 2px 34px rgba(0, 0, 0, 0.55);
+}
+
+.xp-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 1rem;
+  margin-bottom: 1.1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.xp-detail-match {
+  color: #46d369;
+  font-weight: 800;
+}
+
+.xp-detail-chip {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 2px;
+  padding: 0 0.3rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #fff;
+}
+
+.xp-detail-overview {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 44rem;
+  margin: 0 0 1.6rem;
+  font-size: clamp(0.92rem, 1.2vw, 1.02rem);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.xp-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.xp-detail-play,
+.xp-detail-trailer,
+.xp-detail-list > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.72rem 1.6rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border: 0;
+  cursor: pointer;
+  transition:
+    background var(--xp-fast) var(--xp-ease),
+    color var(--xp-fast) var(--xp-ease),
+    transform var(--xp-fast) var(--xp-ease);
+}
+
+.xp-detail-play:active,
+.xp-detail-trailer:active,
+.xp-detail-list > button:active {
+  transform: scale(0.97);
+}
+
+.xp-detail-section {
+  width: 100%;
+  max-width: 90rem;
+  margin-inline: auto;
+  padding: 2.75rem 4vw;
+}
+
+.xp-detail-player {
+  width: 100%;
+  max-width: 90rem;
+  margin-inline: auto;
+  padding: 0 4vw 1rem;
+}
+
+.xp-detail-heading {
+  margin: 0 0 1.25rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 2vw, 1.7rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+/* Netflix: the title page opens like an expanded preview — the player in its own
+   band, then the copy on the canvas — rather than repeating the billboard's
+   full-bleed overlay. */
+html[data-experience="netflix"] .xp-detail-hero {
+  display: block;
+  min-height: 0;
+  padding: 5.75rem 4vw 0;
+}
+
+/* The player takes the artwork band's place, so it drops the page-level player
+   padding and pulls its own frame flush with the copy below. */
+html[data-experience="netflix"] .xp-detail-player-hero {
+  padding: 0 0 1rem;
+  scroll-margin-top: 5rem;
+}
+
+html[data-experience="netflix"] .xp-detail-inner {
+  padding: 1.35rem 0 2.4rem;
+}
+
+html[data-experience="netflix"] .xp-detail-title {
+  margin-bottom: 0.85rem;
+  font-size: clamp(2.4rem, 5.2vw, 4.8rem);
+  line-height: 0.98;
+}
+
+html[data-experience="netflix"] .xp-detail-kicker {
+  color: #e50914;
+}
+
+html[data-experience="netflix"] .xp-detail-play {
+  background: #fff;
+  color: #000;
+  border-radius: 4px;
+}
+
+html[data-experience="netflix"] .xp-detail-play:hover {
+  background: rgba(255, 255, 255, 0.76);
+}
+
+html[data-experience="netflix"] .xp-detail-list > button {
+  background: rgba(109, 109, 110, 0.7);
+  color: #fff;
+  border-radius: 4px;
+}
+
+html[data-experience="netflix"] .xp-detail-list > button:hover {
+  background: rgba(109, 109, 110, 0.42);
+}
+
+html[data-experience="netflix"] .xp-detail-list > button .text-success {
+  color: #fff;
+}
+
+html[data-experience="netflix"] .xp-detail-trailer {
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 4px;
+}
+
+html[data-experience="netflix"] .xp-detail-trailer:hover {
+  border-color: #fff;
+}
+
+html[data-experience="netflix"] .xp-detail-player .player-stage,
+html[data-experience="netflix"] .xp-detail-player .player-stage + div {
+  border-radius: 4px;
+}
+
+/* Disney+ Hotstar */
+html[data-experience="disney-hotstar"] .xp-detail-kicker {
+  color: #5aa9ff;
+}
+
+html[data-experience="disney-hotstar"] .xp-detail-scrim {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(11, 15, 26, 0.55) 0%,
+      rgba(11, 15, 26, 0.08) 32%,
+      rgba(11, 15, 26, 0.78) 74%,
+      #0b0f1a 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(11, 15, 26, 0.9) 0%,
+      rgba(11, 15, 26, 0.22) 60%,
+      transparent 100%
+    );
+}
+
+html[data-experience="disney-hotstar"] .xp-detail-match {
+  color: #7bc0ff;
+}
+
+html[data-experience="disney-hotstar"] .xp-detail-play {
+  background: linear-gradient(120deg, #0072e5, #0f7bff);
+  color: #fff;
+  border-radius: 9999px;
+  box-shadow: 0 8px 24px rgba(0, 114, 229, 0.35);
+}
+
+html[data-experience="disney-hotstar"] .xp-detail-play:hover {
+  background: linear-gradient(120deg, #0f7bff, #2b8cff);
+}
+
+html[data-experience="disney-hotstar"] .xp-detail-list > button,
+html[data-experience="disney-hotstar"] .xp-detail-trailer {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: #fff;
+  border-radius: 9999px;
+}
+
+html[data-experience="disney-hotstar"] .xp-detail-list > button:hover,
+html[data-experience="disney-hotstar"] .xp-detail-trailer:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Apple TV+ */
+html[data-experience="apple-tv"] .xp-detail-hero {
+  min-height: 82vh;
+  justify-content: center;
+  text-align: center;
+}
+
+html[data-experience="apple-tv"] .xp-detail-inner {
+  display: flex;
+  max-width: 60rem;
+  flex-direction: column;
+  align-items: center;
+}
+
+html[data-experience="apple-tv"] .xp-detail-kicker {
+  color: #f5f5f7;
+  letter-spacing: 0.24em;
+}
+
+html[data-experience="apple-tv"] .xp-detail-scrim {
+  background:
+    radial-gradient(90% 70% at 50% 30%, transparent 0%, rgba(0, 0, 0, 0.35) 55%, rgba(0, 0, 0, 0.9) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.2), #000 96%);
+}
+
+html[data-experience="apple-tv"] .xp-detail-overview {
+  max-width: 40rem;
+}
+
+html[data-experience="apple-tv"] .xp-detail-actions {
+  justify-content: center;
+}
+
+html[data-experience="apple-tv"] .xp-detail-match {
+  color: #f5f5f7;
+}
+
+html[data-experience="apple-tv"] .xp-detail-play {
+  background: #f5f5f7;
+  color: #000;
+  border-radius: 9999px;
+}
+
+html[data-experience="apple-tv"] .xp-detail-play:hover {
+  background: #fff;
+}
+
+html[data-experience="apple-tv"] .xp-detail-list > button,
+html[data-experience="apple-tv"] .xp-detail-trailer {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+  border-radius: 9999px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+html[data-experience="apple-tv"] .xp-detail-list > button:hover,
+html[data-experience="apple-tv"] .xp-detail-trailer:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* More Like This */
+.xp-mlt-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.4rem;
+}
+
+.xp-mlt-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  color: inherit;
+}
+
+.xp-mlt-art {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #222;
+}
+
+.xp-mlt-art img {
+  transition: transform var(--xp-slow) var(--xp-ease);
+}
+
+.xp-mlt-card:hover .xp-mlt-art img {
+  transform: scale(1.04);
+}
+
+.xp-mlt-play {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity var(--xp-fast) var(--xp-ease);
+}
+
+.xp-mlt-play > svg {
+  width: 2.6rem;
+  height: 2.6rem;
+  padding: 0.7rem;
+  border-radius: 9999px;
+  background: #fff;
+  color: #000;
+  fill: #000;
+}
+
+.xp-mlt-card:hover .xp-mlt-play {
+  opacity: 1;
+}
+
+.xp-mlt-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.xp-mlt-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.xp-mlt-match {
+  color: #46d369;
+  font-weight: 800;
+}
+
+.xp-mlt-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.xp-mlt-overview {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.xp-mlt-rail {
+  display: flex;
+  gap: 0.85rem;
+  overflow-x: auto;
+  padding-bottom: 0.75rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.xp-mlt-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.xp-mlt-rail .xp-mlt-card {
+  flex: 0 0 17rem;
+  scroll-snap-align: start;
+}
+
+.xp-mlt-rail .xp-mlt-overview {
+  -webkit-line-clamp: 2;
+}
+
+html[data-experience="disney-hotstar"] .xp-mlt-art,
+html[data-experience="apple-tv"] .xp-mlt-art {
+  border-radius: 8px;
+}
+
+/* About / details */
+.xp-about-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+  margin-bottom: 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.xp-about-lead {
+  max-width: 52rem;
+  margin: 0 0 2rem;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.xp-about-facts {
+  display: grid;
+  gap: 0.8rem;
+  max-width: 56rem;
+  margin: 0;
+}
+
+.xp-about-facts > div {
+  display: grid;
+  grid-template-columns: 10rem 1fr;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.xp-about-facts dt {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.xp-about-facts dd {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.xp-about-seasons,
+.xp-about-watch {
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.xp-about-watch a {
+  color: #fff;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Episodes */
+.xp-episodes-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.xp-episodes-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 2vw, 1.7rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.xp-episodes-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.xp-episodes-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0.5rem 2.4rem 0.5rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.xp-episodes-select option {
+  background: #181818;
+  color: #fff;
+}
+
+.xp-episodes-chevron {
+  position: absolute;
+  right: 0.65rem;
+  width: 1rem;
+  height: 1rem;
+  color: #fff;
+  pointer-events: none;
+}
+
+.xp-episodes-sub {
+  margin: 0 0 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.xp-ep-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.xp-ep-row {
+  display: grid;
+  grid-template-columns: 2.2rem 160px 1fr;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem 0.35rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: inherit;
+  animation: xp-ep-in 0.35s var(--xp-ease) both;
+  transition: background var(--xp-fast) var(--xp-ease);
+}
+
+.xp-ep-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.xp-ep-row-current {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.xp-ep-num {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: center;
+}
+
+.xp-ep-thumb {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #222;
+}
+
+.xp-ep-thumb img {
+  transition: transform var(--xp-slow) var(--xp-ease);
+}
+
+.xp-ep-row:hover .xp-ep-thumb img {
+  transform: scale(1.05);
+}
+
+.xp-ep-thumb-play {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  background: rgba(0, 0, 0, 0.35);
+  transition: opacity var(--xp-fast) var(--xp-ease);
+}
+
+.xp-ep-thumb-play > svg {
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0.55rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #000;
+  fill: #000;
+}
+
+.xp-ep-row:hover .xp-ep-thumb-play {
+  opacity: 1;
+}
+
+.xp-ep-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.xp-ep-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.xp-ep-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.xp-ep-now,
+.xp-ep-watched {
+  padding: 0.12rem 0.4rem;
+  border-radius: 2px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.xp-ep-now {
+  background: #e50914;
+  color: #fff;
+}
+
+.xp-ep-watched {
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+html[data-experience="disney-hotstar"] .xp-ep-now {
+  background: #0f7bff;
+}
+
+html[data-experience="apple-tv"] .xp-ep-now {
+  background: rgba(255, 255, 255, 0.92);
+  color: #000;
+}
+
+.xp-ep-meta {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.xp-ep-overview {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.xp-ep-skeleton {
+  display: grid;
+  grid-template-columns: 2.2rem 160px 1fr;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem 0.35rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.xp-ep-skeleton-num,
+.xp-ep-skeleton-thumb,
+.xp-ep-skeleton-copy span {
+  display: block;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  animation: xp-skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+.xp-ep-skeleton-num {
+  height: 0.9rem;
+}
+
+.xp-ep-skeleton-thumb {
+  aspect-ratio: 16 / 9;
+}
+
+.xp-ep-skeleton-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.xp-ep-skeleton-copy span {
+  height: 0.7rem;
+}
+
+.xp-ep-skeleton-copy span:first-child {
+  width: 40%;
+}
+
+.xp-ep-skeleton-copy span:last-child {
+  width: 75%;
+}
+
+@keyframes xp-ep-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes xp-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (min-width: 768px) {
+  .xp-detail-hero,
+  .xp-detail-section,
+  .xp-detail-player {
+    padding-inline: 3.5rem;
+  }
+
+  .xp-mlt-rail .xp-mlt-card {
+    flex-basis: 20rem;
+  }
+}
+
+@media (max-width: 1023px) {
+  .xp-mlt-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639px) {
+  .xp-detail-hero {
+    min-height: 68vh;
+    padding-top: 7.5rem;
+  }
+
+  .xp-mlt-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .xp-ep-row,
+  .xp-ep-skeleton {
+    grid-template-columns: 1.8rem 112px 1fr;
+    gap: 0.7rem;
+  }
+
+  .xp-ep-overview {
+    display: none;
+  }
+
+  .xp-about-facts > div {
+    grid-template-columns: 7rem 1fr;
+  }
+}
+
+/* ── Reduced motion ─────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .xp-preview *,
+  .xp-preview *::before {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .xp-choice:hover .xp-preview-row > i {
+    transform: none;
+  }
+
+  .xp-brand-tile:hover {
+    transform: none;
+  }
+
+  .xp-top10-track {
+    transition: none !important;
+  }
+
+  .xp-top10-poster,
+  .xp-top10-title {
+    transition: none !important;
+  }
+
+  .xp-top10-link:hover .xp-top10-poster {
+    transform: none;
+  }
+
+  html[data-experience] [data-xp-hero] img {
+    transition: none !important;
+  }
+
+  .xp-ep-row {
+    animation: none;
+  }
+
+  .xp-ep-skeleton-num,
+  .xp-ep-skeleton-thumb,
+  .xp-ep-skeleton-copy span {
+    animation: none;
+  }
+
+  .xp-mlt-card:hover .xp-mlt-art img,
+  .xp-ep-row:hover .xp-ep-thumb img {
+    transform: none;
+  }
+}

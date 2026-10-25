@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { Check, Globe2, Layers, Loader2, Palette, RotateCcw, Type, Upload, X } from "lucide-react";
+import { Check, Globe2, Layers, Loader2, Palette, RotateCcw, Sparkles, Type, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   clearSiteTheme,
@@ -11,7 +11,9 @@ import {
   type SiteThemeAdminState,
 } from "@/app/actions/site-theme";
 import FontsourceBrowser from "@/components/theme/FontsourceBrowser";
+import { ExperienceGrid } from "@/components/theme/ExperienceSwitcher";
 import { accentDelta } from "@/lib/theme/accent";
+import { getExperience } from "@/lib/theme/experiences";
 import {
   ELEVATION_PRESETS,
   RADIUS_OPTIONS,
@@ -81,6 +83,7 @@ export default function ThemeStudio() {
     theme,
     themes,
     tokens,
+    experience,
     customizations,
     hasCustomizations,
     isStudioOpen,
@@ -90,6 +93,7 @@ export default function ThemeStudio() {
     clearCustomTokens,
     resetTheme,
   } = useTheme<CinevoTokens>();
+  const activeExperience = getExperience(experience);
   const reduceMotion = useReducedMotion();
   const [browseTarget, setBrowseTarget] = useState<"fontHeading" | "fontBody" | null>(null);
   const [siteAdmin, setSiteAdmin] = useState<SiteThemeAdminState | null>(null);
@@ -174,8 +178,11 @@ export default function ThemeStudio() {
   const publishedPreset = publishedTheme
     ? themes.find((entry) => entry.id === publishedTheme.themeId)
     : null;
+  const publishedExperience = publishedTheme
+    ? getExperience(publishedTheme.experience)
+    : null;
   const publishedLabel = publishedTheme
-    ? `${publishedPreset?.name ?? publishedTheme.themeId}${publishedTheme.delta ? " with overrides" : ""}`
+    ? `${publishedExperience?.name ?? "Cinevo"} · ${publishedPreset?.name ?? publishedTheme.themeId}${publishedTheme.delta ? " with overrides" : ""}`
     : "Shipped Cinevo palette";
 
   const publishCurrentTheme = useCallback(async () => {
@@ -183,7 +190,7 @@ export default function ThemeStudio() {
     setSiteBusy("publish");
 
     try {
-      const result = await publishSiteTheme({ themeId: theme, delta: customizations });
+      const result = await publishSiteTheme({ themeId: theme, experience, delta: customizations });
       if (!result.success) {
         toast.error(result.error ?? "Couldn't publish the site theme");
         return;
@@ -193,14 +200,14 @@ export default function ThemeStudio() {
         previous ? { ...previous, siteTheme: result.siteTheme ?? null, storageReady: true } : previous,
       );
       toast.success("Site theme published", {
-        description: "Visitors without their own theme now get this one.",
+        description: "Visitors without a saved theme now get this one.",
       });
     } catch {
       toast.error("Couldn't publish the site theme");
     } finally {
       setSiteBusy(null);
     }
-  }, [siteBusy, theme, customizations]);
+  }, [siteBusy, theme, experience, customizations]);
 
   const resetPublishedTheme = useCallback(async () => {
     if (siteBusy) return;
@@ -217,7 +224,7 @@ export default function ThemeStudio() {
         previous ? { ...previous, siteTheme: null, storageReady: true } : previous,
       );
       toast.success("Site theme reset", {
-        description: "Visitors without their own theme now see the shipped palette.",
+        description: "Visitors without a saved theme now see the shipped palette.",
       });
     } catch {
       toast.error("Couldn't reset the site theme");
@@ -352,7 +359,16 @@ export default function ThemeStudio() {
 
             <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4">
               <div className="flex flex-col gap-6 pb-10">
-                <Section icon={<Palette className="size-3.5" />} title="Palette" delay={0.02}>
+                <Section icon={<Sparkles className="size-3.5" />} title="Experience" delay={0.02}>
+                  <ExperienceGrid compact scope="studio" />
+                  <p className="text-[11px] leading-relaxed text-muted">
+                    <strong className="text-fg-secondary">{activeExperience.name}</strong> is active.
+                    Switching loads its shipped palette and chrome; the controls below then layer on
+                    top.
+                  </p>
+                </Section>
+
+                <Section icon={<Palette className="size-3.5" />} title="Palette" delay={0.06}>
                   {/* The full studio library is longer than the sheet, so the
                       grid owns its own scrollbar and the controls below stay
                       reachable without scrolling past every preset. */}
@@ -571,8 +587,8 @@ export default function ThemeStudio() {
                       </p>
                       <p className="mt-1 text-xs font-bold text-fg">{publishedLabel}</p>
                       <p className="mt-1.5 text-[11px] leading-relaxed text-muted">
-                        Shown to everyone without a saved theme of their own. Publish the palette
-                        and overrides above to make them the default.
+                        Shown to every visitor without a theme saved in their browser.
+                        Publish the active experience, palette and overrides above to replace it.
                       </p>
 
                       {!siteAdmin.storageReady && (
@@ -616,9 +632,9 @@ export default function ThemeStudio() {
 
                 <p className="text-[11px] leading-relaxed text-muted">
                   Saved in this browser and applied before first paint. Radius, type and colour
-                  overrides are cleared when you switch palettes; <strong>Reset</strong> returns to
-                  the palette exactly as shipped. A published site default applies until you save
-                  a theme of your own.
+                  overrides are cleared when you switch palettes or experiences;{" "}
+                  <strong>Reset</strong> returns to the active experience exactly as shipped. A
+                  published site default outranks a personal cookie.
                 </p>
               </div>
             </div>

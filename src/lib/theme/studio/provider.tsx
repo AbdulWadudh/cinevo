@@ -12,9 +12,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { getExperience, isExperienceId } from "../experiences";
 import { THEME_COOKIE } from "./cookie";
 import { loadFont } from "./fonts";
 import { resolveActiveTokens, tokensToCssVars } from "./tokens";
@@ -32,7 +34,7 @@ function writeCookie(payload: CompactCookiePayload): void {
   document.cookie = cookie;
 }
 
-function applyTokens(tokens: BaseTokens): void {
+function applyTokens(tokens: BaseTokens, experience: string): void {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
 
@@ -40,9 +42,7 @@ function applyTokens(tokens: BaseTokens): void {
     root.style.setProperty(key, value);
   }
 
-  // Radius is part of the preset schema but Cinevo's shape scale is fixed, so
-  // the studio's --radius-* shims are deliberately not applied (they would
-  // quietly resize every rounded-sm/md utility).
+  root.dataset.experience = experience;
 }
 
 export function ThemeProvider<T extends BaseTokens>({
@@ -54,10 +54,13 @@ export function ThemeProvider<T extends BaseTokens>({
   children: ReactNode;
   themes: ThemeDefinition<T>[];
   defaultTheme: string;
-  initialState: { themeId: string; delta?: Partial<T> };
+  initialState: { themeId: string; delta?: Partial<T>; experience?: string };
 }) {
   const [themeId, setThemeId] = useState(initialState.themeId);
   const [delta, setDelta] = useState<Partial<T> | undefined>(initialState.delta);
+  const [experience, setExperienceId] = useState(
+    isExperienceId(initialState.experience) ? initialState.experience : "cinevo",
+  );
   const [isStudioOpen, setStudioOpen] = useState(false);
 
   const activePreset = useMemo(
@@ -70,17 +73,22 @@ export function ThemeProvider<T extends BaseTokens>({
     [activePreset, delta],
   );
 
+  // The head script already painted these exact tokens onto <html>, so only
+  // later changes (studio previews, experience switches) need applying here.
+  const paintedByHead = useRef(false);
   useEffect(() => {
-    applyTokens(tokens);
-    // A saved font is re-fetched on load; the two bundled faces are no-ops.
+    if (paintedByHead.current) applyTokens(tokens, experience);
+    paintedByHead.current = true;
+    // A saved font is re-fetched on load; bundled and platform faces are no-ops.
     loadFont(tokens.fontHeading);
     loadFont(tokens.fontBody);
-  }, [tokens]);
+  }, [tokens, experience]);
 
   const persist = useCallback(
-    (id: string, nextDelta?: Partial<T>) => {
+    (id: string, nextDelta?: Partial<T>, nextExperience?: string) => {
       const payload: CompactCookiePayload<T> = { id, def: defaultTheme };
       if (nextDelta && Object.keys(nextDelta).length > 0) payload.d = nextDelta;
+      if (nextExperience && nextExperience !== "cinevo") payload.x = nextExperience;
       writeCookie(payload);
     },
     [defaultTheme],
@@ -89,10 +97,25 @@ export function ThemeProvider<T extends BaseTokens>({
   const setTheme = useCallback(
     (id: string) => {
       // A preset is a complete look: switching starts from its values rather
-      // than carrying one palette's overrides onto another.
+      // than carrying one palette's overrides onto another. The experience
+      // chrome stays put so studio palettes can retint Netflix/Disney+/Apple.
       setThemeId(id);
       setDelta(undefined);
-      persist(id, undefined);
+      persist(id, undefined, experience);
+    },
+    [persist, experience],
+  );
+
+  const setExperience = useCallback(
+    (id: string) => {
+      const next = getExperience(id);
+      // An experience is a complete shipped look: load its signature palette
+      // and clear overrides so the first paint is the faithful one. Studio
+      // edits made afterwards still layer on top.
+      setExperienceId(next.id);
+      setThemeId(next.paletteId);
+      setDelta(undefined);
+      persist(next.paletteId, undefined, next.id);
     },
     [persist],
   );
@@ -101,11 +124,11 @@ export function ThemeProvider<T extends BaseTokens>({
     (partial: Partial<T>) => {
       setDelta((previous) => {
         const next = { ...previous, ...partial };
-        persist(themeId, next);
+        persist(themeId, next, experience);
         return next;
       });
     },
-    [persist, themeId],
+    [persist, themeId, experience],
   );
 
   const clearCustomTokens = useCallback(
@@ -114,17 +137,37 @@ export function ThemeProvider<T extends BaseTokens>({
         if (!previous) return previous;
         const next = { ...previous };
         for (const key of keys) delete next[key];
-        persist(themeId, Object.keys(next).length > 0 ? next : undefined);
+        persist(themeId, Object.keys(next).length > 0 ? next : undefined, experience);
         return Object.keys(next).length > 0 ? next : undefined;
       });
     },
-    [persist, themeId],
+    [persist, themeId, experience],
   );
 
   const resetTheme = useCallback(() => {
     setDelta(undefined);
-    persist(themeId, undefined);
-  }, [persist, themeId]);
+    persist(themeId, undefined, experience);
+  }, [persist, themeId, experience]);
+
+  const applyThemeChoice = useCallback(
+    (choice: { themeId: string; experience?: string; delta?: Partial<T> }) => {
+      // All three parts move together, so this can't persist a half-switched
+      // theme the way chaining setExperience + setTheme would.
+      if (!themes.some((theme) => theme.id === choice.themeId)) return;
+
+      const nextExperience = isExperienceId(choice.experience)
+        ? choice.experience
+        : experience;
+      const nextDelta =
+        choice.delta && Object.keys(choice.delta).length > 0 ? choice.delta : undefined;
+
+      setThemeId(choice.themeId);
+      setExperienceId(nextExperience);
+      setDelta(nextDelta);
+      persist(choice.themeId, nextDelta, nextExperience);
+    },
+    [persist, experience, themes],
+  );
 
   const openStudio = useCallback(() => setStudioOpen(true), []);
   const closeStudio = useCallback(() => setStudioOpen(false), []);
@@ -134,28 +177,34 @@ export function ThemeProvider<T extends BaseTokens>({
       theme: themeId,
       tokens,
       themes,
+      experience,
       customizations: delta,
       hasCustomizations: Boolean(delta && Object.keys(delta).length > 0),
       isStudioOpen,
       openStudio,
       closeStudio,
       setTheme,
+      setExperience,
       setCustomTokens,
       clearCustomTokens,
       resetTheme,
+      applyThemeChoice,
     }),
     [
       themeId,
       tokens,
       themes,
+      experience,
       delta,
       isStudioOpen,
       openStudio,
       closeStudio,
       setTheme,
+      setExperience,
       setCustomTokens,
       clearCustomTokens,
       resetTheme,
+      applyThemeChoice,
     ],
   );
 

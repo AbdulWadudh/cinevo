@@ -23,10 +23,25 @@ export interface FontOption {
 const familyStack = (family: string, category: FontOption["category"]) =>
   `'${family}', ${category === "monospace" ? "ui-monospace, monospace" : category === "serif" ? "ui-serif, Georgia, serif" : "ui-sans-serif, system-ui, sans-serif"}`;
 
+/** Platform faces are already installed — asking Fontsource for them 404s. */
+const SYSTEM_FAMILIES = new Set([
+  "-apple-system",
+  "blinkmacsystemfont",
+  "sf pro text",
+  "sf pro display",
+  "helvetica neue",
+  "helvetica",
+  "arial",
+  "system-ui",
+  "ui-sans-serif",
+  "segoe ui",
+]);
+
 export const FONT_OPTIONS: FontOption[] = [
   { id: "plus-jakarta-sans", family: "Plus Jakarta Sans", category: "sans-serif", stack: BUNDLED["plus jakarta sans"] },
   { id: "geist", family: "Geist", category: "sans-serif", stack: BUNDLED.geist },
   { id: "inter", family: "Inter", category: "sans-serif", stack: familyStack("Inter", "sans-serif") },
+  { id: "roboto", family: "Roboto", category: "sans-serif", stack: familyStack("Roboto", "sans-serif") },
   { id: "outfit", family: "Outfit", category: "sans-serif", stack: familyStack("Outfit", "sans-serif") },
   { id: "space-grotesk", family: "Space Grotesk", category: "sans-serif", stack: familyStack("Space Grotesk", "sans-serif") },
   { id: "manrope", family: "Manrope", category: "sans-serif", stack: familyStack("Manrope", "sans-serif") },
@@ -91,6 +106,17 @@ export function fontsourceStack(family: string, category: string): string {
   return familyStack(family, kind);
 }
 
+/**
+ * Fontsource stylesheet for a themed face, or null when next/font already ships
+ * it. The server renders this into <head> so a custom display face is loading
+ * before the first paint instead of swapping in after hydration.
+ */
+export function fontStylesheetHref(value: string | undefined): string | null {
+  const family = fontFamilyOf(value);
+  if (!family || BUNDLED[family.toLowerCase()]) return null;
+  return `https://cdn.jsdelivr.net/fontsource/css/${slugify(family)}:vf@latest/index.css`;
+}
+
 function whenStylesheetFails(link: HTMLLinkElement, next: () => void): void {
   link.onerror = () => {
     link.remove();
@@ -101,7 +127,7 @@ function whenStylesheetFails(link: HTMLLinkElement, next: () => void): void {
 export function loadFont(value: string | undefined): void {
   if (typeof document === "undefined") return;
   const family = fontFamilyOf(value);
-  if (!family || BUNDLED[family.toLowerCase()]) return;
+  if (!family || BUNDLED[family.toLowerCase()] || SYSTEM_FAMILIES.has(family.toLowerCase())) return;
 
   const slug = slugify(family);
   if (loaded.has(slug) || document.getElementById(`cinevo-font-${slug}`)) return;

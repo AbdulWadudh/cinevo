@@ -13,6 +13,8 @@ interface WishlistButtonProps {
   rating?: number;
   releaseDate?: string;
   initialExists: boolean;
+  /** Service-native wording (e.g. "Watchlist" on Disney+). */
+  labels?: { add: string; added: string };
 }
 
 export default function WishlistButton({
@@ -22,10 +24,13 @@ export default function WishlistButton({
   posterPath,
   rating,
   releaseDate,
-  initialExists
+  initialExists,
+  labels,
 }: WishlistButtonProps) {
   const [exists, setExists] = useState(initialExists);
   const router = useRouter();
+  const addLabel = labels?.add ?? "My List";
+  const addedLabel = labels?.added ?? "Added to List";
 
   const handleToggle = async () => {
     // Optimistic toggle
@@ -62,12 +67,12 @@ export default function WishlistButton({
       {exists ? (
         <>
           <Check className="w-4 h-4" />
-          <span>Added to List</span>
+          <span>{addedLabel}</span>
         </>
       ) : (
         <>
           <Plus className="w-4 h-4" />
-          <span>My List</span>
+          <span>{addLabel}</span>
         </>
       )}
     </button>

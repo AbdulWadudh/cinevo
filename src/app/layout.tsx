@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Plus_Jakarta_Sans } from "next/font/google";
-import { cookies } from "next/headers";
 import "./globals.css";
+import "./experiences.css";
 import { Analytics } from "@vercel/analytics/next";
 import PwaRegister from "@/components/PwaRegister";
 import RadioMiniPlayer from "@/components/radio/RadioMiniPlayer";
@@ -9,25 +9,16 @@ import RadioPlayerProvider from "@/components/radio/RadioPlayerProvider";
 import ClickSpark from "@/components/reactbits/ClickSpark";
 import TrailerProvider from "@/components/TrailerProvider";
 import SpatialNavProvider from "@/components/tv/SpatialNavProvider";
+import ThemeMismatchNotice from "@/components/theme/ThemeMismatchNotice";
 import ThemeStudio from "@/components/theme/ThemeStudio";
 import Toaster from "@/components/ui/Toaster";
 import WatchSync from "@/components/watch/WatchSync";
 import WishlistProvider from "@/components/wishlist/WishlistProvider";
 import { site } from "@/config";
-import {
-	CUSTOMIZABLE_THEME_KEYS,
-	DEFAULT_THEME_ID,
-	themePresets,
-} from "@/lib/theme/presets";
-import {
-	getSsrThemeState,
-	isTrustedThemeCookie,
-	parseThemeCookie,
-	THEME_COOKIE,
-} from "@/lib/theme/studio/cookie";
+import { getActiveThemeState } from "@/lib/theme/active";
+import { DEFAULT_THEME_ID, themePresets } from "@/lib/theme/presets";
 import { ThemeProvider } from "@/lib/theme/studio/provider";
 import { ThemeStyle } from "@/lib/theme/studio/theme-style";
-import { getSiteTheme } from "@/lib/theme/site";
 
 const plusJakarta = Plus_Jakarta_Sans({
 	variable: "--font-plus-jakarta",
@@ -83,30 +74,13 @@ export default async function RootLayout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	const rawTheme = (await cookies()).get(THEME_COOKIE)?.value;
-	const personalTheme = parseThemeCookie(rawTheme, DEFAULT_THEME_ID);
-	const hasPersonalTheme =
-		Boolean(rawTheme) &&
-		isTrustedThemeCookie(personalTheme, themePresets, DEFAULT_THEME_ID);
-	// A visitor who has never picked a theme gets the admin-published default.
-	// Someone with a valid personal cookie keeps their own palette.
-	const siteTheme = hasPersonalTheme ? null : await getSiteTheme();
-	const initialTheme = hasPersonalTheme
-		? personalTheme
-		: siteTheme
-			? { id: siteTheme.themeId, d: siteTheme.delta, def: DEFAULT_THEME_ID }
-			: { id: DEFAULT_THEME_ID };
-	const themeState = getSsrThemeState(
-		initialTheme,
-		themePresets,
-		DEFAULT_THEME_ID,
-		CUSTOMIZABLE_THEME_KEYS,
-	);
+	const themeState = await getActiveThemeState();
 
 	return (
 		<html
 			lang="en"
 			suppressHydrationWarning
+			data-experience={themeState.experience}
 			className={`${plusJakarta.variable} ${geistSans.variable} dark h-full antialiased`}
 		>
 			<head>
@@ -124,6 +98,7 @@ export default async function RootLayout({
 					initialState={{
 						themeId: themeState.themeId,
 						delta: themeState.delta,
+						experience: themeState.experience,
 					}}
 				>
 					{/* Owns the audio element, so radio keeps playing across navigation. */}
@@ -151,6 +126,9 @@ export default async function RootLayout({
 					<WatchSync />
 					<PwaRegister />
 					<SpatialNavProvider />
+					{themeState.showMismatch && themeState.published && (
+						<ThemeMismatchNotice published={themeState.published} />
+					)}
 					<Toaster />
 				</ThemeProvider>
 				<Analytics />

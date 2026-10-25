@@ -19,6 +19,8 @@ import CastSection from "@/components/watch/CastSection";
 import ShareButton from "@/components/watch/ShareButton";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
 import SeasonList from "@/components/watch/SeasonList";
+import DetailPage, { type DetailVariant } from "@/components/experience/DetailPage";
+import { getActiveThemeState } from "@/lib/theme/active";
 import { site } from "@/config";
 
 interface PageProps {
@@ -94,14 +96,16 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
     similar,
     progressRes,
     wishlistRes,
-    watchProviders
+    watchProviders,
+    themeState,
   ] = await Promise.all([
     tmdb.getDetails(id, mediaType),
     tmdb.getCast(id, mediaType),
     tmdb.getSimilar(id, mediaType),
     getSingleWatchProgress(id, mediaType, isTV ? season : undefined, isTV ? episode : undefined),
     checkWishlistStatus(id, mediaType),
-    tmdb.getWatchProviders(id, mediaType, isTV ? season : undefined)
+    tmdb.getWatchProviders(id, mediaType, isTV ? season : undefined),
+    getActiveThemeState(),
   ]);
 
   if (!details) {
@@ -166,6 +170,53 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
           theme === "animation" ? "hover:border-purple-400 hover:text-purple-400" :
             theme === "bollywood" ? "hover:border-amber-500 hover:text-amber-500" :
               "hover:border-accent hover:text-accent";
+
+  // The clone experiences get their own title page: service-native backdrop,
+  // actions and metadata, then episodes / More Like This / About. Cinevo keeps
+  // the layout below untouched.
+  if (themeState.experience !== "cinevo") {
+    return (
+      <DetailPage
+        variant={themeState.experience as DetailVariant}
+        details={details}
+        cast={cast}
+        similar={similar}
+        mediaId={id}
+        mediaType={mediaType}
+        season={season}
+        episode={episode}
+        preview={preview}
+        wishlistExists={wishlistRes.exists}
+      >
+        <RadioAutoPause />
+        {/* Records this view into the user's watch history (no-op when signed
+            out, and no-op in preview — see `?preview=1` above) */}
+        <TrackWatch
+          mediaId={id}
+          mediaType={mediaType}
+          title={details.title || details.name || ""}
+          posterPath={details.poster_path || details.backdrop_path || undefined}
+          season={isTV ? season : undefined}
+          episode={isTV ? episode : undefined}
+          preview={preview}
+        />
+        <IframePlayer
+          mediaId={id}
+          mediaType={mediaType}
+          title={details.title || details.name || ""}
+          posterPath={details.backdrop_path || details.poster_path || undefined}
+          season={isTV ? season : undefined}
+          episode={isTV ? episode : undefined}
+          initialProgress={initialTime}
+          initialSourceKey={initialSourceKey}
+          initialSandbox={initialSandbox}
+          seasons={isTV && details.seasons ? (details.seasons as any[]).filter((s: any) => s.season_number > 0) : undefined}
+          runtimeMinutes={details.runtime || undefined}
+          preview={preview}
+        />
+      </DetailPage>
+    );
+  }
 
   return (
     <div className={`flex-1 w-full pb-16 overflow-x-hidden ${bgGradientClass}`}>

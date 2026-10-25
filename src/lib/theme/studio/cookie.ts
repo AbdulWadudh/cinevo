@@ -12,6 +12,7 @@ export interface SsrThemeState<T extends BaseTokens = BaseTokens> {
   themeId: string;
   delta?: Partial<T>;
   activeTokens: T;
+  experience: string;
 }
 
 export function parseThemeCookie<T extends BaseTokens = BaseTokens>(
@@ -27,6 +28,7 @@ export function parseThemeCookie<T extends BaseTokens = BaseTokens>(
       id: typeof parsed.id === "string" && parsed.id ? parsed.id : fallbackThemeId,
       d: parsed.d && typeof parsed.d === "object" ? parsed.d : undefined,
       def: typeof parsed.def === "string" ? parsed.def : undefined,
+      x: typeof parsed.x === "string" ? parsed.x : undefined,
     };
   } catch {
     return { id: fallbackThemeId };
@@ -56,6 +58,8 @@ export function getSsrThemeState<T extends BaseTokens>(
   themes: ThemeDefinition<T>[],
   fallbackThemeId: string,
   customizableKeys: readonly string[] = [],
+  validExperienceIds: readonly string[] = [],
+  fallbackExperienceId = "cinevo",
 ): SsrThemeState<T> {
   const matched = themes.find((candidate) => candidate.id === cookiePayload.id);
   const theme =
@@ -63,11 +67,16 @@ export function getSsrThemeState<T extends BaseTokens>(
 
   const trusted = isTrustedThemeCookie(cookiePayload, themes, fallbackThemeId);
   const delta = trusted ? pickAllowedKeys(cookiePayload.d, customizableKeys) : undefined;
+  const experience =
+    trusted && cookiePayload.x && validExperienceIds.includes(cookiePayload.x)
+      ? cookiePayload.x
+      : fallbackExperienceId;
 
   return {
     themeId: theme.id,
     delta,
     activeTokens: resolveActiveTokens(theme, delta),
+    experience,
   };
 }
 

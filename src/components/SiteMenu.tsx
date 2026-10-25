@@ -5,24 +5,25 @@ import { usePathname, useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import StaggeredMenu, { type StaggeredMenuItem } from "@/components/reactbits/StaggeredMenu";
 import NotificationBell from "@/components/NotificationBell";
+import ExperienceBrand from "@/components/theme/ExperienceBrand";
+import { getExperience } from "@/lib/theme/experiences";
+import { useTheme } from "@/lib/theme/studio/provider";
 import "./SiteMenu.css";
-
-const MENU_ITEMS: StaggeredMenuItem[] = [
-  { label: "Home", ariaLabel: "Go to home", link: "/" },
-  { label: "Browse", ariaLabel: "Browse all titles", link: "/browse" },
-  { label: "Gallery", ariaLabel: "Open the 3D gallery", link: "/gallery" },
-  { label: "Mystery", ariaLabel: "Reveal mystery picks", link: "/reveal" },
-  { label: "Radio", ariaLabel: "Listen to radio", link: "/radio" },
-  { label: "Wishlist", ariaLabel: "Your wishlist", link: "/wishlist" },
-  { label: "History", ariaLabel: "Your watch history", link: "/history" },
-  { label: "Profile", ariaLabel: "Your profile", link: "/profile" },
-];
 
 /** Cinevo's primary navigation — the React Bits StaggeredMenu, themed, with
  *  search + notifications as round buttons pinned to the bottom of the panel. */
 export default function SiteMenu() {
   const pathname = usePathname();
   const router = useRouter();
+  const { experience } = useTheme();
+  const menuItems: StaggeredMenuItem[] = [
+    ...getExperience(experience).nav.map((link) => ({
+      label: link.label,
+      ariaLabel: link.label,
+      link: link.href,
+    })),
+    { label: "Profile", ariaLabel: "Your profile", link: "/profile" },
+  ];
 
   // Search + notifications live in the top bar (outside the menu), like desktop.
   const headerExtras = (
@@ -44,12 +45,13 @@ export default function SiteMenu() {
       isFixed
       className="cinevo-menu"
       position="right"
-      items={MENU_ITEMS}
+      items={menuItems}
       displaySocials={false}
       displayItemNumbering={false}
       currentPath={pathname}
       headerExtras={headerExtras}
       logoUrl="/full_logo.png"
+      logo={<ExperienceBrand className="xp-mobile-brand" />}
       logoHref="/"
       menuButtonColor="var(--color-fg)"
       openMenuButtonColor="var(--color-fg)"

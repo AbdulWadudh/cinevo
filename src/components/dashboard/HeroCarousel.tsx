@@ -4,10 +4,12 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, useReducedMotion } from "motion/react";
-import { Star, Play, ChevronLeft, ChevronRight, Clapperboard } from "lucide-react";
+import { Star, Play, ChevronLeft, ChevronRight, Clapperboard, Info } from "lucide-react";
 import { TMDBMedia } from "@/lib/tmdb";
 import { useTrailer } from "@/components/TrailerProvider";
 import { FocusSection, FocusableLink, FocusableButton } from "@/components/tv/Focusable";
+import { getExperience } from "@/lib/theme/experiences";
+import { useTheme } from "@/lib/theme/studio/provider";
 
 interface HeroCarouselProps {
   items: TMDBMedia[];
@@ -21,6 +23,8 @@ const ENGAGEMENT_EVENTS = ["pointermove", "pointerdown", "touchstart", "keydown"
 
 export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps) {
   const { openTrailer } = useTrailer();
+  const { experience } = useTheme();
+  const activeExperience = getExperience(experience);
   const reduceMotion = useReducedMotion();
   const [activeIndex, setActiveIndex] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -62,8 +66,8 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
       // Pause rotation while the user is hovering the banner.
       if (hoveredRef.current) return;
       setActiveIndex((prevIndex) => (prevIndex + 1) % carouselItems.length);
-    }, 7000); // Rotate every 7 seconds
-  }, [carouselItems.length, stopAutoPlay]);
+    }, activeExperience.hero.interval);
+  }, [activeExperience.hero.interval, carouselItems.length, stopAutoPlay]);
 
   useEffect(() => {
     if (carouselItems.length > 0) {
@@ -93,6 +97,7 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
 
   return (
     <section 
+      data-xp-hero=""
       className="relative w-full h-[85vh] min-h-[500px] max-h-[850px] overflow-hidden mb-8 group/hero"
       onMouseEnter={() => { hoveredRef.current = true; }}
       onMouseLeave={() => { hoveredRef.current = false; }}
@@ -116,9 +121,10 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
           <div
             key={item.id}
             aria-hidden={!isActive}
-            className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${
+            className={`absolute inset-0 w-full h-full transition-opacity ease-in-out ${
               isActive ? "opacity-100 z-10 pointer-events-auto" : "opacity-0 z-0 pointer-events-none"
             }`}
+            style={{ transitionDuration: `${activeExperience.hero.fade}ms` }}
           >
             {/* Backdrop Image. The size segment here is cosmetic — the custom
                 loader rewrites it to the bucket that matches the rendered width. */}
@@ -167,8 +173,8 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
                 </motion.div>
               )}
 
-              <div className="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-black/30" />
-              <div className="absolute inset-0 bg-gradient-to-r from-bg/90 via-bg/40 to-transparent" />
+              <div data-xp-hero-gradient="bottom" className="absolute inset-0 bg-gradient-to-t from-bg via-transparent to-black/30" />
+              <div data-xp-hero-gradient="side" className="absolute inset-0 bg-gradient-to-r from-bg/90 via-bg/40 to-transparent" />
             </div>
 
             {/* Full-banner click target → details (sits below the info/controls
@@ -190,23 +196,43 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
               animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
               transition={{ duration: reduceMotion ? 0 : 0.45, ease: "easeOut" }}
               className="absolute bottom-0 left-0 right-0 z-20 px-6 md:px-12 pb-20 max-w-2xl text-left pointer-events-none"
+              data-xp-hero-copy=""
             >
-              <span className="inline-block text-[10px] font-extrabold tracking-widest text-accent uppercase bg-accent/10 px-3 py-1 rounded-full border border-accent/20 mb-4 animate-pulse">
-                Trending Now
+              <span data-xp-hero-badge="" className="inline-block text-[10px] font-extrabold tracking-widest text-accent uppercase bg-accent/10 px-3 py-1 rounded-full border border-accent/20 mb-4 animate-pulse">
+                {activeExperience.hero.badge}
               </span>
               
-              <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-extrabold leading-[1.08] tracking-tight text-white mb-4 drop-shadow-md">
+              <h1 data-xp-hero-title="" className="font-display text-4xl sm:text-5xl md:text-6xl font-extrabold leading-[1.08] tracking-tight text-white mb-4 drop-shadow-md">
                 {item.title || item.name}
               </h1>
               
-              <div className="flex items-center gap-3 text-xs sm:text-sm text-fg-secondary font-medium mb-4 flex-wrap">
-                <span className="bg-gold text-black text-xs font-extrabold px-2.5 py-[3px] rounded flex items-center gap-1 shadow-sm">
-                  <Star className="w-3.5 h-3.5 fill-black stroke-black" />
-                  {item.vote_average ? item.vote_average.toFixed(1) : "N/A"}
-                </span>
-                <span>&bull;</span>
-                <span>{releaseYear}</span>
-              </div>
+              {activeExperience.id === "netflix" ? (
+                <div
+                  data-xp-hero-meta=""
+                  className="mb-4 flex flex-wrap items-center gap-2.5 text-xs font-semibold text-white/85 sm:text-sm"
+                >
+                  <span className="font-bold text-[#46d369]">
+                    {Math.max(50, Math.round((item.vote_average || 0) * 10))}% Match
+                  </span>
+                  <span>{releaseYear}</span>
+                  <span className="rounded-[2px] border border-white/30 px-1.5 py-0.5 text-[10px] leading-none">
+                    HD
+                  </span>
+                  <span>{item.media_type === "tv" ? "TV Series" : "Film"}</span>
+                </div>
+              ) : (
+                <div
+                  data-xp-hero-meta=""
+                  className="flex items-center gap-3 text-xs sm:text-sm text-fg-secondary font-medium mb-4 flex-wrap"
+                >
+                  <span className="bg-gold text-black text-xs font-extrabold px-2.5 py-[3px] rounded flex items-center gap-1 shadow-sm">
+                    <Star className="w-3.5 h-3.5 fill-black stroke-black" />
+                    {item.vote_average ? item.vote_average.toFixed(1) : "N/A"}
+                  </span>
+                  <span>&bull;</span>
+                  <span>{releaseYear}</span>
+                </div>
+              )}
               
               <p className="text-sm text-fg-secondary leading-relaxed mb-6 line-clamp-3 md:line-clamp-4 max-w-[85%]">
                 {item.overview}
@@ -217,25 +243,37 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
                 <FocusSection className="flex items-center gap-3 pointer-events-auto" focusKey="HERO_ACTIONS" saveChild={false}>
                   <FocusableLink
                     href={`/watch/${item.media_type || "movie"}/${item.id}`}
+                    data-xp-hero-primary=""
                     className="relative z-20 inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold bg-accent-strong text-white hover:bg-accent-strong-hover hover:shadow-[0_6px_20px_rgba(var(--accent-rgb),0.35)] transition-all cursor-pointer"
                   >
-                    <Play className="w-4 h-4 fill-white" /> Play Now
+                    <Play className="w-4 h-4 fill-white" /> {activeExperience.hero.primary}
                   </FocusableLink>
-                  <FocusableButton
-                    onPress={() =>
-                      openTrailer({
-                        id: String(item.id),
-                        mediaType: (item.media_type as "movie" | "tv") || "movie",
-                        title: item.title || item.name || "",
-                        rating: item.vote_average,
-                        date: item.release_date || item.first_air_date,
-                        key: trailers[item.id],
-                      })
-                    }
-                    className="relative z-20 inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold bg-white/[0.12] text-white border border-white/20 hover:bg-white/20 backdrop-blur-md transition-all cursor-pointer"
-                  >
-                    <Clapperboard className="w-4 h-4" /> Watch Trailer
-                  </FocusableButton>
+                  {activeExperience.id === "netflix" ? (
+                    <FocusableLink
+                      href={`/watch/${item.media_type || "movie"}/${item.id}`}
+                      data-xp-hero-secondary=""
+                      className="relative z-20 inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold bg-white/[0.12] text-white border border-white/20 hover:bg-white/20 backdrop-blur-md transition-all cursor-pointer"
+                    >
+                      <Info className="w-4 h-4" /> {activeExperience.hero.secondary}
+                    </FocusableLink>
+                  ) : (
+                    <FocusableButton
+                      onPress={() =>
+                        openTrailer({
+                          id: String(item.id),
+                          mediaType: (item.media_type as "movie" | "tv") || "movie",
+                          title: item.title || item.name || "",
+                          rating: item.vote_average,
+                          date: item.release_date || item.first_air_date,
+                          key: trailers[item.id],
+                        })
+                      }
+                      data-xp-hero-secondary=""
+                      className="relative z-20 inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold bg-white/[0.12] text-white border border-white/20 hover:bg-white/20 backdrop-blur-md transition-all cursor-pointer"
+                    >
+                      <Clapperboard className="w-4 h-4" /> {activeExperience.hero.secondary}
+                    </FocusableButton>
+                  )}
                 </FocusSection>
               )}
             </motion.div>
@@ -246,6 +284,7 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
       {/* Navigation Arrow buttons */}
       <motion.button
         onClick={handlePrev}
+        data-xp-hero-arrow=""
         whileHover={reduceMotion ? undefined : { scale: 1.08 }}
         whileTap={reduceMotion ? undefined : { scale: 0.92 }}
         className="absolute left-4 top-1/2 -translate-y-1/2 z-30 flex size-11 items-center justify-center rounded-full bg-black/40 hover:bg-accent-strong text-white border border-white/8 hover:border-accent opacity-0 group-hover/hero:opacity-100 pointer-coarse:opacity-100 transition-colors duration-300 backdrop-blur-md cursor-pointer"
@@ -255,6 +294,7 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
       </motion.button>
       <motion.button
         onClick={handleNext}
+        data-xp-hero-arrow=""
         whileHover={reduceMotion ? undefined : { scale: 1.08 }}
         whileTap={reduceMotion ? undefined : { scale: 0.92 }}
         className="absolute right-4 top-1/2 -translate-y-1/2 z-30 flex size-11 items-center justify-center rounded-full bg-black/40 hover:bg-accent-strong text-white border border-white/8 hover:border-accent opacity-0 group-hover/hero:opacity-100 pointer-coarse:opacity-100 transition-colors duration-300 backdrop-blur-md cursor-pointer"
@@ -268,6 +308,7 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
           24px minimum target size. */}
       <div
         className="absolute bottom-1 left-1/2 -translate-x-1/2 z-30 flex items-center gap-0.5"
+        data-xp-hero-dots=""
         role="group"
         aria-label="Choose slide"
       >

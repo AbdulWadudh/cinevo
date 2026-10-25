@@ -8,8 +8,10 @@ import { motion, useReducedMotion } from "motion/react";
 import NotificationBell from "@/components/NotificationBell";
 import SiteMenu from "@/components/SiteMenu";
 import { FocusSection, FocusableLink, FocusableButton } from "@/components/tv/Focusable";
+import ExperienceBrand from "@/components/theme/ExperienceBrand";
 import { createClient } from "@/lib/supabase/client";
 import { getProfileBrief } from "@/app/actions/auth";
+import { getExperience } from "@/lib/theme/experiences";
 import { useTheme } from "@/lib/theme/studio/provider";
 import type { NavViewer } from "@/lib/auth";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
@@ -19,7 +21,8 @@ export default function NavBar({ initialViewer }: { initialViewer: NavViewer | n
   const router = useRouter();
   const pathname = usePathname();
   const reduceMotion = useReducedMotion();
-  const { openStudio } = useTheme();
+  const { openStudio, experience } = useTheme();
+  const activeExperience = getExperience(experience);
 
   const [scrolled, setScrolled] = useState(false);
   const [viewer, setViewer] = useState<NavViewer | null>(initialViewer);
@@ -76,15 +79,12 @@ export default function NavBar({ initialViewer }: { initialViewer: NavViewer | n
     router.push("/search");
   };
 
-  const navLinks = [
-    { name: "Home", href: "/" },
-    { name: "Browse", href: "/browse" },
-    { name: "Gallery", href: "/gallery" },
-    { name: "Mystery", href: "/reveal" },
-    { name: "Radio", href: "/radio" },
-    { name: "Wishlist", href: "/wishlist" },
-    { name: "History", href: "/history" },
-  ];
+  const navLinks = activeExperience.nav;
+  // Two clone links can share a destination (TV Shows and Movies both open the
+  // catalogue). Only the first matching one may claim the active underline.
+  const activeHref = navLinks.find(
+    (link) => link.href.split(/[?#]/)[0] === pathname,
+  )?.href;
 
   return (
     <>
@@ -92,30 +92,42 @@ export default function NavBar({ initialViewer }: { initialViewer: NavViewer | n
       <motion.nav
         initial={reduceMotion ? false : { opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
+        transition={{ duration: activeExperience.motion.base / 1000, ease: "easeOut" }}
+        data-xp-nav=""
+        data-scrolled={scrolled}
         className={`fixed top-0 left-0 right-0 z-40 hidden md:flex items-center justify-between px-6 md:px-12 py-4 transition-all duration-300 ${scrolled ? "bg-bg/95 backdrop-blur-xl border-b border-white/[0.04] shadow-lg" : "bg-linear-to-b from-bg/90 to-transparent"
           }`}
       >
         <div className="flex items-center gap-10">
-          <Link href="/" className="flex items-center hover:scale-105 transition-transform duration-200">
-            {/* eslint-disable-next-line @next/next/no-img-element -- static logo, variable width */}
-            <img src={site.logo.full} alt={site.name} className="h-8 w-auto" />
+          <Link
+            href="/"
+            data-xp-nav-brand=""
+            className="flex items-center hover:scale-105 transition-transform duration-200"
+            aria-label={`${site.name} home`}
+          >
+            <ExperienceBrand className="h-8 w-auto" />
           </Link>
-          <FocusSection className="hidden md:flex items-center gap-6" focusKey="NAV_LINKS">
+          <FocusSection
+            className="hidden md:flex items-center gap-6"
+            focusKey="NAV_LINKS"
+          >
             {navLinks.map((link) => {
-              const active = pathname === link.href;
+              const active = link.href === activeHref;
               return (
                 <FocusableLink
-                  key={link.href}
+                  key={`${link.label}-${link.href}`}
                   href={link.href}
+                  data-xp-nav-link=""
+                  data-active={active}
                   className={`text-sm font-medium tracking-wide transition-colors relative py-1 px-1.5 rounded ${active ? "text-fg" : "text-fg-secondary hover:text-fg"
                     }`}
                 >
-                  {link.name}
+                  {link.label}
                   {active && (
                     <motion.span
                       layoutId={reduceMotion ? undefined : "active-nav-link"}
                       transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                      data-xp-nav-active=""
                       className="absolute bottom-0 left-1.5 right-1.5 h-0.5 bg-accent-strong rounded-full"
                     />
                   )}
@@ -129,25 +141,27 @@ export default function NavBar({ initialViewer }: { initialViewer: NavViewer | n
           <FocusableButton
             onPress={goSearch}
             ariaLabel="Search"
+            data-xp-nav-action=""
             className="p-2 text-fg-secondary hover:text-fg hover:bg-white/6 rounded-full transition-all cursor-pointer"
           >
             <Search className="w-5 h-5" />
           </FocusableButton>
           <NotificationBell />
-          <FocusableLink href="/wishlist" ariaLabel="Wishlist" className="p-2 text-fg-secondary hover:text-fg hover:bg-white/6 rounded-full transition-all block">
+          <FocusableLink href="/wishlist" ariaLabel="Wishlist" data-xp-nav-action="" data-xp-nav-heart="" className="p-2 text-fg-secondary hover:text-fg hover:bg-white/6 rounded-full transition-all block">
             <Heart className="w-5 h-5" />
           </FocusableLink>
           {viewer?.isAdmin && (
             <FocusableButton
               onPress={openStudio}
               ariaLabel="Theme studio"
+              data-xp-nav-action=""
               className="p-2 text-fg-secondary hover:text-fg hover:bg-white/6 rounded-full transition-all cursor-pointer"
             >
               <Palette className="w-5 h-5" />
             </FocusableButton>
           )}
           {viewer ? (
-            <Link href="/profile" aria-label="Profile" className="block">
+            <Link href="/profile" aria-label="Profile" data-xp-nav-action="" className="block">
               {viewer.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element -- user avatar from arbitrary host
                 <img
@@ -165,6 +179,7 @@ export default function NavBar({ initialViewer }: { initialViewer: NavViewer | n
           ) : (
             <Link
               href="/login"
+              data-xp-signin=""
               className="text-xs font-semibold text-fg-secondary hover:text-fg border border-white/[0.1] hover:border-accent px-3.5 py-2 rounded-lg transition-all"
             >
               Sign In

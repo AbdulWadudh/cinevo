@@ -124,10 +124,27 @@ const HARD_ELEVATION: Elevation = {
   elevationXl: "8px 8px 0px 0px #000000",
 };
 
+const FLAT_ELEVATION: Elevation = {
+  elevationSm: "none",
+  elevation: "none",
+  elevationLg: "none",
+  elevationXl: "none",
+};
+
+const APPLE_ELEVATION: Elevation = {
+  elevationSm: "0 1px 2px rgba(0,0,0,0.35)",
+  elevation: "0 8px 24px rgba(0,0,0,0.5)",
+  elevationLg: "0 20px 60px rgba(0,0,0,0.65)",
+  elevationXl: "0 30px 90px rgba(0,0,0,0.8)",
+};
+
 const JAKARTA = "var(--font-plus-jakarta)";
 const GEIST = "var(--font-geist-sans)";
 const SPACE_GROTESK = "'Space Grotesk', ui-sans-serif, system-ui, sans-serif";
 const INTER = "'Inter', ui-sans-serif, system-ui, sans-serif";
+const ROBOTO = "'Roboto', ui-sans-serif, system-ui, sans-serif";
+const APPLE_SYSTEM =
+  "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif";
 const JETBRAINS_MONO = "'JetBrains Mono', ui-monospace, monospace";
 
 interface PresetSeed {
@@ -628,4 +645,103 @@ export const themePresets: ThemeDefinition<CinevoTokens>[] = [
     textMuted: "#D8DEE9",
     radius: "0.75rem",
   }),
+  {
+    id: "netflix",
+    name: "Netflix",
+    description: "Pure black, signature red and sharp four-pixel corners",
+    tokens: {
+      canvas: "#000000",
+      surface: "#141414",
+      card: "#181818",
+      border: "#2f2f2f",
+      primary: "#e50914",
+      primaryHover: "#f6121d",
+      accentStrong: "#e50914",
+      accentStrongHover: "#f6121d",
+      accentRgb: "229, 9, 20",
+      secondary: "#b3b3b3",
+      accent: "#e50914",
+      success: "#46d369",
+      danger: "#e50914",
+      warning: "#f5c518",
+      textPrimary: "#ffffff",
+      textSecondary: "#e5e5e5",
+      textMuted: "#b3b3b3",
+      bgElevated: "#0b0b0b",
+      surfaceHover: "#232323",
+      gold: "#f5c518",
+      blue: "#0b84ff",
+      emerald: "#46d369",
+      radius: "0.25rem",
+      fontHeading: INTER,
+      fontBody: INTER,
+      ...FLAT_ELEVATION,
+    },
+  },
+  {
+    id: "disney-hotstar",
+    name: "Disney+ Hotstar",
+    description: "Deep navy with electric blue and rounded content tiles",
+    tokens: {
+      canvas: "#0f1014",
+      surface: "#15171e",
+      card: "#1b1e27",
+      border: "#262a36",
+      primary: "#1f80e0",
+      primaryHover: "#3b95f5",
+      accentStrong: "#0d6ac2",
+      accentStrongHover: "#1179d8",
+      accentRgb: "31, 128, 224",
+      secondary: "#00c6ff",
+      accent: "#00c6ff",
+      success: "#1a9e5c",
+      danger: "#e5484d",
+      warning: "#f5a623",
+      textPrimary: "#f9f9fb",
+      textSecondary: "#c3c7d1",
+      textMuted: "#8f95a3",
+      bgElevated: "#0a0b0f",
+      surfaceHover: "#222633",
+      gold: "#f5a623",
+      blue: "#1f80e0",
+      emerald: "#1a9e5c",
+      radius: "0.5rem",
+      fontHeading: ROBOTO,
+      fontBody: ROBOTO,
+      ...NATURAL_ELEVATION,
+    },
+  },
+  {
+    id: "apple-tv",
+    name: "Apple TV+",
+    description: "Cinematic black, frosted glass and pure white action",
+    tokens: {
+      canvas: "#000000",
+      surface: "#1c1c1e",
+      card: "#2c2c2e",
+      border: "#3a3a3c",
+      primary: "#f5f5f7",
+      primaryHover: "#ffffff",
+      accentStrong: "#ffffff",
+      accentStrongHover: "#e8e8ed",
+      accentRgb: "245, 245, 247",
+      secondary: "#8e8e93",
+      accent: "#f5f5f7",
+      success: "#30d158",
+      danger: "#ff453a",
+      warning: "#ffd60a",
+      textPrimary: "#ffffff",
+      textSecondary: "#c7c7cc",
+      textMuted: "#8e8e93",
+      bgElevated: "#101011",
+      surfaceHover: "#333336",
+      gold: "#ffd60a",
+      blue: "#0a84ff",
+      emerald: "#30d158",
+      radius: "0.75rem",
+      fontHeading: APPLE_SYSTEM,
+      fontBody: APPLE_SYSTEM,
+      ...APPLE_ELEVATION,
+    },
+  },
 ];

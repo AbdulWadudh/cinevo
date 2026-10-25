@@ -9,8 +9,12 @@ import BrowseSection from "@/components/dashboard/BrowseSection";
 import GenreSection from "@/components/dashboard/GenreSection";
 import HeroCarousel from "@/components/dashboard/HeroCarousel";
 import StudioHubs from "@/components/dashboard/StudioHubs";
+import TopTenRow from "@/components/dashboard/TopTenRow";
+import BrandRail from "@/components/dashboard/BrandRail";
+import ExperienceFooter from "@/components/dashboard/ExperienceFooter";
+import Billboard from "@/components/experience/Billboard";
 import { tmdb, type TMDBMedia } from "@/lib/tmdb";
-import { site } from "@/config";
+import { getActiveThemeState } from "@/lib/theme/active";
 
 interface HomeProps {
   searchParams: Promise<{
@@ -208,6 +212,65 @@ export default async function Home({ searchParams }: HomeProps) {
     .slice(0, 5)
     .map(({ item }) => item);
 
+  const { experience } = await getActiveThemeState();
+
+  // ── Netflix shell ──
+  // Same catalogue, different product: billboard, ranked row, landscape rails
+  // and Netflix's footer instead of Cinevo's discovery widgets.
+  if (experience === "netflix") {
+    return (
+      <div className="flex-1 w-full overflow-x-hidden bg-[#141414] pb-0">
+        <Nav />
+        <Billboard variant="netflix" items={trendingMovies} trailers={heroTrailers} />
+        <TopTenRow items={trendingMovies} />
+        <MediaCarousel title="Trending Now" items={trendingMovies} mediaType="movie" source={{ kind: "trending", mediaType: "movie" }} />
+        <MediaCarousel title="Popular on Cinevo" items={trendingTV} mediaType="tv" source={{ kind: "trending", mediaType: "tv" }} />
+        <MediaCarousel title="New Releases" items={airingToday} mediaType="tv" badge="new" source={{ kind: "airingToday", mediaType: "tv" }} />
+        <MediaCarousel title="Action & Adventure" items={marvel} mediaType="movie" source={{ kind: "company", value: "420|7505", mediaType: "movie" }} />
+        <MediaCarousel title="Sci-Fi & Fantasy" items={dc} mediaType="movie" source={{ kind: "company", value: "9993|429|128064", mediaType: "movie" }} />
+        <MediaCarousel title="International Movies" items={bollywood} mediaType="movie" source={{ kind: "language", value: "hi", mediaType: "movie" }} />
+        <ExperienceFooter />
+      </div>
+    );
+  }
+
+  // ── Disney+ Hotstar shell ──
+  if (experience === "disney-hotstar") {
+    return (
+      <div className="flex-1 w-full overflow-x-hidden bg-[#0f1014] pb-0">
+        <Nav />
+        <Billboard variant="disney" items={trendingMovies} trailers={heroTrailers} />
+        <BrandRail />
+        <MediaCarousel title="Recommended For You" items={trendingMovies} mediaType="movie" source={{ kind: "trending", mediaType: "movie" }} />
+        <MediaCarousel title="New on Cinevo" items={airingToday} mediaType="tv" badge="new" source={{ kind: "airingToday", mediaType: "tv" }} />
+        <MediaCarousel title="Popular Series" items={trendingTV} mediaType="tv" source={{ kind: "trending", mediaType: "tv" }} />
+        <MediaCarousel title="Superhero Universe" items={marvel} mediaType="movie" source={{ kind: "company", value: "420|7505", mediaType: "movie" }} />
+        <MediaCarousel title="Cinevo Specials" items={bollywood} mediaType="movie" source={{ kind: "language", value: "hi", mediaType: "movie" }} />
+        <ExperienceFooter />
+      </div>
+    );
+  }
+
+  // ── Apple TV+ shell ──
+  if (experience === "apple-tv") {
+    const acclaimed = [...trendingMovies, ...trendingTV]
+      .filter((item) => item.vote_average > 0)
+      .sort((a, b) => b.vote_average - a.vote_average)
+      .slice(0, 18);
+
+    return (
+      <div className="flex-1 w-full overflow-x-hidden bg-black pb-0">
+        <Nav />
+        <Billboard variant="apple" items={trendingMovies} trailers={heroTrailers} />
+        <MediaCarousel title="Cinevo Originals" items={trendingTV} mediaType="tv" source={{ kind: "trending", mediaType: "tv" }} />
+        <MediaCarousel title="New Releases" items={trendingMovies} mediaType="movie" source={{ kind: "trending", mediaType: "movie" }} />
+        <MediaCarousel title="Critically Acclaimed" items={acclaimed} mediaType="movie" />
+        <MediaCarousel title="Coming Soon" items={airingToday} mediaType="tv" badge="new" source={{ kind: "airingToday", mediaType: "tv" }} />
+        <ExperienceFooter />
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 w-full bg-bg pb-12 overflow-x-hidden">
       {/* Dynamic fixed navigation */}
@@ -244,18 +307,7 @@ export default async function Home({ searchParams }: HomeProps) {
       <MediaCarousel title="DC Universe" items={dc} mediaType="movie" source={{ kind: "company", value: "9993|429|128064", mediaType: "movie" }} />
       <MediaCarousel title="Bollywood" items={bollywood} mediaType="movie" source={{ kind: "language", value: "hi", mediaType: "movie" }} />
 
-      {/* Sleek Footer */}
-      <footer className="px-6 md:px-12 py-5 border-t border-border mt-12">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-4">
-            <span className="text-[11px] text-muted">{site.copyright}</span>
-            <Link href="/privacy" className="text-[11px] text-muted hover:text-fg-secondary transition-colors">Privacy</Link>
-            <Link href="/terms" className="text-[11px] text-muted hover:text-fg-secondary transition-colors">Terms</Link>
-          </div>
-          {/* eslint-disable-next-line @next/next/no-img-element -- static logo, variable width */}
-          <img src={site.logo.full} alt={site.name} className="h-6 w-auto opacity-90" />
-        </div>
-      </footer>
+      <ExperienceFooter />
     </div>
   );
 }

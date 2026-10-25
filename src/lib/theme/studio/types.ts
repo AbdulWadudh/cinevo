@@ -43,12 +43,16 @@ export interface CompactCookiePayload<T extends BaseTokens = BaseTokens> {
   id: string;
   d?: Partial<T>;
   def?: string;
+  /** Experience chrome id ("cinevo", "netflix", "disney-hotstar", "apple-tv"). */
+  x?: string;
 }
 
 export interface ThemeContextValue<T extends BaseTokens = BaseTokens> {
   theme: string;
   tokens: T;
   themes: ThemeDefinition<T>[];
+  /** Active structural experience. Studio edits layer on top of its tokens. */
+  experience: string;
   /** The overrides layered on the active preset, if any. */
   customizations?: Partial<T>;
   hasCustomizations: boolean;
@@ -56,7 +60,15 @@ export interface ThemeContextValue<T extends BaseTokens = BaseTokens> {
   openStudio: () => void;
   closeStudio: () => void;
   setTheme: (themeId: string) => void;
+  /** Loads an experience's palette and chrome, clearing studio overrides. */
+  setExperience: (experienceId: string) => void;
   setCustomTokens: (tokens: Partial<T>) => void;
   clearCustomTokens: (keys: (keyof T)[]) => void;
   resetTheme: () => void;
+  /** Applies an exact preset + experience + overrides in one persisted step. */
+  applyThemeChoice: (choice: {
+    themeId: string;
+    experience?: string;
+    delta?: Partial<T>;
+  }) => void;
 }

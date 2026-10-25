@@ -26,6 +26,8 @@ interface StaggeredMenuProps {
   displayItemNumbering?: boolean;
   className?: string;
   logoUrl?: string;
+  /** Custom brand mark (e.g. an experience wordmark) in place of the image. */
+  logo?: React.ReactNode;
   /** If set, the logo links here (e.g. "/" for home). */
   logoHref?: string;
   menuButtonColor?: string;
@@ -53,6 +55,7 @@ export const StaggeredMenu = ({
   displayItemNumbering = true,
   className,
   logoUrl = "/src/assets/logos/reactbits-gh-white.svg",
+  logo,
   logoHref,
   menuButtonColor = "#fff",
   openMenuButtonColor = "#fff",
@@ -390,6 +393,20 @@ export const StaggeredMenu = ({
     };
   }, [closeOnClickAway, open, closeMenu]);
 
+  const logoNode = logo ? (
+    <span className="sm-logo-custom">{logo}</span>
+  ) : (
+    // eslint-disable-next-line @next/next/no-img-element -- logo, variable width
+    <img
+      src={logoUrl || "/src/assets/logos/reactbits-gh-white.svg"}
+      alt="Logo"
+      className="sm-logo-img"
+      draggable={false}
+      width={110}
+      height={24}
+    />
+  );
+
   return (
     <div
       className={(className ? className + " " : "") + "staggered-menu-wrapper" + (isFixed ? " fixed-wrapper" : "")}
@@ -410,27 +427,12 @@ export const StaggeredMenu = ({
       </div>
       <header className="staggered-menu-header" aria-label="Main navigation header">
         <div className="sm-logo" aria-label="Logo">
-          {/* eslint-disable-next-line @next/next/no-img-element -- logo, variable width */}
           {logoHref ? (
             <Link href={logoHref} aria-label="Home" className="sm-logo-link" onClick={closeMenu}>
-              <img
-                src={logoUrl || "/src/assets/logos/reactbits-gh-white.svg"}
-                alt="Logo"
-                className="sm-logo-img"
-                draggable={false}
-                width={110}
-                height={24}
-              />
+              {logoNode}
             </Link>
           ) : (
-            <img
-              src={logoUrl || "/src/assets/logos/reactbits-gh-white.svg"}
-              alt="Logo"
-              className="sm-logo-img"
-              draggable={false}
-              width={110}
-              height={24}
-            />
+            logoNode
           )}
         </div>
         <div className="sm-header-actions">

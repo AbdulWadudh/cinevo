@@ -52,6 +52,12 @@
   object-fit: contain;
 }
 
+.sm-logo-custom {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+
 .sm-toggle {
   position: relative;
   display: inline-flex;

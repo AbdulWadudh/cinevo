@@ -22,7 +22,7 @@ interface FocusableLinkProps {
 }
 
 /** A D-pad-focusable Next.js link. Enter follows the link. */
-export function FocusableLink({ href, children, className = "", focusClassName = "", onClick, focusKey, ariaLabel }: FocusableLinkProps) {
+export function FocusableLink({ href, children, className = "", focusClassName = "", onClick, focusKey, ariaLabel, ...rest }: FocusableLinkProps) {
   const { ref, focused } = useFocusable({
     focusKey,
     onEnterPress: () => { onClick?.(); ref.current?.click(); },
@@ -34,6 +34,7 @@ export function FocusableLink({ href, children, className = "", focusClassName =
       href={href}
       onClick={onClick}
       aria-label={ariaLabel}
+      {...rest}
       className={`tv-focusable ${className} ${focused ? `tv-focused ${focusClassName}` : ""}`}
     >
       {children}
@@ -51,7 +52,7 @@ interface FocusableButtonProps {
 }
 
 /** A D-pad-focusable button. Enter triggers onPress. */
-export function FocusableButton({ children, onPress, className = "", focusClassName = "", ariaLabel, disabled }: FocusableButtonProps) {
+export function FocusableButton({ children, onPress, className = "", focusClassName = "", ariaLabel, disabled, ...rest }: FocusableButtonProps) {
   const { ref, focused } = useFocusable({
     focusable: !disabled,
     onEnterPress: () => { if (!disabled) onPress(); },
@@ -63,6 +64,7 @@ export function FocusableButton({ children, onPress, className = "", focusClassN
       onClick={() => !disabled && onPress()}
       disabled={disabled}
       aria-label={ariaLabel}
+      {...rest}
       className={`tv-focusable ${className} ${focused ? `tv-focused ${focusClassName}` : ""}`}
     >
       {children}
