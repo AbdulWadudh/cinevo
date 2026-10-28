@@ -21,7 +21,7 @@
   transform-style: preserve-3d;
 }
 
-main.sphere-main {
+.sphere-main {
   position: absolute;
   inset: 0;
   display: grid;
