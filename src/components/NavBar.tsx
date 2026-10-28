@@ -150,16 +150,14 @@ export default function NavBar({ initialViewer }: { initialViewer: NavViewer | n
           <FocusableLink href="/wishlist" ariaLabel="Wishlist" data-xp-nav-action="" data-xp-nav-heart="" className="p-2 text-fg-secondary hover:text-fg hover:bg-white/6 rounded-full transition-all block">
             <Heart className="w-5 h-5" />
           </FocusableLink>
-          {viewer?.isAdmin && (
-            <FocusableButton
-              onPress={openStudio}
-              ariaLabel="Theme studio"
-              data-xp-nav-action=""
-              className="p-2 text-fg-secondary hover:text-fg hover:bg-white/6 rounded-full transition-all cursor-pointer"
-            >
-              <Palette className="w-5 h-5" />
-            </FocusableButton>
-          )}
+          <FocusableButton
+            onPress={openStudio}
+            ariaLabel="Theme studio"
+            data-xp-nav-action=""
+            className="p-2 text-fg-secondary hover:text-fg hover:bg-white/6 rounded-full transition-all cursor-pointer"
+          >
+            <Palette className="w-5 h-5" />
+          </FocusableButton>
           {viewer ? (
             <Link href="/profile" aria-label="Profile" data-xp-nav-action="" className="block">
               {viewer.avatarUrl ? (
