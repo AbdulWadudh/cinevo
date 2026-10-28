@@ -8,9 +8,9 @@ the one task it names; not the folders.
 
 ## Routing
 
-1. **Start with `agent-kit start`.** It prints the branch, the commands and their tiers, what
-   is in flight, the gate, the last evidence, and one next action — reading it replaces
-   guessing where the session stopped.
+1. **Start with `agent-kit start`.** It prints the branch, the commands and their tiers, the
+   five newest closes, what is in flight, the gate, the last evidence, and one next action —
+   reading it replaces guessing where the session stopped.
 2. **Check Active** below. If a task is in progress, open it and resume from its last recorded
    step. Do not start a second one. A `BLOCKED` task does not hold the slot: its question waits
    in the file until `agent-kit task resume` (the owner has answered), and only then is it the
@@ -21,6 +21,21 @@ the one task it names; not the folders.
    becomes work only when the owner picks it, and then it is deleted.
 5. **Never work from memory.** The task file is the state; if a fact is not in it, it did not
    happen.
+
+## Task ids
+
+The id source is one row in `.agent-kit/project.md` (`| ids | local |`), written by
+`setup --ids`. Never invent an id: `task new` asks the allocator.
+
+- **`local`** — the next number after the highest one on disk (`tasks/active/`, `tasks/archive/`
+  and the change cards), floor `TASK-100`. Fully offline. Two branches that took the same
+  number collide at merge; `task renumber TASK-N --next` moves the one that lost and rewrites
+  its file name, its children and every `depends_on`.
+- **`issue`** — the id is the GitHub issue number: `task new` mints the issue, `--from <n>`
+  imports one a teammate opened, `task publish` sends the approved plan at G1, and
+  `task close --sync` closes the issue with the final record. No other path touches the network.
+
+`doctor`'s `task ids` and `task ids unique` rows check the mode, and one id per file and card.
 
 ## Subtasks
 
@@ -67,17 +82,9 @@ the vocabulary, the IDs and the cells, so a malformed row fails before it wastes
 _Nothing in flight._
 <!-- ACTIVE:END -->
 
-## Recent
-
-<!-- RECENT:START -->
-- `2026-10-28` [TASK-103](archive/2026-10/2026-10-28-TASK-103-remove-project-changelog.md) — Drop the parallel project changelog; agent-kit change cards are the only record.
-- `2026-10-28` [TASK-102](archive/2026-10/2026-10-28-TASK-102-gallery-route-blank.md) — Scope the dome container rule to the div the component now renders so /gallery is visible again.
-- `2026-10-28` [TASK-101](archive/2026-10/2026-10-28-TASK-101-upgrade-agent-kit.md) — Upgrade the kit to v1.1.0, clear the lint errors, trim AGENTS.md and SKILL.md
-<!-- RECENT:END -->
-
 ## History
 
 Closed tasks move to `.agent-kit/tasks/archive/YYYY-MM/`, and each leaves one change file in
 `.agent-kit/logs/MM-YYYY/`. A DONE subtask waits in `active/` until its main task closes, then
-archives with it under the main task's single change file. The five newest of both are listed
-above and in the logs index; open anything older only when the user asks about it.
+archives with it under the main task's single change file. The five newest of both are printed
+by `agent-kit start`; open anything older only when the user asks about it.

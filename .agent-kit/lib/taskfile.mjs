@@ -1,6 +1,6 @@
 /** taskfile.mjs — task state: active tasks, ids, the index block */
 import fs from "node:fs";
-import { TASK_INDEX, TASKS } from "./consts.mjs";
+import { LOG_DIR, PROJECT, TASK_INDEX, TASKS } from "./consts.mjs";
 import {
 	abs,
 	block,
@@ -10,6 +10,7 @@ import {
 	frontMatter,
 	list,
 	read,
+	readIf,
 	write,
 } from "./io.mjs";
 
@@ -23,11 +24,55 @@ export function slugify(s) {
 	);
 }
 
+export const ID_MODES = new Set(["local", "issue"]);
+// Ids start at 101 so the template, its examples and every install so far keep their numbers.
+export const ID_FLOOR = 100;
+
+/**
+ * The repo's one id source, recorded by `setup --ids` as `| ids | local |` under `## Tasks`
+ * in `project.md`. Null means the row is missing: `task new` then allocates locally.
+ */
+export function idsMode(root) {
+	const m = (readIf(abs(root, PROJECT)) || "").match(
+		/##\s+Tasks\s*\n([\s\S]*?)(\n##\s|$)/,
+	);
+	if (!m) return null;
+	for (const line of m[1].split(/\r?\n/)) {
+		const cells = line
+			.split("|")
+			.slice(1, -1)
+			.map((c) => c.trim());
+		if (cells[0] === "ids") return cells[1] || null;
+	}
+	return null;
+}
+
+/** Every id the repo already carries: task files, then the change cards a close wrote. */
+export function usedIds(root) {
+	const out = [];
+	for (const rel of [
+		...expand(root, `${TASKS}/active`),
+		...expand(root, `${TASKS}/archive`),
+		...expand(root, LOG_DIR),
+	]) {
+		if (!rel.endsWith(".md")) continue;
+		const id = frontMatter(read(abs(root, rel))).id;
+		if (id) out.push({ id, rel });
+	}
+	return out;
+}
+
+/**
+ * The offline allocator: one past the highest id on disk, never a shared cell to write. The
+ * merge is the serialization point, and `doctor` fails a duplicate a merge produced.
+ */
 export function nextId(root) {
-	const p = abs(root, `${TASKS}/.counter`);
-	const n = exists(p) ? parseInt(read(p).trim(), 10) || 100 : 100;
-	write(p, `${n + 1}\n`);
-	return n + 1;
+	let max = ID_FLOOR;
+	for (const { id } of usedIds(root)) {
+		const m = String(id).match(/^TASK-(\d+)(?:\.\d+)?$/);
+		if (m) max = Math.max(max, Number(m[1]));
+	}
+	return max + 1;
 }
 
 /** Every active file with its parsed state. The status decides the slot, not the file count. */
@@ -55,7 +100,7 @@ export function childrenOf(root, parent) {
 	return activeTasks(root).filter((t) => parentId(t.fm) === parent);
 }
 
-/** `TASK-104.2` after `.1`, never touching the top-level `.counter`. */
+/** `TASK-104.2` after `.1`; a subtask never takes a top-level id. */
 export function nextChildId(root, parent) {
 	let n = 0;
 	const bump = (id) => {

@@ -1,8 +1,9 @@
 /** doctor/structure.mjs — files, indexes, pointers, budgets */
 import fs from "node:fs";
 import { LOG_DIR, MANIFEST, PROJECT, SKIP_DIRS, STATE, TASK_INDEX } from "../consts.mjs";
-import { rtkVersion } from "../env.mjs";
+import { prerequisites } from "../env.mjs";
 import { abs, exists, isDir, read, walk, walkDirs } from "../io.mjs";
+import { idsMode } from "../taskfile.mjs";
 
 export function structureChecks({ base, add, isTemplate }) {
 	const required = [
@@ -62,13 +63,18 @@ export function structureChecks({ base, add, isTemplate }) {
 				: "none: AGENTS.md already points at .agent-kit/SKILL.md",
 	);
 
-	// The token saver is a machine tool, not a repo invariant: missing is advice, not failure.
-	const rtk = rtkVersion(base);
+	// The machine's tools are a gate, not advice (owner 2026-10-28): a missing one is how silent
+	// token waste and a task with no derivable inventory happen. Presence only, except GitHub,
+	// which is listed only when the repo takes its ids from issues.
+	const issueIds = idsMode(base) === "issue";
+	const req = prerequisites(base, { issue: issueIds });
+	const absent = req.filter((p) => !p.ok);
 	add(
-		rtk ? "PASS" : "WARN",
-		"token saver",
-		rtk ||
-			"rtk gain failed - install rtk-ai.rtk (winget) or brew install rtk; setup does it",
+		absent.length ? "FAIL" : "PASS",
+		"prerequisites",
+		absent.length
+			? absent.map((p) => `${p.name}: ${p.fix}`).join("; ")
+			: req.map((p) => `${p.name} ${p.found}`).join(", "),
 	);
 
 	// A session pays for these four files before it plans anything, so they are the budget. A

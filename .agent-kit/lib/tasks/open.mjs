@@ -1,21 +1,11 @@
-/** tasks/open.mjs — opening, inspecting and parking a task */
+/** tasks/open.mjs — opening and parking a task */
 import path from "node:path";
-import { LOOP_LIMIT, PROJECT, TASK_TEMPLATE, TASKS } from "../consts.mjs";
-import {
-	abs,
-	die,
-	exists,
-	frontMatter,
-	git,
-	read,
-	readIf,
-	sectionRows,
-	write,
-} from "../io.mjs";
+import { TASK_TEMPLATE, TASKS } from "../consts.mjs";
+import { abs, die, exists, frontMatter, git, read, write } from "../io.mjs";
 import {
 	activeTasks,
-	childrenOf,
 	currentTask,
+	idsMode,
 	matchTasks,
 	nextChildId,
 	nextId,
@@ -23,25 +13,28 @@ import {
 	refreshActive,
 	slugify,
 } from "../taskfile.mjs";
-import {
-	blockedState,
-	evidenceDetail,
-	evidenceState,
-	loopState,
-} from "../verify/evidence.mjs";
+import { blockedState } from "../verify/evidence.mjs";
 import { cmdVerify } from "../verify/index.mjs";
+import { importTask, mintTask } from "./issue.mjs";
 
-export function cmdTaskNew({ root, slug, lane, force, noBaseline, parent }) {
+export function cmdTaskNew({
+	root,
+	slug,
+	lane,
+	force,
+	noBaseline,
+	parent,
+	from,
+}) {
 	const base = path.resolve(root || process.cwd());
-	if (!slug)
-		die("usage: task new <slug> [--lane quick|planned] [--parent TASK-N]");
-	const activeDir = abs(base, `${TASKS}/active`);
+	if (!slug && !from)
+		die(
+			"usage: task new <slug> [--lane quick|planned] [--parent TASK-N] [--from <issue>]",
+		);
 	const tasks = activeTasks(base);
 
-	let id;
-	let parentTask = null;
 	if (parent) {
-		parentTask = tasks.find((t) => t.fm.id === parent);
+		const parentTask = tasks.find((t) => t.fm.id === parent);
 		if (!parentTask) die(`no active task with id ${parent}`);
 		if (parentTask.fm.status === "BLOCKED")
 			die(`${parent} is blocked; resume it first`);
@@ -62,17 +55,50 @@ export function cmdTaskNew({ root, slug, lane, force, noBaseline, parent }) {
 				read(parentTask.path).replace(/^status:.*$/m, "status: QUEUED"),
 			);
 		}
-		id = nextChildId(base, parent);
-	} else {
-		const inProgress = tasks.filter((t) => t.fm.status === "IN_PROGRESS");
-		if (inProgress.length && !force)
-			die(
-				`a task is already in progress (${inProgress[0].file}). Close it, block it, or pass --force.`,
-			);
-		id = `TASK-${nextId(base)}`;
+		return openTask(base, {
+			id: nextChildId(base, parent),
+			slug,
+			lane,
+			parent,
+			noBaseline,
+		});
 	}
-	if (!exists(abs(base, TASK_TEMPLATE))) die(`missing ${TASK_TEMPLATE}`);
 
+	const inProgress = tasks.filter((t) => t.fm.status === "IN_PROGRESS");
+	if (inProgress.length && !force)
+		die(
+			`a task is already in progress (${inProgress[0].file}). Close it, block it, or pass --force.`,
+		);
+
+	// The repo's one id source. Both remote branches are async; the local one stays synchronous
+	// so every caller that does not mint keeps returning a number. A remote failure leaves no
+	// task file: the id comes first, so there is nothing to undo.
+	const fail = (e) => {
+		console.error(`agent-kit: ${e.message}\n`);
+		return 1;
+	};
+	if (from)
+		return importTask(base, from)
+			.then((issue) =>
+				openTask(base, {
+					id: issue.id,
+					slug: slug || issue.title,
+					lane,
+					noBaseline,
+					intent: issue.intent,
+				}),
+			)
+			.catch(fail);
+	if ((idsMode(base) || "local") === "issue")
+		return mintTask(base, slug)
+			.then((id) => openTask(base, { id, slug, lane, noBaseline }))
+			.catch(fail);
+	return openTask(base, { id: `TASK-${nextId(base)}`, slug, lane, noBaseline });
+}
+
+/** Write the task file from the template, refresh the index, and record the baseline. */
+function openTask(base, { id, slug, lane, parent, noBaseline, intent }) {
+	if (!exists(abs(base, TASK_TEMPLATE))) die(`missing ${TASK_TEMPLATE}`);
 	const today = new Date().toISOString().slice(0, 10);
 	const file = `${today}-${id}-${slugify(slug)}.md`;
 	const baseline = git(base, ["rev-parse", "HEAD"]) || "none";
@@ -82,11 +108,13 @@ export function cmdTaskNew({ root, slug, lane, force, noBaseline, parent }) {
 		.replaceAll("{{LANE}}", (lane || "planned").toUpperCase())
 		.replaceAll("{{TITLE}}", slug.replace(/-/g, " "))
 		.replaceAll("{{BASELINE}}", baseline);
+	if (intent)
+		body = body.replace(/<!--\s*FILL:intent[\s\S]*?-->/, intent);
 	if (parent)
 		body = /^parent:.*$/m.test(body)
 			? body.replace(/^parent:.*$/m, `parent: ${parent}`)
 			: body.replace(/^(id:.*\r?\n)/m, `$1parent: ${parent}\n`);
-	write(abs(activeDir, file), body);
+	write(abs(base, `${TASKS}/active/${file}`), body);
 
 	refreshActive(base);
 
@@ -108,86 +136,6 @@ export function cmdTaskNew({ root, slug, lane, force, noBaseline, parent }) {
 		"Baseline run, so a red command is reported rather than blamed on this task:\n",
 	);
 	cmdVerify({ root: base, baseline: true, full: !parent });
-	return 0;
-}
-
-export function cmdTaskShow({ root, id }) {
-	const base = path.resolve(root || process.cwd());
-	const tasks = activeTasks(base);
-	// Asking "what is in flight?" is normal. Nothing in flight is an answer, not an error.
-	if (tasks.length === 0 && !id) {
-		console.log("\nNothing in flight.\n");
-		return 0;
-	}
-	const inProgress = tasks.filter((t) => t.fm.status === "IN_PROGRESS");
-	const task = id
-		? matchTasks(tasks, id)[0]
-		: inProgress.length === 1
-			? inProgress[0]
-			: tasks.length === 1
-				? tasks[0]
-				: null;
-	if (!task)
-		die(
-			id
-				? `no active task matches ${id}`
-				: `ambiguous: ${tasks.map((t) => t.file).join(", ")}; pass --id`,
-		);
-	const text = task.text;
-	const fm = task.fm;
-	console.log(
-		`\n${fm.id}  ${fm.lane || "?"}  ${fm.status || "?"}  ${fm.summary || "(no summary)"}`,
-	);
-	console.log(`  ${TASKS}/active/${task.file}`);
-	const taskParent = parentId(fm);
-	if (taskParent) console.log(`  parent: ${taskParent}`);
-	const subtasks = taskParent ? [] : childrenOf(base, fm.id);
-	if (subtasks.length)
-		console.log(
-			`  subtasks: ${subtasks.filter((t) => t.fm.status === "DONE").length}/${subtasks.length} done — ${subtasks.map((t) => `${t.fm.id} [${t.fm.status || "?"}]`).join(", ")}`,
-		);
-	const plan = text.match(/## Scope[\s\S]*?(?=\n## Verification)/);
-	console.log(plan ? `\n${plan[0].trim()}\n` : "\n(no scope/plan section)\n");
-	const rows = evidenceDetail(text);
-	console.log(
-		rows.length
-			? `Verification: ${rows.map((r) => `${r.action}=${Number.isFinite(r.exit) ? r.exit : "?"} (${r.scope})`).join(" ")}`
-			: "Verification: not run",
-	);
-	const milestone = sectionRows(readIf(abs(base, PROJECT)) || "").filter(
-		([, , when]) => when === "milestone",
-	);
-	if (milestone.length && !rows.some((r) => r.scope === "full"))
-		console.log(
-			taskParent
-				? `Full suite: not run — ${milestone.length} milestone command(s) run at the main task's close`
-				: `Full suite: not run — ${milestone.length} milestone command(s) wait for \`verify --full\` or close`,
-		);
-	const es = evidenceState(base, text, fm);
-	if (es.state === "stale")
-		console.log(
-			"Evidence: STALE — files changed since the last verify; run verify again",
-		);
-	else if (es.state === "current") console.log("Evidence: current");
-	else if (es.state === "unknown")
-		console.log("Evidence: unknown (no loop record)");
-	const loop = loopState(text);
-	if (loop?.fail) {
-		console.log(
-			loop.n >= LOOP_LIMIT
-				? `Loop: ${loop.n}/${LOOP_LIMIT} — verify refuses an identical run until the Plan changes`
-				: `Loop: ${loop.n}/${LOOP_LIMIT} — same failing set, same files`,
-		);
-	} else {
-		console.log(`Loop: 0/${LOOP_LIMIT}`);
-	}
-	const blocked = blockedState(text);
-	if (blocked) console.log(`Blocked: ${blocked.question}`);
-	console.log(
-		fm.lane === "PLANNED"
-			? "Gate: PLANNED needs approval before the first edit, and again before close.\n"
-			: "Gate: QUICK — verify, then close.\n",
-	);
 	return 0;
 }
 

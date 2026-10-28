@@ -1,6 +1,7 @@
 /** tasks/start.mjs — the day-start summary */
 import path from "node:path";
-import { LOOP_LIMIT, PROJECT } from "../consts.mjs";
+import { entriesIn } from "../changelog.mjs";
+import { LOG_DIR, LOOP_LIMIT, PROJECT, RECENT_LIMIT } from "../consts.mjs";
 import { abs, git, list, readIf, sectionRows } from "../io.mjs";
 import { activeTasks, CHILD_ID, childrenOf, parentId } from "../taskfile.mjs";
 import {
@@ -28,6 +29,15 @@ export function cmdStart({ root } = {}) {
 	console.log(
 		`Suite   ${cmds.length ? cmds.map(([a, c, w]) => `${a}: ${c} (${w})`).join(" · ") : "none declared"}`,
 	);
+	// Derived, never stored: the cards are the record, so a close does not rewrite an index.
+	const recent = entriesIn(base, LOG_DIR, "date").slice(0, RECENT_LIMIT);
+	if (recent.length) {
+		console.log(`\nRecent  ${recent.length} close(s), newest first`);
+		for (const e of recent)
+			console.log(
+				`  ${e.id}  ${e.date || "undated"} — ${e.summary || "(no summary)"}`,
+			);
+	}
 	if (tasks.length === 0) {
 		console.log("\nTask    none in flight");
 		console.log(

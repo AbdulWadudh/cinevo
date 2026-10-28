@@ -1,7 +1,8 @@
-/** env.mjs — token saver and harness detection */
+/** env.mjs — machine prerequisites, token saver and harness detection */
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { credential } from "./github.mjs";
 import { abs, exists, isDir, posix, read, run, write } from "./io.mjs";
 
 // ---------------------------------------------------------------- token saver
@@ -56,6 +57,54 @@ export function ensureRtk(root) {
 		"rtk",
 		"install manually: https://github.com/rtk-ai/rtk — `rtk gain` must work",
 	];
+}
+
+// ---------------------------------------------------------------- prerequisites
+
+export function runtimeName() {
+	return process.versions.bun
+		? `bun ${process.versions.bun}`
+		: `node ${process.version}`;
+}
+
+/**
+ * The tools a repo needs to work, as one list: `doctor` renders it as a FAIL row and `setup`
+ * refuses to finish without it (owner 2026-10-28, "make it mandatory"). Presence only — a gate
+ * that called the network could not run in CI. `issue` adds the credential the id source needs.
+ */
+export function prerequisites(root, { issue = false } = {}) {
+	const rows = [];
+	const major = Number((process.versions.node || "0").split(".")[0]);
+	rows.push({
+		name: "runtime",
+		ok: !!process.versions.bun || major >= 18,
+		found: runtimeName(),
+		fix: "use Node 18+ (built-in fetch) or Bun",
+	});
+	const gv = run("git --version", root, 20000);
+	rows.push({
+		name: "git",
+		ok: gv.code === 0,
+		found: gv.code === 0 ? gv.out.trim() : "",
+		fix: "install git — the task baseline and the close inventory read it",
+	});
+	const rtk = rtkVersion(root);
+	rows.push({
+		name: "rtk",
+		ok: !!rtk,
+		found: rtk || "",
+		fix: "install the token saver: winget install --id rtk-ai.rtk -e (or brew install rtk)",
+	});
+	if (issue) {
+		const cred = credential(root);
+		rows.push({
+			name: "GitHub access",
+			ok: !!cred,
+			found: cred ? `via ${cred.source}` : "",
+			fix: "gh auth login (recommended), or set GH_TOKEN with Issues read/write",
+		});
+	}
+	return rows;
 }
 
 // ---------------------------------------------------------------- harnesses

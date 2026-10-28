@@ -8,7 +8,11 @@ owns the verb.
 
 | File | Holds | Open when |
 |---|---|---|
-| `index.mjs` | re-exports of the six commands | a caller needs a stable import |
-| `open.mjs` | `task new`, `show`, `block`, `resume` | a task cannot open, read, park or resume |
-| `close.mjs` | `task close`: the gate, inventory, archive, change card | a close is refused or files the wrong inventory |
+| `index.mjs` | re-exports of the eight commands | a caller needs a stable import |
+| `open.mjs` | `task new` (local or minted), `block`, `resume` | a task cannot open, park or resume |
+| `issue.mjs` | `mintTask`, `importTask` — the two ways an id comes from GitHub | a mint or `--from` import fails |
+| `show.mjs` | `task show` | the task brief is wrong or missing |
+| `publish.mjs` | `task publish`, `syncAfterClose` | the plan or the final record does not reach the issue |
+| `renumber.mjs` | `task renumber`: local only, rewrites every reference | two tasks collided after a merge |
+| `close.mjs` | `task close`: the gate, inventory, archive, change card, `--sync` | a close is refused or files the wrong inventory |
 | `start.mjs` | `start` | the day-start summary is wrong or missing |

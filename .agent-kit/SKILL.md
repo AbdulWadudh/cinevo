@@ -11,33 +11,31 @@ boundaries and this repo's facts; if it disagrees with this file, it wins.
 ## 1. Start of session
 
 Read `AGENTS.md`, then `.agent-kit/project.md`. Run `agent-kit start`: it prints the branch, the
-declared commands and their tiers, what is in flight, the gate, the last evidence, and one next
-action. `task show` opens the active task in full. Resume what is in flight before opening
-anything new. Load only the rule files that match the files you will touch.
+declared commands and their tiers, the five newest closes, what is in flight, the gate, the last
+evidence, and one next action. `task show` opens the active task in full. Resume what is in
+flight before opening anything new. Load only the rule files that match the files you will touch.
 
 Open a directory through its `INDEX.md`, then the one file it names — never by listing it.
 
 ## Skills and tools, before you plan
 
-List what the harness exposes — installed skills (its skill folder or plugin list), configured
-MCP servers and their tools, and CLIs on `PATH` — then name the one that covers the task in the
-plan. A skill that matches is part of the plan, not a preference: read it and follow it; several
-fit, take the narrowest; none fits, say so and write the smallest step by hand. Use a configured
-MCP server before a hand-written script that does the same, and an existing CLI or repo script
-before a one-off. Re-check when the task changes shape. Installing a skill or wiring an MCP
-server is the owner's yes — not a mid-task fix. The rule itself is
-`.agent-kit/rules/_behavior.md` §12.
+List what the harness exposes — skills, MCP servers and their tools, CLIs on `PATH` — then name
+the one that covers the task in the plan. A match is part of the plan: read it and follow it;
+several fit, take the narrowest; none fits, say so and write the smallest step by hand. Prefer a
+configured MCP server to a hand-written script, and an existing CLI or repo script to a one-off.
+Re-check when the task changes shape. Installing a skill or wiring an MCP server is the owner's
+yes, not a mid-task fix. The rule is `.agent-kit/rules/_behavior.md` §12.
 
-`agent-kit harnesses` lists the coding agents installed on this machine — HOME config, PATH,
-repo markers. The repo may show none of them. Say the list when you set up or report on a
-repo, and wire `.agent-kit/SKILL.md` for each harness that has a skill folder; the command prints those
-paths. It is a report, not a gate.
+`agent-kit harnesses` lists the coding agents installed here — HOME config, PATH, repo markers;
+the repo may show none. Say the list when you set up or report on a repo, and wire
+`.agent-kit/SKILL.md` for each harness with a skill folder; it prints those paths. A report, not
+a gate.
 
 ## Browser access — use `agent-browser`
 
 Reach for `agent-browser` only when the task needs the UI: clicking, forms, a session, a
-rendered page, or building and checking one. No UI needed, plain `curl` or `fetch` is the
-right tool. No Playwright, no headless driver of your own.
+rendered page. No UI needed, `curl` or `fetch` is right. No Playwright, no headless driver of
+your own.
 
 ## Shell output — run it through rtk
 
@@ -52,8 +50,8 @@ context spent. Prefix the shell commands whose output you inspect:
 
 - `rtk bypass <cmd>` when the full text is the evidence: a stack trace you must read line by
   line, machine-readable output (`--porcelain`, `--json`), or a command the task must quote.
-- File reads the edit needs go through the editor's Read tool, not `rtk read`: the filter
-  trades bodies for signatures, which is wrong when you are editing the body.
+- File reads the edit needs go through the editor's Read tool: the filter trades bodies for
+  signatures.
 - `verify` and `task close` run the declared commands themselves, unfiltered, so exit codes are
   untouched.
 
@@ -64,16 +62,16 @@ the change file written at close carries the same ID. `rtk gain` is the source.
 ## 2. Classify
 
 QUICK: at most three files, reversible, no public interface, schema, dependency or data
-change. Everything else is PLANNED. When unsure, take PLANNED — the cost is a short plan, not
-a rewrite.
+change. Everything else is PLANNED; when unsure, take it — a short plan, not a rewrite.
 
 ## 3. Open
 
 `task new <slug> --lane quick|planned`. It records the baseline run itself — a full one, so the
-milestone rows are on record before you touch anything. Before the first edit, fill the task's
-intent, scope and `touches` — the exact paths you will write. Keep it minimal: intent, scope,
-the decisions a later session would re-open (each with its pointer), the plan, the proof and
-the summary. If an explanation changes no later action, it is not recorded.
+milestone rows are on record before you touch anything. The id comes from `project.md`'s `ids`
+row — never type one; `ids: issue` also mints the issue, and `--from <n>` imports one. Before the
+first edit, fill the task's intent, scope and `touches` — the exact paths you will write. Keep it
+minimal: intent, scope, the decisions a later session would re-open (each with its pointer), the
+plan, the proof and the summary. If an explanation changes no later action, it is not recorded.
 
 A task too big for one sitting splits into subtasks: `task new <slug> --lane quick|planned
 --parent TASK-N` opens `TASK-N.M`, queues the main task, and records a quick baseline. One
@@ -83,7 +81,8 @@ Do not use a subtask to dodge G1: the plan and the gate are the main task's.
 ## 4. G1 — plan approval (PLANNED only)
 
 Put the plan in chat: the files, the steps, the risks, and the command that will prove it.
-Wait for a yes. No edits before it.
+Wait for a yes. No edits before it. In `ids: issue`, that yes is also when `task publish` sends
+the plan to the issue.
 
 ## 5. Work
 
@@ -92,9 +91,9 @@ a file you did not declare? Say why, amend `touches` first. Never widen silently
 
 ## 6. Prove it
 
-`verify` mid-flight: it runs the `always` rows and holds the `milestone` ones for the baseline,
-`verify --full` and `task close`. So the inner loop stays short and the slow build is still on
-record before the task can close. Real exit codes go in the evidence table, each row with its
+`verify` mid-flight runs the `always` rows and holds the `milestone` ones for the baseline,
+`verify --full` and `task close`: the inner loop stays short, and build is on record before
+close. Real exit codes go in the evidence table, each row with its
 scope. If `task show` says `Evidence: STALE`, the task's files moved after the green run —
 verify again before quoting it. Compare against the baseline: a red that was already red is not
 progress, and a green you did not cause is not a fix. Three identical red runs over the same
@@ -119,7 +118,8 @@ points at.
 It prints the commit message already in the hook's shape — subject and body — so closing and
 committing do not drift apart. `--pr` also prints a PR body built from the change file and the
 evidence. `--amend "<why>"` accepts a declared breach and writes the reason into the plan —
-only with the user's reason, never as a way past a red suite.
+only with the user's reason, never as a way past a red suite. `--sync` (issue ids) closes the
+task's issue with the final record, after the local close is written.
 
 A subtask closes differently: `task close` runs the quick suite (lint included), marks it DONE
 and leaves it in `active/`, and prints its own commit message. It writes no change file and
@@ -139,9 +139,9 @@ owner.
 
 ## 9. Report
 
-One short message: what changed, what proved it, what is still open. Name the task ID. If rtk
-ran, put its figure under the same ID (`TASK-118 — rtk 82% over 14 commands`). Then stop — no
-follow-up suggestions unless asked.
+One short message: what changed, what proved it, what is still open. Name the task ID; if rtk
+ran, put its figure under it (`rtk 82% over 14 commands`). Then stop — no follow-up suggestions
+unless asked.
 
 ## When the loop bends
 

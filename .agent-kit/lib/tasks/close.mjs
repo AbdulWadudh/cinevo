@@ -1,7 +1,7 @@
 /** tasks/close.mjs — the close gate, inventory, archive and change card */
 import fs from "node:fs";
 import path from "node:path";
-import { refreshRecents, writeChange } from "../changelog.mjs";
+import { retireRecent, writeChange } from "../changelog.mjs";
 import { CATEGORIES, ENTRY_LIMIT, LOG_DIR, TASKS } from "../consts.mjs";
 import {
 	abs,
@@ -26,8 +26,9 @@ import {
 } from "../taskfile.mjs";
 import { evidenceDetail, evidenceRows } from "../verify/evidence.mjs";
 import { cmdVerify } from "../verify/index.mjs";
+import { syncAfterClose } from "./publish.mjs";
 
-export function cmdTaskClose({ root, id, amend, noVerify, pr }) {
+export function cmdTaskClose({ root, id, amend, noVerify, pr, sync }) {
 	const base = path.resolve(root || process.cwd());
 	const file = currentTask(base, id);
 	const rel = `${TASKS}/active/${file}`;
@@ -245,7 +246,7 @@ export function cmdTaskClose({ root, id, amend, noVerify, pr }) {
 	});
 
 	refreshActive(base);
-	refreshRecents(base);
+	retireRecent(base);
 
 	console.log(`\nClosed ${fm.id}`);
 	console.log(`  archived  ${archive}/${file}`);
@@ -286,5 +287,14 @@ export function cmdTaskClose({ root, id, amend, noVerify, pr }) {
 		].join("\n");
 		console.log(`PR body:\n\n${prBody}\n`);
 	}
+	// The local close is already on disk; a failed sync reports and exits 1 without undoing it.
+	if (sync)
+		return syncAfterClose({
+			base,
+			fm,
+			body: archived,
+			rel: `${archive}/${file}`,
+			change,
+		});
 	return 0;
 }

@@ -13,9 +13,37 @@ import { inventoryScenario, blockScenarios, collisionScenario } from "./state.mj
 import { pointersScenario, identityScenario, machineScenarios, setupPointerScenario, hookScenario, budgetScenario } from "./surface.mjs";
 import { loopScenarios } from "./loop.mjs";
 import { familyScenarios } from "./family.mjs";
+import { localIdScenarios } from "./ids.mjs";
+import { issueIdScenarios, prerequisiteScenarios } from "./issue.mjs";
 
-export function cmdSelftest(dispatch) {
+/**
+ * `setup` and `doctor` require rtk, and a suite that needs a tool on the host is a suite that
+ * fails on someone else's machine. This shim answers both calls the kit makes, so the scenario
+ * that proves a missing prerequisite empties PATH instead.
+ */
+function rtkShim() {
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-kit-bin-"));
+	fs.writeFileSync(
+		path.join(dir, "rtk"),
+		'#!/bin/sh\ncase "$1" in\n  --version) echo "rtk 0.0.0-selftest" ;;\n  *) echo "selftest rtk" ;;\nesac\nexit 0\n',
+	);
+	fs.chmodSync(path.join(dir, "rtk"), 0o755);
+	if (process.platform === "win32")
+		fs.writeFileSync(
+			path.join(dir, "rtk.cmd"),
+			'@echo off\r\nif "%1"=="--version" (echo rtk 0.0.0-selftest) else (echo selftest rtk)\r\nexit /b 0\r\n',
+		);
+	const before = process.env.PATH || "";
+	process.env.PATH = `${dir}${path.delimiter}${before}`;
+	return () => {
+		process.env.PATH = before;
+		fs.rmSync(dir, { recursive: true, force: true });
+	};
+}
+
+export async function cmdSelftest(dispatch) {
 	const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "agent-kit-test-"));
+	const unshim = rtkShim();
 	const failures = [];
 	const assert = (ok, label) => {
 		if (!ok) failures.push(label);
@@ -39,6 +67,32 @@ export function cmdSelftest(dispatch) {
 		console.error = () => {};
 		try {
 			return fn();
+		} finally {
+			console.log = log;
+			console.error = err;
+		}
+	};
+	/** The same, for a command that returns a promise: the console stays off until it settles. */
+	const quietAsync = async (fn) => {
+		const log = console.log;
+		const err = console.error;
+		console.log = () => {};
+		console.error = () => {};
+		try {
+			return await fn();
+		} finally {
+			console.log = log;
+			console.error = err;
+		}
+	};
+	const spokenAsync = async (fn) => {
+		const out = [];
+		const log = console.log;
+		const err = console.error;
+		console.log = (s) => out.push(String(s));
+		console.error = (s) => out.push(String(s));
+		try {
+			return { code: await fn(), out: out.join("\n") };
 		} finally {
 			console.log = log;
 			console.error = err;
@@ -92,6 +146,8 @@ export function cmdSelftest(dispatch) {
 		assert,
 		captured,
 		quiet,
+		quietAsync,
+		spokenAsync,
 		fillTask,
 		spoken,
 		doctorRow,
@@ -138,7 +194,11 @@ export function cmdSelftest(dispatch) {
 		hookScenario(ctx);
 		budgetScenario(ctx);
 		tagScenarios(ctx);
+		await localIdScenarios(ctx);
+		await issueIdScenarios(ctx);
+		prerequisiteScenarios(ctx);
 	} finally {
+		unshim();
 		fs.rmSync(tmp, { recursive: true, force: true });
 		if (ctx.shared.junkDir)
 			fs.rmSync(ctx.shared.junkDir, { recursive: true, force: true });

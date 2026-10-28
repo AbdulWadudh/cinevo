@@ -31,12 +31,9 @@ export const LOOP_LIMIT = 3;
 // A missing cell means `always`, so a table written before tiers existed keeps its meaning.
 export const TIERS = new Set(["always", "milestone"]);
 
-// The indexes carry the last few entries, so a session reads a list instead of a folder.
-// [index, folder, date field]
-export const RECENT_LISTS = [
-	[TASK_INDEX, `${TASKS}/archive`, "closed"],
-	[`${LOG_DIR}/INDEX.md`, LOG_DIR, "date"],
-];
+// `start` derives the newest entries from the files, so only a pre-TASK-127 install still
+// carries a RECENT block; these are the two indexes whose first close retires it.
+export const RECENT_INDEXES = [TASK_INDEX, `${LOG_DIR}/INDEX.md`];
 export const RECENT_LIMIT = 5;
 
 export const TEXT_EXT = new Set([

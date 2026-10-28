@@ -18,3 +18,5 @@ owns the area, not at a 1,700-line script. Scenarios share one throwaway repo, s
 | `family.mjs` | 26–27: subtask close, family delivery | a parent/subtask flow breaks |
 | `surface.mjs` | 15–16, 18–19, 30–32: pointers, identity, harnesses, commit message, hooks, budget | a harness-facing file or hook is wrong |
 | `release.mjs` | 13, 28, 33–34: change log, release note, tag pin | a release or tag is wrong |
+| `ids.mjs` | 35: local ids derive, a stale `.counter` is ignored, a collision renumbers, the mode is refused | the offline allocator is wrong |
+| `issue.mjs` | 36–37: issue ids over a stubbed API, a missing prerequisite | issue mode or the prerequisites row is wrong |

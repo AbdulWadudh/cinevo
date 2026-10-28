@@ -1,7 +1,6 @@
 /** sync.mjs — `check` and `pull`: drift and update */
 import fs from "node:fs";
 import path from "node:path";
-import { refreshRecents } from "./changelog.mjs";
 import { MANIFEST, STATE } from "./consts.mjs";
 import { cmdDoctor } from "./doctor/index.mjs";
 import {
@@ -244,9 +243,6 @@ export function cmdPull({
 			]);
 		}
 	}
-
-	// A seed pull can replace an index; the entries it lists are derived, so rebuild them.
-	refreshRecents(root);
 
 	const specOf = spec || state.source || "";
 	const pin = isRemote(specOf) ? ref || state.ref || "" : "";

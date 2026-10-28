@@ -1,11 +1,10 @@
 # Cinevo — Agent Entry Point
 
-You are working in Cinevo, a cinematic streaming front-end (movies, TV, live radio) built
-on Next.js 16 and Prisma. Read this file once per session, then follow it.
+Cinevo is a cinematic streaming front-end (movies, TV, live radio) on Next.js 16 and Prisma.
+Read this file once per session.
 
-Cinevo behaves like a premium app rather than a catalogue with links: inline trailer previews,
-spatial D-pad navigation for TV, a live-radio wing with its own player, and a theme studio that
-can repaint the whole site.
+Cinevo is a premium app, not a catalogue: inline trailer previews, D-pad navigation for TV, a
+live-radio wing with its own player, and a theme studio that repaints the site.
 
 ## Start here, in order
 
@@ -48,16 +47,15 @@ can repaint the whole site.
 
 ## Core rules
 
-1. **Every admin action is gated.** `requireAdmin()` runs before its first query and throws
-   `Error("Forbidden")` otherwise, in `src/app/actions/admin.ts`, `providers.ts` and `radio.ts`
-   alike; a new admin action copies the guard rather than trusting the caller. Detail:
+1. **Every admin action is gated.** `requireAdmin()` is the first statement and throws
+   `Error("Forbidden")` otherwise; a new admin action copies the guard. Detail:
    `.agent-kit/rules/api.md` §5.
 2. **Migrations are append-only.** A schema change is `schema.prisma` plus a new timestamped
-   directory, and the change file names it. Detail: `.agent-kit/rules/database.md` §1.
+   directory; the change file names it. Detail: `.agent-kit/rules/database.md` §1.
 3. **The theme is resolved once per request.** `getActiveThemeState()` is the only reader of the
-   theme cookie and the published theme row; a page or component takes the value. Detail:
+   theme cookie and the published row; a page takes the value. Detail:
    `.agent-kit/rules/theming.md` §1.
-4. **Context discipline.** Every directory the kit owns carries an `INDEX.md`: read the index, then the one file it points at — never list a folder into context. Search narrowly; read at most three source files at a time. History (`.agent-kit/tasks/archive/`, `.agent-kit/logs/MM-YYYY/`) is read only when the user asks; the indexes list the five newest entries for you.
+4. **Context discipline.** Every directory the kit owns carries an `INDEX.md`: read the index, then the one file it points at — never list a folder into context. Search narrowly; at most three source files at a time. History is read only when the user asks.
 5. **One home per fact.** A rule lives in exactly one file; everywhere else cites it.
 6. **Planning.** Anything beyond the QUICK lane (three files or fewer, reversible, no contract change) needs a task file in `.agent-kit/tasks/active/`, with the plan approved before the first edit.
 7. **Subagents.** Every subagent prompt names the files to read and the deliverable. It never restates the plan.
@@ -65,15 +63,14 @@ can repaint the whole site.
 
 ## Done means
 
-The quick suite and the full one are green (the full one is `verify --full`, which `task close`
-runs itself), the task's evidence table holds real exit codes, `.agent-kit/tasks/INDEX.md` is
-current, and `agent-kit doctor` reports no failures. Then `agent-kit task close`.
+Both suites are green (`task close` runs the full one), the evidence table holds real exit
+codes, `.agent-kit/tasks/INDEX.md` is current, and `agent-kit doctor` reports no failures. Then
+`agent-kit task close`.
 
-A task too big for one sitting splits into subtasks (`task new --parent TASK-N`). A subtask
-closes on the quick suite: `task close` marks it DONE and keeps it in `active/`. The main
-task's close is the milestone — it refuses while a subtask is open, runs the full suite, and
-build failures are fixed right there before it closes; green, it archives the family
-under one change file and one commit message.
+A task too big for one sitting splits into subtasks (`task new --parent TASK-N`): a subtask
+closes on the quick suite and stays DONE in `active/`; the main close refuses while one is open,
+runs the full suite, fixes a red build there, then archives the family under one change file and
+one commit message.
 
 ---
 
@@ -86,12 +83,14 @@ under one change file and one commit message.
 |---|---|
 | `doctor` | truth checks over docs, declarations and tasks; `--strict` also fails on unfilled markers; `--fix` repairs encoding only; `--json` for CI |
 | `harnesses` | list the coding agents installed on this machine (HOME, PATH, repo) — the repo may show none; a report, not a gate |
-| `start` | read-only session brief: branch, declared commands and their tiers, active tasks, the gate, last evidence, loop and stale state, and one next action |
-| `task new <slug> --lane quick\|planned [--parent TASK-N]` | open a task **and record the baseline run**, a full one (`--no-baseline` to skip); `--parent` opens `TASK-N.M`, queues the main task, and records a quick baseline |
+| `start` | read-only session brief: branch, declared commands and their tiers, the five newest closes, active tasks, the gate, last evidence, loop and stale state, and one next action |
+| `task new <slug> --lane quick\|planned [--parent TASK-N] [--from <issue>]` | open a task **and record the baseline run**, a full one (`--no-baseline` to skip); `--parent` opens `TASK-N.M`, queues the main task, and records a quick baseline; in `ids: issue` it also mints the issue and takes its number, and `--from` imports an existing issue instead |
 | `task show` | print the active task's scope, plan and evidence — the thing G1/G2 asks a human to read |
+| `task publish [--id TASK-N]` | issue ids only: send the task's approved plan to its issue (the front matter stays in the repo) |
+| `task renumber <old> <new> \| <old> --next [--file <name>]` | local ids only: move an id after a collision, rewriting the file name, a parent's children and every `depends_on`; `--file` picks one of two same-id files |
 | `task block "<question>"` | park the in-progress task on an owner decision; it stops holding the slot and the question waits in the file |
 | `task resume [<id>]` | continue a blocked task; pass the id when more than one is waiting |
-| `task close` | a subtask runs the **quick** suite, is marked DONE and stays active for the main close; the main task refuses while a subtask is open, runs the **full** suite, scope-checks against git (its own write set plus every subtask's), records the inventory, archives the family, writes one change file under `.agent-kit/logs/MM-YYYY/`, and prints a ready commit message; `--pr` adds a PR body; `--amend "<why>"` accepts a declared breach and writes the reason into the plan; `--no-verify` only when the suite cannot run here |
+| `task close` | a subtask runs the **quick** suite, is marked DONE and stays active for the main close; the main task refuses while a subtask is open, runs the **full** suite, scope-checks against git (its own write set plus every subtask's), records the inventory, archives the family, writes one change file under `.agent-kit/logs/MM-YYYY/`, and prints a ready commit message; `--pr` adds a PR body; `--amend "<why>"` accepts a declared breach and writes the reason into the plan; `--no-verify` only when the suite cannot run here; `--sync` (issue ids) closes the issue with the final record and comments the change card's path, after the local close is written |
 | `release <version>` | write `.agent-kit/releases/<version>.md` from the change files no earlier release claims; `release --tag <version>` creates the annotated tag whose message is that note |
 | `verify` | the inner loop: runs the `always` rows and writes the evidence table; `--full` adds the `milestone` rows, which the baseline and `task close` already run; at three identical red runs it refuses until the Plan changes |
 | `task guard [--message <file>]` | the hooks: `pre-commit` refuses a commit outside the declared write set (silent when no task is open); `commit-msg` warns — never blocks — on a subject that is not `type (TASK-ID): summary` or a body with no summary. **Opt-in per clone** via `git config core.hooksPath .agent-kit/githooks` |

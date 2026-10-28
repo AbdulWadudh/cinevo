@@ -31,14 +31,14 @@
     ".agent-kit/changelog",
     ".agent-kit/driver",
     ".agent-kit/tasks/templates",
-    ".agent-kit/tasks/template.md"
+    ".agent-kit/tasks/template.md",
+    ".agent-kit/tasks/.counter"
   ],
   "owned": [
     ".agent-kit/project.md",
     ".agent-kit/template.json",
     ".agent-kit/tasks/active",
     ".agent-kit/tasks/archive",
-    ".agent-kit/tasks/.counter",
     ".agent-kit/logs",
     ".agent-kit/releases"
   ]

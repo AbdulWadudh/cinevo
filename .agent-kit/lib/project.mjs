@@ -154,7 +154,22 @@ export function detectStack(root) {
 	return out;
 }
 
-export function projectMd(stack, today) {
+export function tasksSection(mode) {
+	return [
+		"## Tasks",
+		"",
+		"Who allocates a task id. `local` derives the next number from this repo's own task",
+		"files and change cards; `issue` takes the GitHub issue number, so two sessions on two",
+		"clones cannot mint the same id. `task renumber` moves a local id; it refuses in issue mode.",
+		"",
+		"| Fact | Value |",
+		"|---|---|",
+		`| ids | ${mode} |`,
+		"",
+	].join("\n");
+}
+
+export function projectMd(stack, today, mode = "local") {
 	const lines = [];
 	lines.push("# Project Profile", "");
 	lines.push(
@@ -192,7 +207,8 @@ export function projectMd(stack, today) {
 	}
 	if (Object.keys(stack.commands).length === 0)
 		lines.push("| build | <!-- FILL:build-command --> |");
-	lines.push("", "## Entry points", "");
+	lines.push("", tasksSection(mode));
+	lines.push("## Entry points", "");
 	lines.push(
 		...(stack.entry.length
 			? stack.entry.map((e) => `- ${e}`)

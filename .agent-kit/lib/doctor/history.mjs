@@ -1,18 +1,15 @@
-/** doctor/history.mjs — completeness, recent lists, release notes */
+/** doctor/history.mjs — completeness and release notes */
 import fs from "node:fs";
 import path from "node:path";
-import { recentLines } from "../changelog.mjs";
-import { LOG_DIR, RECENT_LISTS, TASKS } from "../consts.mjs";
+import { LOG_DIR, TASKS } from "../consts.mjs";
 import {
 	abs,
-	blockBody,
 	exists,
 	expand,
 	frontMatter,
 	git,
 	isDir,
 	read,
-	readIf,
 } from "../io.mjs";
 import { CHILD_ID } from "../taskfile.mjs";
 
@@ -37,25 +34,7 @@ export function historyChecks({ base, add }) {
 		undocumented.slice(0, 3).join(", "),
 	);
 
-	// 7b. the indexes carry the last five entries, so a session reads one list instead of a folder.
-	const staleRecents = [];
-	for (const [rel, dir, field] of RECENT_LISTS) {
-		const text = readIf(abs(base, rel));
-		// A Windows checkout (autocrlf) rewrites file content to CRLF; the generated lines are
-		// LF. Compare meaning, not line endings.
-		const body = text === null ? null : blockBody(text, "RECENT");
-		const actual = body === null ? null : body.split("\r\n").join("\n");
-		if (actual === null) staleRecents.push(`${rel}: no RECENT block`);
-		else if (actual !== recentLines(base, rel, dir, field))
-			staleRecents.push(`${rel}: stale`);
-	}
-	add(
-		staleRecents.length ? "FAIL" : "PASS",
-		"recent lists",
-		staleRecents.join(", "),
-	);
-
-	// 7c. a release note is named for its version and says so on the first line, so a note
+	// 7b. a release note is named for its version and says so on the first line, so a note
 	// cannot be filed under the wrong tag. A repo that never cuts a release has no folder.
 	const releaseDir = abs(base, ".agent-kit/releases");
 	const releaseFiles = isDir(releaseDir)

@@ -48,7 +48,7 @@ You are working in <PROJECT NAME>. Read this file once per session, then follow 
      Examples: component variants, theme tokens, data-flow boundaries,
      destructive-action confirms, tenancy or auth invariants. -->
 
-5. **Context discipline.** Every directory the kit owns carries an `INDEX.md`: read the index, then the one file it points at — never list a folder into context. Search narrowly; read at most three source files at a time. History (`.agent-kit/tasks/archive/`, `.agent-kit/logs/MM-YYYY/`) is read only when the user asks; the indexes list the five newest entries for you.
+5. **Context discipline.** Every directory the kit owns carries an `INDEX.md`: read the index, then the one file it points at — never list a folder into context. Search narrowly; read at most three source files at a time. History (`.agent-kit/tasks/archive/`, `.agent-kit/logs/MM-YYYY/`) is read only when the user asks; `agent-kit start` prints the five newest closes.
 6. **One home per fact.** A rule lives in exactly one file; everywhere else cites it.
 7. **Planning.** Anything beyond the QUICK lane (three files or fewer, reversible, no contract change) needs a task file in `.agent-kit/tasks/active/`, with the plan approved before the first edit.
 8. **Subagents.** Every subagent prompt names the files to read and the deliverable. It never restates the plan.
@@ -77,12 +77,14 @@ under one change file and one commit message.
 |---|---|
 | `doctor` | truth checks over docs, declarations and tasks; `--strict` also fails on unfilled markers; `--fix` repairs encoding only; `--json` for CI |
 | `harnesses` | list the coding agents installed on this machine (HOME, PATH, repo) — the repo may show none; a report, not a gate |
-| `start` | read-only session brief: branch, declared commands and their tiers, active tasks, the gate, last evidence, loop and stale state, and one next action |
-| `task new <slug> --lane quick\|planned [--parent TASK-N]` | open a task **and record the baseline run**, a full one (`--no-baseline` to skip); `--parent` opens `TASK-N.M`, queues the main task, and records a quick baseline |
+| `start` | read-only session brief: branch, declared commands and their tiers, the five newest closes, active tasks, the gate, last evidence, loop and stale state, and one next action |
+| `task new <slug> --lane quick\|planned [--parent TASK-N] [--from <issue>]` | open a task **and record the baseline run**, a full one (`--no-baseline` to skip); `--parent` opens `TASK-N.M`, queues the main task, and records a quick baseline; in `ids: issue` it also mints the issue and takes its number, and `--from` imports an existing issue instead |
 | `task show` | print the active task's scope, plan and evidence — the thing G1/G2 asks a human to read |
+| `task publish [--id TASK-N]` | issue ids only: send the task's approved plan to its issue (the front matter stays in the repo) |
+| `task renumber <old> <new> \| <old> --next [--file <name>]` | local ids only: move an id after a collision, rewriting the file name, a parent's children and every `depends_on`; `--file` picks one of two same-id files |
 | `task block "<question>"` | park the in-progress task on an owner decision; it stops holding the slot and the question waits in the file |
 | `task resume [<id>]` | continue a blocked task; pass the id when more than one is waiting |
-| `task close` | a subtask runs the **quick** suite, is marked DONE and stays active for the main close; the main task refuses while a subtask is open, runs the **full** suite, scope-checks against git (its own write set plus every subtask's), records the inventory, archives the family, writes one change file under `.agent-kit/logs/MM-YYYY/`, and prints a ready commit message; `--pr` adds a PR body; `--amend "<why>"` accepts a declared breach and writes the reason into the plan; `--no-verify` only when the suite cannot run here |
+| `task close` | a subtask runs the **quick** suite, is marked DONE and stays active for the main close; the main task refuses while a subtask is open, runs the **full** suite, scope-checks against git (its own write set plus every subtask's), records the inventory, archives the family, writes one change file under `.agent-kit/logs/MM-YYYY/`, and prints a ready commit message; `--pr` adds a PR body; `--amend "<why>"` accepts a declared breach and writes the reason into the plan; `--no-verify` only when the suite cannot run here; `--sync` (issue ids) closes the issue with the final record and comments the change card's path, after the local close is written |
 | `release <version>` | write `.agent-kit/releases/<version>.md` from the change files no earlier release claims; `release --tag <version>` creates the annotated tag whose message is that note |
 | `verify` | the inner loop: runs the `always` rows and writes the evidence table; `--full` adds the `milestone` rows, which the baseline and `task close` already run; at three identical red runs it refuses until the Plan changes |
 | `task guard [--message <file>]` | the hooks: `pre-commit` refuses a commit outside the declared write set (silent when no task is open); `commit-msg` warns — never blocks — on a subject that is not `type (TASK-ID): summary` or a body with no summary. **Opt-in per clone** via `git config core.hooksPath .agent-kit/githooks` |

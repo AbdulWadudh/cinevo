@@ -16,6 +16,8 @@ import {
 	cmdTaskBlock,
 	cmdTaskClose,
 	cmdTaskNew,
+	cmdTaskPublish,
+	cmdTaskRenumber,
 	cmdTaskResume,
 	cmdTaskShow,
 } from "./tasks/index.mjs";
@@ -49,6 +51,7 @@ export function main(argv) {
 				sourceSpec: src.spec,
 				ref: src.ref,
 				noRtk: flag("no-rtk"),
+				ids: value("ids"),
 			});
 		}
 		case "check": {
@@ -101,6 +104,7 @@ export function main(argv) {
 					force: flag("force"),
 					noBaseline: flag("no-baseline"),
 					parent: value("parent"),
+					from: value("from"),
 				});
 			if (sub === "show")
 				return cmdTaskShow({ root: process.cwd(), id: value("id") });
@@ -119,6 +123,17 @@ export function main(argv) {
 					amend: value("amend"),
 					noVerify: flag("no-verify"),
 					pr: flag("pr"),
+					sync: flag("sync"),
+				});
+			if (sub === "publish")
+				return cmdTaskPublish({ root: process.cwd(), id: value("id") });
+			if (sub === "renumber")
+				return cmdTaskRenumber({
+					root: process.cwd(),
+					oldId: args[2],
+					newId: args[3],
+					next: flag("next"),
+					file: value("file"),
 				});
 			if (sub === "guard")
 				return cmdTaskGuard({
@@ -126,7 +141,7 @@ export function main(argv) {
 					message: value("message"),
 				});
 			return die(
-				'usage: task new <slug> [--parent TASK-N] | task show | task block "<question>" | task resume | task close [--id TASK-N] [--amend "<why>"] [--pr] | task guard [--message <file>]',
+				'usage: task new <slug> [--parent TASK-N] [--from <issue>] | task show | task block "<question>" | task resume | task close [--id TASK-N] [--amend "<why>"] [--pr] [--sync] | task publish [--id TASK-N] | task renumber <TASK-N> <TASK-M>|--next [--file <name>] | task guard [--message <file>]',
 			);
 		}
 		case "learnings": {
@@ -144,14 +159,13 @@ export function main(argv) {
 		case "selftest":
 			return cmdSelftest(main);
 		case "help":
-		case undefined:
-			console.log(
-				read(path.join(SCRIPT_ROOT, ".agent-kit/agent-kit.mjs"))
-					.split("\n")
-					.slice(1, 27)
-					.join("\n"),
-			);
+		case undefined: {
+			const text = read(
+				path.join(SCRIPT_ROOT, ".agent-kit/agent-kit.mjs"),
+			).split("\n");
+			console.log(text.slice(2, text.indexOf(" */")).join("\n"));
 			return 0;
+		}
 		default:
 			return die(
 				`unknown command: ${cmd} (setup|check|pull|doctor|start|verify|harnesses|task|learnings|release|selftest)`,

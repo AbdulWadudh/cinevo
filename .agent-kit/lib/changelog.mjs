@@ -1,8 +1,8 @@
-/** changelog.mjs — change cards and the recent lists */
+/** changelog.mjs — change cards */
 import fs from "node:fs";
 import path from "node:path";
-import { LOG_DIR, RECENT_LIMIT, RECENT_LISTS } from "./consts.mjs";
-import { abs, block, expand, frontMatter, posix, read, readIf, write } from "./io.mjs";
+import { LOG_DIR, RECENT_INDEXES } from "./consts.mjs";
+import { abs, expand, frontMatter, posix, read, readIf, write } from "./io.mjs";
 import { CHILD_ID, closeOutField } from "./taskfile.mjs";
 
 
@@ -68,26 +68,18 @@ export function entriesIn(base, dir, dateField) {
 		);
 }
 
-/** The body of an index's RECENT block: five links, newest first, one line each. */
-export function recentLines(base, indexRel, dir, dateField) {
-	const recent = entriesIn(base, dir, dateField).slice(0, RECENT_LIMIT);
-	if (!recent.length) return "_Nothing yet._";
-	const from = path.dirname(indexRel);
-	return recent
-		.map(
-			(e) =>
-				`- \`${e.date || "undated"}\` [${e.id}](${posix(path.relative(from, e.rel))}) — ${e.summary || "(no summary)"}`,
-		)
-		.join("\n");
-}
-
-export function refreshRecents(base) {
-	for (const [rel, dir, field] of RECENT_LISTS) {
+/**
+ * `start` derives the five newest closes from the cards, so no index stores them. An older
+ * install still carries a RECENT block in two indexes; the first close retires it rather than
+ * leaving links that drift from the files.
+ */
+export function retireRecent(base) {
+	for (const rel of RECENT_INDEXES) {
 		const text = readIf(abs(base, rel));
-		if (text === null) continue;
-		write(
-			abs(base, rel),
-			block(text, "RECENT", recentLines(base, rel, dir, field)),
-		);
+		if (text === null || !text.includes("<!-- RECENT:START -->")) continue;
+		const next = text
+			.replace(/<!-- RECENT:START -->[\s\S]*?<!-- RECENT:END -->\r?\n?/, "")
+			.replace(/## Recent\r?\n\r?\n(?=#|$)/, "");
+		if (next !== text) write(abs(base, rel), next);
 	}
 }

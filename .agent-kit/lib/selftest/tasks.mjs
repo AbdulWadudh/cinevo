@@ -4,11 +4,11 @@ import { LOG_DIR, PROJECT, TASK_INDEX, TASKS } from "../consts.mjs";
 import { cmdDoctor } from "../doctor/index.mjs";
 import { cmdTaskGuard } from "../guard.mjs";
 import { abs, exists, expand, git, read, walk, write } from "../io.mjs";
-import { cmdTaskClose, cmdTaskNew, cmdTaskShow } from "../tasks/index.mjs";
+import { cmdTaskClose, cmdTaskNew, cmdStart, cmdTaskShow } from "../tasks/index.mjs";
 import { cmdVerify } from "../verify/index.mjs";
 
 export function scopeScenarios(ctx) {
-	const { tmp, assert, quiet, fillTask } = ctx;
+	const { tmp, assert, captured, quiet, fillTask } = ctx;
 	console.log("\n6. the scope guard bites");
 	const gitOk = git(tmp, ["init"]) !== null;
 	if (gitOk) {
@@ -91,6 +91,18 @@ export function scopeScenarios(ctx) {
 			"The plan names <!-- VERIFY:START --> in prose.\n\n## Plan",
 		),
 	);
+	// A pre-TASK-127 install carries a RECENT block in both indexes. The first close must retire
+	// it rather than leave a second copy of the newest closes that drifts from the cards.
+	const legacyRecent =
+		"\n## Recent\n\n<!-- RECENT:START -->\n- TASK-100 — an older close\n<!-- RECENT:END -->\n";
+	write(abs(tmp, TASK_INDEX), read(abs(tmp, TASK_INDEX)) + legacyRecent);
+	write(abs(tmp, `${LOG_DIR}/INDEX.md`), read(abs(tmp, `${LOG_DIR}/INDEX.md`)) + legacyRecent);
+	captured(() => cmdStart({ root: tmp }));
+	assert(
+		read(abs(tmp, TASK_INDEX)).includes("RECENT:START") &&
+			read(abs(tmp, `${LOG_DIR}/INDEX.md`)).includes("RECENT:START"),
+		"nothing but a close rewrites an index",
+	);
 	const before = quiet(() => cmdTaskClose({ root: tmp }));
 	assert(before === 0, "task close exits 0 when the write set holds");
 	assert(
@@ -145,31 +157,21 @@ export function scopeScenarios(ctx) {
 		"the plan's sections stay in the task; the change file does not copy them",
 	);
 	const taskIndexText = read(abs(tmp, TASK_INDEX));
+	const logsIndexText = read(abs(tmp, `${LOG_DIR}/INDEX.md`));
 	assert(
-		taskIndexText.includes("<!-- RECENT:START -->") &&
-			/\[TASK-101\]\(archive\/\d{4}-\d{2}\//.test(taskIndexText) &&
-			taskIndexText.includes("fixture change"),
-		"the task index lists the last closed tasks and links the archive",
+		!taskIndexText.includes("RECENT:START") &&
+			!taskIndexText.includes("## Recent") &&
+			!logsIndexText.includes("RECENT:START") &&
+			!logsIndexText.includes("## Recent"),
+		"the close retires a legacy RECENT block and its heading from both indexes",
 	);
-	const logsRecent = read(abs(tmp, `${LOG_DIR}/INDEX.md`));
+	const started = captured(() => cmdStart({ root: tmp }));
 	assert(
-		/\[TASK-101\]\(\d{2}-\d{4}\/\d{4}-\d{2}-\d{2}-TASK-101-[\w-]+\.md\)/.test(
-			logsRecent,
-		) && logsRecent.includes("fixture change"),
-		"the logs index lists the last changes and links the month folder",
+		started.includes("Recent") &&
+			started.includes("TASK-101") &&
+			started.includes("fixture change"),
+		"start derives the newest close from the card, not from an index",
 	);
-	write(
-		abs(tmp, `${LOG_DIR}/INDEX.md`),
-		logsRecent.replace(
-			/<!-- RECENT:START -->[\s\S]*?<!-- RECENT:END -->/,
-			"<!-- RECENT:START -->\n_Nothing yet._\n<!-- RECENT:END -->",
-		),
-	);
-	assert(
-		quiet(() => cmdDoctor({ root: tmp })) === 1,
-		"doctor fails a stale recent list",
-	);
-	write(abs(tmp, `${LOG_DIR}/INDEX.md`), logsRecent);
 	assert(
 		quiet(() => cmdDoctor({ root: tmp })) === 0,
 		"doctor accepts a closed task and its change file",

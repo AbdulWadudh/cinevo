@@ -1,10 +1,12 @@
 /** doctor/tasks.mjs — task hygiene, statuses, subtasks, backlog */
 import fs from "node:fs";
-import { TASK_INDEX, TASKS } from "../consts.mjs";
+import path from "node:path";
+import { LOG_DIR, TASK_INDEX, TASKS } from "../consts.mjs";
 import {
 	abs,
 	covers,
 	exists,
+	expand,
 	fenceFree,
 	frontMatter,
 	list,
@@ -12,7 +14,13 @@ import {
 	read,
 	readIf,
 } from "../io.mjs";
-import { activeTasks, CHILD_ID, parentId } from "../taskfile.mjs";
+import {
+	activeTasks,
+	CHILD_ID,
+	ID_MODES,
+	idsMode,
+	parentId,
+} from "../taskfile.mjs";
 import { blockedState } from "../verify/evidence.mjs";
 
 export function taskChecks({ base, add }) {
@@ -30,6 +38,58 @@ export function taskChecks({ base, add }) {
 		unindexed.length ? "FAIL" : "PASS",
 		"active tasks indexed",
 		unindexed.join(", "),
+	);
+
+	// One id source per repo, recorded in project.md. A missing row is how a pre-ids install
+	// looks; it still allocates locally, so it warns instead of failing.
+	const mode = idsMode(base);
+	add(
+		!mode ? "WARN" : ID_MODES.has(mode) ? "PASS" : "FAIL",
+		"task ids",
+		!mode
+			? "project.md has no `ids:` row — allocating locally; re-run setup to record it"
+			: ID_MODES.has(mode)
+				? mode
+				: `${mode} — expected local or issue`,
+	);
+
+	// One id, one task file, one change card. Two branches that minted the same number, or a
+	// hand copy, is the case this catches. Task files and cards are grouped apart because a
+	// close writes both under one id by design.
+	const idProblems = [];
+	const group = (rels) => {
+		const by = new Map();
+		for (const rel of rels.filter((r) => r.endsWith(".md"))) {
+			const id = frontMatter(read(abs(base, rel))).id;
+			if (!id) {
+				idProblems.push(`${rel}: no id`);
+				continue;
+			}
+			if (!/^TASK-\d+(?:\.\d+)?$/.test(id))
+				idProblems.push(`${rel}: ${id} is not TASK-N`);
+			else if (!path.basename(rel).includes(`-${id}-`))
+				idProblems.push(`${rel}: id ${id} does not match the file name`);
+			if (!by.has(id)) by.set(id, []);
+			by.get(id).push(path.basename(rel));
+		}
+		for (const [id, files] of by)
+			if (files.length > 1) idProblems.push(`${id}: ${files.join(" = ")}`);
+		return by.size;
+	};
+	const taskIds = group([
+		...expand(base, `${TASKS}/active`),
+		...expand(base, `${TASKS}/archive`),
+	]);
+	// `logs/INDEX.md` heads the month folders; only a card under MM-YYYY/ carries an id.
+	const cardIds = group(
+		expand(base, LOG_DIR).filter((rel) => /\d{2}-\d{4}\//.test(rel)),
+	);
+	add(
+		idProblems.length ? "FAIL" : "PASS",
+		"task ids unique",
+		idProblems.length
+			? idProblems.slice(0, 4).join("; ")
+			: `${taskIds} task id(s), ${cardIds} change card(s)`,
 	);
 
 	const collisions = [];

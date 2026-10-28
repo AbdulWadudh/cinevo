@@ -3,6 +3,7 @@ import path from "node:path";
 import { LOG_DIR, PROJECT, TASK_INDEX, TASKS } from "../consts.mjs";
 import { abs, exists, expand, frontMatter, git, read, write } from "../io.mjs";
 import { cmdStart, cmdTaskClose, cmdTaskNew } from "../tasks/index.mjs";
+import { nextId } from "../taskfile.mjs";
 
 export function familyScenarios(ctx) {
 	const { tmp, assert, captured, quiet, fillTask, spoken, doctorRow } = ctx;
@@ -16,7 +17,7 @@ export function familyScenarios(ctx) {
 	quiet(() => cmdTaskNew({ root: tmp, slug: "subtask-main", lane: "quick" }));
 	const mainTask = fillTask([], "prove the main close runs build");
 	const mainId = frontMatter(read(mainTask)).id;
-	const counterBefore = read(abs(tmp, `${TASKS}/.counter`));
+	const nextBefore = nextId(tmp);
 	quiet(() =>
 		cmdTaskNew({
 			root: tmp,
@@ -34,8 +35,8 @@ export function familyScenarios(ctx) {
 	write(abs(tmp, "src/child.txt"), "one\n");
 	assert(childId === `${mainId}.1`, "a subtask id extends the main id");
 	assert(
-		read(abs(tmp, `${TASKS}/.counter`)) === counterBefore,
-		"opening a subtask does not move the top-level counter",
+		nextId(tmp) === nextBefore,
+		"opening a subtask does not advance the next top-level id",
 	);
 	assert(
 		frontMatter(read(mainTask)).status === "QUEUED",
@@ -125,7 +126,7 @@ export function familyScenarios(ctx) {
 	quiet(() => cmdTaskNew({ root: tmp, slug: "family-main", lane: "planned" }));
 	const familyMain = fillTask(["src/family"], "prove the family write set");
 	const familyId = frontMatter(read(familyMain)).id;
-	const familyCounter = read(abs(tmp, `${TASKS}/.counter`));
+	const familyNext = nextId(tmp);
 	quiet(() =>
 		cmdTaskNew({
 			root: tmp,
@@ -160,8 +161,8 @@ export function familyScenarios(ctx) {
 		"the second subtask takes the next dotted number",
 	);
 	assert(
-		read(abs(tmp, `${TASKS}/.counter`)) === familyCounter,
-		"neither subtask moves the counter",
+		nextId(tmp) === familyNext,
+		"neither subtask advances the next top-level id",
 	);
 	assert(
 		frontMatter(read(familyMain)).status === "QUEUED",
