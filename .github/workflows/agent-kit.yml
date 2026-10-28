@@ -1,0 +1,19 @@
+name: agent-kit
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      # selftest builds a throwaway repo and asserts every gate can fail.
+      - name: selftest
+        run: node scripts/agent-kit.mjs selftest
+      - name: doctor
+        run: node scripts/agent-kit.mjs doctor --strict

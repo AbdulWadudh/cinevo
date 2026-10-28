@@ -1,0 +1,10 @@
+#!/bin/sh
+# agent-kit: warn when a message names no task or carries no summary. Never blocks.
+# Silent until the first task exists, so the setup fill commit can land.
+if [ -f scripts/agent-kit.mjs ]; then
+  if command -v bun >/dev/null 2>&1; then
+    bun scripts/agent-kit.mjs task guard --message "$1"
+  else
+    node scripts/agent-kit.mjs task guard --message "$1"
+  fi
+fi

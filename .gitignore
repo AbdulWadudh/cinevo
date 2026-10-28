@@ -58,3 +58,4 @@ local.properties
 android-signing-key-info.json
 app-release-unsigned-aligned.apk
 .claude/settings.local.json
+.perch

@@ -1,3 +1,126 @@
+# Cinevo — Agent Entry Point
+
+You are working in Cinevo, a cinematic streaming front-end (movies, TV, live radio) built
+on Next.js 16 and Prisma. Read this file once per session, then follow it.
+
+Cinevo is a streaming front-end that behaves like a premium app rather than a catalogue
+with links: inline trailer previews, spatial D-pad navigation for TV, a live-radio wing with
+its own player, and a theme studio that can repaint the whole site.
+
+## Start here, in order
+
+1. `SKILL.md` — the work loop: classify, open, gate, verify, close, report. Follow its order.
+2. `.agents/project.md` — stack, commands, entry points, generated directories. Cite it; never restate it.
+3. `.agents/tasks/INDEX.md` — resume the active task, or open a new one.
+4. `.agents/rules/INDEX.md` — load only the rule files matching what you will touch.
+5. `docs/INDEX.md` — find where the logic lives before searching the tree.
+6. `CHANGELOG.md` — read it before proposing a feature; it records what already ships.
+7. Any other directory you open has an `INDEX.md`: read that first, then the one file it names.
+
+## Boundary protocol
+
+**Always**
+- Read before writing. Keep every edit inside the task's declared `touches`.
+- Run `agent-kit verify` before and after edits; it is the quick suite. The full one runs at the
+  baseline and at `task close`. Evidence goes in the task file; memory does not count.
+- Take the smallest complete change: reuse what exists, delete before adding, no speculative abstraction.
+- Update `CHANGELOG.md` in the same change that ships the work, and keep `README.md` in step
+  when a change adds a user-facing feature, a new script, or alters setup steps.
+
+**Ask first**
+- New dependency, schema or migration, public interface change.
+- Anything under `.env`, `.env.example`, `.env.local` — secrets and the documented env surface.
+- Any edit to a migration under `prisma/migrations/` (see rule 2: they are append-only).
+- `android-twa/` signing material: `*.keystore`, `*.jks`, `android-signing-key-info.json`,
+  `local.properties`. Losing or leaking a signing key means the Play listing can never be updated.
+- `releases/` and the committed `app-release-*.apk` / `*.aab` artifacts — these are release
+  outputs, not workspace noise.
+- Deleting files, rewriting generated output, or anything irreversible.
+
+**Never**
+- Invent a path, a command or an export. If it is not in `project.md` or in the tree, it does not exist.
+- Edit a generated directory (listed in `project.md`): `.next/`, `build/`, `node_modules/`,
+  `next-env.d.ts`, `*.tsbuildinfo`, `android-twa/app/build/`, or the Prisma client output
+  path named in `project.md`.
+- Close a task with edits it does not record.
+- Commit as the session. Git's configured identity is the author — never `-c user.name`, never
+  `-c user.email`, never a name from the conversation — and no `Co-Authored-By`, "Generated with",
+  or any other AI attribution in a commit, PR or changelog. It is `.agents/rules/commits.md`.
+- Hand the user a command to run. Execute it, then report the result in one or two lines. If this
+  environment cannot execute it, say so and stop — never hand over a script, and never claim the
+  step passed.
+
+## Core rules
+
+1. **Every admin action is gated.** A Server Action that reads or writes admin-scoped data
+   calls `requireAdmin()` before its first query and throws `Error("Forbidden")` otherwise.
+   The guard is defined per module in `src/app/actions/admin.ts`, `providers.ts` and
+   `radio.ts`; a new admin action copies it rather than trusting the caller.
+2. **Migrations are append-only.** Never edit a directory under `prisma/migrations/` that has
+   run anywhere. A schema change is `prisma/schema.prisma` plus a new timestamped migration
+   directory, and the change file says which one.
+3. **The theme is resolved once per request.** `getActiveThemeState()`
+   (`src/lib/theme/active.ts`) is the only reader of the theme cookie and the published
+   theme row. A component or page takes the resolved state as a value; it does not parse
+   `k79_theme_state` or query the site-theme table itself.
+4. **Generated output is never edited.** `.next/`, `build/`, `node_modules/`,
+   `next-env.d.ts` and `*.tsbuildinfo` are produced by a command, and so is the Prisma
+   client. A fix that belongs in one of them belongs in its source, or in the command that
+   generates it.
+
+5. **Context discipline.** Every directory the kit owns carries an `INDEX.md`: read the index, then the one file it points at — never list a folder into context. Search narrowly; read at most three source files at a time. History (`.agents/tasks/archive/`, `.agents/logs/MM-YYYY/`) is read only when the user asks; the indexes list the five newest entries for you.
+6. **One home per fact.** A rule lives in exactly one file; everywhere else cites it.
+7. **Planning.** Anything beyond the QUICK lane (three files or fewer, reversible, no contract change) needs a task file in `.agents/tasks/active/`, with the plan approved before the first edit.
+8. **Subagents.** Every subagent prompt names the files to read and the deliverable. It never restates the plan.
+9. **Shell output.** Prefix commands with `rtk` (`rtk git status`, `rtk npm test`); `rtk bypass <cmd>` when the full output is the evidence. Name the active task ID with any savings you report — the detail is in `SKILL.md` §Shell output.
+
+## Done means
+
+The quick suite and the full one are green (the full one is `verify --full`, which `task close`
+runs itself), the task's evidence table holds real exit codes, `.agents/tasks/INDEX.md` is
+current, and `agent-kit doctor` reports no failures. Then `agent-kit task close`.
+
+A task too big for one sitting splits into subtasks (`task new --parent TASK-N`). A subtask
+closes on the quick suite: `task close` marks it DONE and keeps it in `active/`. The main
+task's close is the milestone — it refuses while a subtask is open, runs the full suite, and
+build failures are fixed right there before it closes; green, it archives the family
+under one change file and one commit message.
+
+---
+
+<!-- MACHINERY: everything below is the kit. Keep it as written. -->
+## Kit
+
+`bun scripts/agent-kit.mjs <command>` (fallback: `node scripts/agent-kit.mjs <command>`)
+
+| Command | Use |
+|---|---|
+| `doctor` | truth checks over docs, declarations and tasks; `--strict` also fails on unfilled markers; `--fix` repairs encoding only; `--json` for CI |
+| `harnesses` | list the coding agents installed on this machine (HOME, PATH, repo) — the repo may show none; a report, not a gate |
+| `start` | read-only session brief: branch, declared commands and their tiers, active tasks, the gate, last evidence, loop and stale state, and one next action |
+| `task new <slug> --lane quick\|planned [--parent TASK-N]` | open a task **and record the baseline run**, a full one (`--no-baseline` to skip); `--parent` opens `TASK-N.M`, queues the main task, and records a quick baseline |
+| `task show` | print the active task's scope, plan and evidence — the thing G1/G2 asks a human to read |
+| `task block "<question>"` | park the in-progress task on an owner decision; it stops holding the slot and the question waits in the file |
+| `task resume [<id>]` | continue a blocked task; pass the id when more than one is waiting |
+| `task close` | a subtask runs the **quick** suite, is marked DONE and stays active for the main close; the main task refuses while a subtask is open, runs the **full** suite, scope-checks against git (its own write set plus every subtask's), records the inventory, archives the family, writes one change file under `.agents/logs/MM-YYYY/`, and prints a ready commit message; `--pr` adds a PR body; `--amend "<why>"` accepts a declared breach and writes the reason into the plan; `--no-verify` only when the suite cannot run here |
+| `release <version>` | write `releases/vX.Y.Z.md` from the change files no earlier release claims; prints the `gh release create --notes-file` line and never runs git |
+| `verify` | the inner loop: runs the `always` rows and writes the evidence table; `--full` adds the `milestone` rows, which the baseline and `task close` already run; at three identical red runs it refuses until the Plan changes |
+| `task guard [--message <file>]` | the hooks: `pre-commit` refuses a commit outside the declared write set (silent when no task is open); `commit-msg` warns — never blocks — on a subject that is not `type (TASK-ID): summary` or a body with no summary. **Opt-in per clone** via `git config core.hooksPath .githooks` |
+| `learnings archive` | move entries past the 30 cap into `.agents/learnings/archive/`; the live list is the part a session reads |
+| `check` / `pull --dry-run` / `pull` | drift against the template; `pull` never overwrites a locally modified file without `--force` |
+
+The owner is not expected to type any of this. The agent runs `task new` and `task close`, and
+`task close` is where the write set is checked — that check always runs. The hooks are a
+per-clone extra that warns earlier; they are off unless someone opts in, because it is git
+config and a shared repo must not rewrite a teammate's git behaviour on install.
+
+`SKILL.md` is the work loop; this file is the contract it runs under. A harness with its own
+skill folder gets a pointer to that one file, never a copy that drifts.
+
+---
+
+<!-- REPO RULES: Cinevo's own house style. These predate the kit and outrank it. -->
+
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 
