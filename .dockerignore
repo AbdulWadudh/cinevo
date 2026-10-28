@@ -17,7 +17,7 @@ build
 .vscode
 .idea
 .claude
-.agents
+.agent-kit
 skills-lock.json
 
 # Docker itself

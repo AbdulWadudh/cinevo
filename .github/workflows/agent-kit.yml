@@ -14,6 +14,6 @@ jobs:
           node-version: '20'
       # selftest builds a throwaway repo and asserts every gate can fail.
       - name: selftest
-        run: node scripts/agent-kit.mjs selftest
+        run: node .agent-kit/agent-kit.mjs selftest
       - name: doctor
-        run: node scripts/agent-kit.mjs doctor --strict
+        run: node .agent-kit/agent-kit.mjs doctor --strict

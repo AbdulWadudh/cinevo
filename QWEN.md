@@ -1,5 +1,5 @@
 # Cinevo — agent instructions
 
-Read SKILL.md at the repository root.
+Read `.agent-kit/SKILL.md` at the repository root.
 
 @AGENTS.md

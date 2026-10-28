@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "machinery": [
+    ".agent-kit/agent-kit.mjs",
+    ".github/workflows/agent-kit.yml",
+    ".agent-kit/githooks",
+    ".agent-kit/SKILL.md",
+    ".agent-kit/INDEX.md",
+    ".agent-kit/sync-manifest.json",
+    ".agent-kit/templates",
+    ".agent-kit/rules/INDEX.md",
+    ".agent-kit/rules/_behavior.md",
+    ".agent-kit/rules/commits.md",
+    ".agent-kit/rules/anti-patterns.md"
+  ],
+  "seeds": {
+    "AGENTS.md": ".agent-kit/templates/AGENTS.seed.md",
+    "CLAUDE.md": ".agent-kit/templates/CLAUDE.seed.md",
+    ".agent-kit/docs/INDEX.md": ".agent-kit/docs/INDEX.md",
+    ".agent-kit/docs/ARCH_MAP.md": ".agent-kit/docs/ARCH_MAP.md",
+    ".agent-kit/docs/API_SKELETON.md": ".agent-kit/docs/API_SKELETON.md",
+    ".agent-kit/docs/ENTRY_POINTS.md": ".agent-kit/docs/ENTRY_POINTS.md",
+    ".agent-kit/rules/learnings.md": ".agent-kit/templates/learnings.seed.md",
+    ".agent-kit/tasks/INDEX.md": ".agent-kit/templates/tasks-INDEX.seed.md",
+    ".agent-kit/tasks/BACKLOG.md": ".agent-kit/templates/backlog.seed.md",
+    ".agent-kit/logs/INDEX.md": ".agent-kit/templates/logs-INDEX.seed.md"
+  },
+  "prune": [
+    ".agent-kit/changelog",
+    ".agent-kit/driver",
+    ".agent-kit/tasks/templates",
+    ".agent-kit/tasks/template.md"
+  ],
+  "owned": [
+    ".agent-kit/project.md",
+    ".agent-kit/template.json",
+    ".agent-kit/tasks/active",
+    ".agent-kit/tasks/archive",
+    ".agent-kit/tasks/.counter",
+    ".agent-kit/logs",
+    ".agent-kit/releases"
+  ]
+}

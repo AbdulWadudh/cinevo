@@ -1,5 +1,5 @@
-Read SKILL.md at the repository root.
+Read `.agent-kit/SKILL.md` at the repository root.
 
 Boundaries, core rules and the task protocol: AGENTS.md.
-Stack, commands and generated paths: .agents/project.md.
-Domain rules, loaded only when their trigger matches: .agents/rules/INDEX.md.
+Stack, commands and generated paths: .agent-kit/project.md.
+Domain rules, loaded only when their trigger matches: .agent-kit/rules/INDEX.md.

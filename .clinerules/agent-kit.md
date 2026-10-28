@@ -1,6 +1,6 @@
 ---
 name: agent-kit
-description: The work loop for this repo — read SKILL.md at the repository root before starting any change, fix or investigation.
+description: The work loop for this repo — read `.agent-kit/SKILL.md` at the repository root before starting any change, fix or investigation.
 ---
 
-Read SKILL.md at the repository root.
+Read `.agent-kit/SKILL.md` at the repository root.
