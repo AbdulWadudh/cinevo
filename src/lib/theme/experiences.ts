@@ -90,7 +90,7 @@ export const EXPERIENCES: ExperienceDefinition[] = [
       width: "w-35 sm:w-45",
       showCaption: true,
       overlayTitle: false,
-      previewOnHover: false,
+      previewOnHover: true,
       hover: { y: -6, scale: 1.02 },
     },
     seeAll: "See All",

@@ -1,6 +1,12 @@
 "use server";
 
+import type { PersonPreview, TitlePreview } from "@/components/hover/types";
 import type { RevealItem, RevealPreference } from "@/components/reveal/types";
+import {
+	certificationOf,
+	runtimeOf,
+	seasonsOf,
+} from "@/components/watch/detail/format";
 import {
 	type DiscoverFilters,
 	type MediaSource,
@@ -53,6 +59,92 @@ export async function getGenresAction(
 	} catch (error) {
 		console.error("Failed to fetch genres:", error);
 		return { success: false, data: [] };
+	}
+}
+
+/**
+ * Server Action for the poster hover card: the extra file a list item does not
+ * carry — certification, genres, running time and the top-billed cast with
+ * portraits. `getDetails` is the same cached read the details page makes.
+ */
+export async function getTitlePreviewAction(
+	mediaId: string,
+	mediaType: "movie" | "tv",
+): Promise<{ success: boolean; data: TitlePreview | null }> {
+	try {
+		const details = await tmdb.getDetails(mediaId, mediaType);
+		if (!details) return { success: false, data: null };
+		return {
+			success: true,
+			data: {
+				overview: details.overview || "",
+				genres: details.genres.map((genre) => genre.name).slice(0, 4),
+				certification: certificationOf(details),
+				runtime: mediaType === "tv" ? seasonsOf(details) : runtimeOf(details),
+				cast: (details.credits?.cast ?? []).slice(0, 12).map((member) => ({
+					id: member.id,
+					name: member.name,
+					character: member.character,
+					profilePath: member.profile_path,
+				})),
+			},
+		};
+	} catch (error) {
+		console.error("Failed to load title preview:", error);
+		return { success: false, data: null };
+	}
+}
+
+/**
+ * Server Action for the cast hover card: the actor's own record plus the four
+ * titles they are best known for. `getPersonCredits` is already popularity-
+ * sorted, so the poster-bearing head is the useful slice.
+ */
+export async function getPersonPreviewAction(
+	personId: string,
+): Promise<{ success: boolean; data: PersonPreview | null }> {
+	try {
+		const [person, credits] = await Promise.all([
+			tmdb.getPerson(personId),
+			tmdb.getPersonCredits(personId),
+		]);
+		if (!person) return { success: false, data: null };
+		const rawBio = person.biography || "";
+		const seenCredits = new Set<string>();
+		const knownFor = credits
+			.filter(
+				(credit): credit is TMDBMedia & { media_type: "movie" | "tv" } =>
+					credit.media_type === "movie" || credit.media_type === "tv",
+			)
+			.filter((credit) => {
+				const key = `${credit.media_type}:${credit.id}`;
+				if (!credit.poster_path || seenCredits.has(key)) return false;
+				seenCredits.add(key);
+				return true;
+			})
+			.slice(0, 12)
+			.map((credit) => ({
+				id: credit.id,
+				mediaType: credit.media_type,
+				title: credit.title || credit.name || "Untitled",
+				posterPath: credit.poster_path ?? null,
+				year: (credit.release_date || credit.first_air_date || "").slice(0, 4),
+			}));
+		return {
+			success: true,
+			data: {
+				biography:
+					rawBio.length > 800 ? `${rawBio.slice(0, 800).trimEnd()}…` : rawBio,
+				birthday: person.birthday,
+				deathday: person.deathday,
+				placeOfBirth: person.place_of_birth,
+				knownForDepartment: person.known_for_department,
+				knownFor,
+			},
+		};
+	} catch (error) {
+		console.error("Failed to load person preview:", error);
+		return { success: false, data: null };
 	}
 }
 

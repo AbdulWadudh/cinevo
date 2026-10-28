@@ -1,736 +1,653 @@
 "use client";
 
-import React, { useCallback, useRef, useState, useEffect, useTransition } from "react";
-import { createPortal } from "react-dom";
-import Link from "next/link";
-import Image from "next/image";
-import { ChevronLeft, ChevronRight, Play, Star, X, Loader2, Clapperboard } from "lucide-react";
-import { motion, AnimatePresence, MotionConfig } from "motion/react";
-import { TMDBMedia, MediaSource } from "@/lib/tmdb";
-import { loadMediaPageAction } from "@/app/actions/tmdb-actions";
-import WishlistHeart from "@/components/wishlist/WishlistHeart";
-import { useTrailer } from "@/components/TrailerProvider";
 import { useFocusable } from "@noriginmedia/norigin-spatial-navigation";
+import {
+	ChevronLeft,
+	ChevronRight,
+	Clapperboard,
+	Loader2,
+	Play,
+	Star,
+	X,
+} from "lucide-react";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
+import Image from "next/image";
+import Link from "next/link";
+import type React from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { loadMediaPageAction } from "@/app/actions/tmdb-actions";
+import TitleHoverCard from "@/components/hover/TitleHoverCard";
+import { useTrailer } from "@/components/TrailerProvider";
 import { FocusSection } from "@/components/tv/Focusable";
-import { getExperience, type ExperienceDefinition } from "@/lib/theme/experiences";
+import WishlistHeart from "@/components/wishlist/WishlistHeart";
+import {
+	type ExperienceDefinition,
+	getExperience,
+} from "@/lib/theme/experiences";
 import { useTheme } from "@/lib/theme/studio/provider";
+import type { MediaSource, TMDBMedia } from "@/lib/tmdb";
 
 const badgeConfig = {
-  trend: { label: "Trending", style: "bg-accent-strong text-white" },
-  new: { label: "New", style: "bg-blue text-white" },
-  top: { label: "Top 10", style: "bg-gold text-black" },
+	trend: { label: "Trending", style: "bg-accent-strong text-white" },
+	new: { label: "New", style: "bg-blue text-white" },
+	top: { label: "Top 10", style: "bg-gold text-black" },
 } as const;
 
 type BadgeKey = keyof typeof badgeConfig;
 
 /* ─── Focusable poster card (D-pad navigable on TV) ─────────────── */
 function PosterCard({
-  item, mediaType, badge, experience, onLinkClick, onCardFocus,
+	item,
+	mediaType,
+	badge,
+	experience,
+	onLinkClick,
+	onCardFocus,
 }: {
-  item: TMDBMedia;
-  mediaType: "movie" | "tv";
-  badge?: BadgeKey;
-  experience: ExperienceDefinition;
-  onLinkClick: (e: React.MouseEvent) => void;
-  onCardFocus: () => void;
+	item: TMDBMedia;
+	mediaType: "movie" | "tv";
+	badge?: BadgeKey;
+	experience: ExperienceDefinition;
+	onLinkClick: (e: React.MouseEvent) => void;
+	onCardFocus: () => void;
 }) {
-  const { openTrailer } = useTrailer();
-  const { ref, focused } = useFocusable({
-    onEnterPress: () => ref.current?.click(),
-    onFocus: () => {
-      onCardFocus();
-      ref.current?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-    },
-  });
-  const cardRef = useRef<HTMLDivElement>(null);
-  const previewRef = useRef<HTMLDivElement>(null);
-  const pointerRef = useRef<{ x: number; y: number } | null>(null);
-  const openTimer = useRef<number | null>(null);
-  const closeTimer = useRef<number | null>(null);
-  const [previewRect, setPreviewRect] = useState<DOMRect | null>(null);
+	const { openTrailer } = useTrailer();
+	const { ref, focused } = useFocusable({
+		onEnterPress: () => ref.current?.click(),
+		onFocus: () => {
+			onCardFocus();
+			ref.current?.scrollIntoView({
+				behavior: "smooth",
+				block: "nearest",
+				inline: "center",
+			});
+		},
+	});
 
-  const clearOpenTimer = useCallback(() => {
-    if (openTimer.current !== null) {
-      window.clearTimeout(openTimer.current);
-      openTimer.current = null;
-    }
-  }, []);
+	const currentBadge = badge ? badgeConfig[badge] : null;
+	const linkUrl = `/watch/${item.media_type || mediaType}/${item.id}`;
+	const landscape = experience.cards.orientation === "landscape";
+	const hasPreview = experience.cards.previewOnHover;
+	const imageSrc = landscape
+		? item.backdrop_path
+			? `https://image.tmdb.org/t/p/w780${item.backdrop_path}`
+			: "https://picsum.photos/seed/cinevobackdrop/800/450"
+		: item.poster_path
+			? `https://image.tmdb.org/t/p/w500${item.poster_path}`
+			: "https://picsum.photos/seed/cinevoposter/300/450";
 
-  const clearCloseTimer = useCallback(() => {
-    if (closeTimer.current !== null) {
-      window.clearTimeout(closeTimer.current);
-      closeTimer.current = null;
-    }
-  }, []);
-
-  // Netflix waits a beat before expanding, so sweeping the row doesn't fire a
-  // preview under every card the pointer crosses.
-  const schedulePreview = useCallback(() => {
-    if (!experience.cards.previewOnHover) return;
-    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
-    clearCloseTimer();
-    clearOpenTimer();
-    openTimer.current = window.setTimeout(() => {
-      const media = cardRef.current?.querySelector<HTMLElement>("[data-xp-card-media]");
-      if (media) setPreviewRect(media.getBoundingClientRect());
-    }, 450);
-  }, [experience.cards.previewOnHover, clearCloseTimer, clearOpenTimer]);
-
-  // The preview is portalled above the card, so it mounts underneath a
-  // stationary pointer and never receives a `pointerenter`. A plain
-  // pointerleave on the card then armed the close timer and took the panel
-  // away mid-reach, which made the chevron unclickable. Ask the hit-test who
-  // is actually under the pointer before closing: if the panel is still under
-  // it (or the pointer merely passed over the card), keep it open.
-  const pointerOverPreview = useCallback(() => {
-    const panel = previewRef.current;
-    const p = pointerRef.current;
-    if (!panel || !p) return false;
-    const hit = document.elementFromPoint(p.x, p.y);
-    return Boolean(hit && panel.contains(hit));
-  }, []);
-
-  const dismissPreview = useCallback(() => {
-    clearOpenTimer();
-    clearCloseTimer();
-    setPreviewRect(null);
-  }, [clearCloseTimer, clearOpenTimer]);
-
-  const closePreviewSoon = useCallback(
-    (event?: React.PointerEvent) => {
-      if (event) pointerRef.current = { x: event.clientX, y: event.clientY };
-      clearOpenTimer();
-      clearCloseTimer();
-      if (pointerOverPreview()) return;
-      closeTimer.current = window.setTimeout(() => {
-        // Re-check on fire: the pointer may have reached the panel in the
-        // meantime even if it was still over the card when it left.
-        if (pointerOverPreview()) return;
-        setPreviewRect(null);
-      }, 260);
-    },
-    [clearCloseTimer, clearOpenTimer, pointerOverPreview],
-  );
-
-  useEffect(() => {
-    if (!previewRect) return;
-    const track = (e: PointerEvent) => {
-      pointerRef.current = { x: e.clientX, y: e.clientY };
-    };
-    window.addEventListener("pointermove", track, { passive: true });
-    return () => window.removeEventListener("pointermove", track);
-  }, [previewRect]);
-
-  useEffect(() => {
-    if (!previewRect) return;
-    const close = () => setPreviewRect(null);
-    window.addEventListener("scroll", close, true);
-    window.addEventListener("resize", close);
-    return () => {
-      window.removeEventListener("scroll", close, true);
-      window.removeEventListener("resize", close);
-    };
-  }, [previewRect]);
-
-  useEffect(
-    () => () => {
-      if (openTimer.current !== null) window.clearTimeout(openTimer.current);
-      if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
-    },
-    [],
-  );
-
-  const currentBadge = badge ? badgeConfig[badge] : null;
-  const linkUrl = `/watch/${item.media_type || mediaType}/${item.id}`;
-  const landscape = experience.cards.orientation === "landscape";
-  const imageSrc = landscape
-    ? item.backdrop_path
-      ? `https://image.tmdb.org/t/p/w780${item.backdrop_path}`
-      : "https://picsum.photos/seed/cinevobackdrop/800/450"
-    : item.poster_path
-      ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
-      : "https://picsum.photos/seed/cinevoposter/300/450";
-
-  const previewTitle = item.title || item.name || "";
-  const previewYear = item.release_date
-    ? item.release_date.split("-")[0]
-    : item.first_air_date
-      ? item.first_air_date.split("-")[0]
-      : "";
-  const previewKind =
-    item.media_type === "tv" || mediaType === "tv" ? "TV Series" : "Film";
-  const previewMatch = Math.max(50, Math.round((item.vote_average || 0) * 10));
-  const previewWidth = previewRect
-    ? Math.min(380, Math.max(300, Math.round(previewRect.width * 1.5)))
-    : 0;
-  const previewHeight = previewWidth * 0.5625 + 156;
-  const previewLeft = previewRect
-    ? Math.min(
-        Math.max(8, previewRect.left - (previewWidth - previewRect.width) / 2),
-        Math.max(8, window.innerWidth - previewWidth - 8),
-      )
-    : 0;
-  const previewTop = previewRect
-    ? Math.min(
-        Math.max(8, previewRect.top - 28),
-        Math.max(8, window.innerHeight - previewHeight - 8),
-      )
-    : 0;
-
-  return (
-    <motion.div
-      ref={cardRef}
-      data-xp-card=""
-      onPointerEnter={schedulePreview}
-      onPointerLeave={closePreviewSoon}
-      onPointerDown={dismissPreview}
-      whileHover={{ y: experience.cards.hover.y, scale: experience.cards.hover.scale }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ type: "spring", ...experience.motion.spring }}
-      className={`flex-none ${experience.cards.width} snap-start group`}
-    >
-      <Link
-        ref={ref}
-        href={linkUrl}
-        onClick={onLinkClick}
-        draggable={false}
-        className={`tv-focusable block cursor-pointer select-none rounded-xl ${focused ? "tv-focused" : ""}`}
-      >
-        <div
-          data-xp-card-media=""
-          className={`relative ${landscape ? "aspect-video" : "aspect-2/3"} w-full bg-surface rounded-xl overflow-hidden border border-white/4 shadow-md transition-all duration-500 group-hover:border-accent group-hover:shadow-[0_8px_25px_rgba(0,0,0,0.8)]`}
-        >
-          <Image
-            src={imageSrc}
-            alt={item.title || item.name || ""}
-            fill
-            sizes={landscape ? "(max-width: 640px) 208px, 260px" : "(max-width: 640px) 140px, 180px"}
-            className="object-cover transition duration-700 group-hover:scale-108"
-            draggable={false}
-          />
-          <WishlistHeart item={item} mediaType={mediaType} />
-          <div data-xp-card-hover="" className="absolute inset-0 flex items-center justify-center gap-2.5 opacity-0 group-hover:opacity-100 bg-black/55 transition-opacity duration-300 z-20">
-            <span className="w-11 h-11 bg-accent-strong text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(var(--accent-rgb),0.45)] transform scale-75 group-hover:scale-100 transition-transform duration-300" title="Play">
-              <Play className="w-4.5 h-4.5 fill-white translate-x-0.5" />
-            </span>
-            <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); openTrailer({ id: String(item.id), mediaType: (item.media_type as "movie" | "tv") || mediaType, title: item.title || item.name || "", rating: item.vote_average, date: item.release_date || item.first_air_date }); }}
-              title="Watch trailer"
-              aria-label="Watch trailer"
-              className="w-11 h-11 bg-white/15 text-white border border-white/30 rounded-full flex items-center justify-center backdrop-blur-md hover:bg-white/25 transform scale-75 group-hover:scale-100 transition-all duration-300 cursor-pointer"
-            >
-              <Clapperboard className="w-4 h-4" />
-            </button>
-          </div>
-          <div data-xp-card-score="" className="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/95 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-            <div className="flex items-center gap-1 text-[11px] font-bold text-gold">
-              <Star className="w-3.5 h-3.5 fill-gold stroke-gold" />
-              <span>{item.vote_average ? item.vote_average.toFixed(1) : "N/A"}</span>
-            </div>
-          </div>
-          {currentBadge && (
-            <span className={`absolute top-2 left-2 text-[9px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider z-20 shadow-md ${currentBadge.style}`}>
-              {currentBadge.label}
-            </span>
-          )}
-          {experience.cards.overlayTitle && (
-            <span className="xp-card-overlay">
-              <span>{item.title || item.name}</span>
-            </span>
-          )}
-        </div>
-        {experience.cards.showCaption && (
-          <div data-xp-card-caption="" className="pt-2 px-1">
-            <h3 className="text-xs sm:text-sm font-semibold truncate text-fg group-hover:text-accent transition-colors">
-              {item.title || item.name}
-            </h3>
-            <p className="text-[10px] sm:text-xs text-muted mt-0.5 font-medium">
-              {item.release_date ? item.release_date.split("-")[0] : item.first_air_date ? item.first_air_date.split("-")[0] : ""} &bull; {item.media_type === "tv" || mediaType === "tv" ? "TV" : "Movie"}
-            </p>
-          </div>
-        )}
-      </Link>
-
-      {/* Netflix's delayed hover preview. Portalled out of the scroll container
-          so the expansion isn't clipped by the row's overflow. */}
-      {previewRect &&
-        createPortal(
-          <motion.div
-            ref={previewRef}
-            aria-hidden="true"
-            initial={{ opacity: 0, scale: 0.92, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            onPointerEnter={clearCloseTimer}
-            onPointerMove={clearCloseTimer}
-            onPointerLeave={closePreviewSoon}
-            style={{ top: previewTop, left: previewLeft, width: previewWidth }}
-            // Portals bubble React events through the tree, so a click on the
-            // panel would otherwise reach the card's pointerdown and dismiss
-            // itself before Play, Trailer or More Info could fire.
-            onPointerDown={(e) => e.stopPropagation()}
-            className="fixed z-[90] overflow-hidden rounded-md bg-[#181818] shadow-[0_16px_50px_rgba(0,0,0,0.8)]"
-          >
-            <Link
-              href={linkUrl}
-              tabIndex={-1}
-              draggable={false}
-              className="relative block aspect-video overflow-hidden"
-            >
-              <Image
-                src={
-                  item.backdrop_path
-                    ? `https://image.tmdb.org/t/p/w780${item.backdrop_path}`
-                    : imageSrc
-                }
-                alt=""
-                fill
-                sizes="380px"
-                className="object-cover"
-                draggable={false}
-              />
-              <span className="absolute inset-0 bg-linear-to-t from-[#181818] via-transparent to-transparent" />
-              <span className="absolute inset-0 grid place-items-center opacity-0 transition-opacity duration-200 hover:opacity-100">
-                <span className="grid size-12 place-items-center rounded-full bg-white text-black">
-                  <Play className="h-5 w-5 translate-x-0.5 fill-black" />
-                </span>
-              </span>
-            </Link>
-
-            <div className="p-4 pt-3">
-              <div className="mb-3 flex items-center gap-2">
-                <Link
-                  href={linkUrl}
-                  tabIndex={-1}
-                  aria-label={`Play ${previewTitle}`}
-                  className="grid size-10 place-items-center rounded-full bg-white text-black transition-colors hover:bg-white/80"
-                >
-                  <Play className="h-4 w-4 translate-x-0.5 fill-black" />
-                </Link>
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  aria-label="Watch trailer"
-                  onClick={() =>
-                    openTrailer({
-                      id: String(item.id),
-                      mediaType: (item.media_type as "movie" | "tv") || mediaType,
-                      title: previewTitle,
-                      rating: item.vote_average,
-                      date: item.release_date || item.first_air_date,
-                    })
-                  }
-                  className="grid size-10 cursor-pointer place-items-center rounded-full border border-white/40 text-white transition-colors hover:border-white"
-                >
-                  <Clapperboard className="h-4 w-4" />
-                </button>
-                <Link
-                  href={linkUrl}
-                  tabIndex={-1}
-                  aria-label={`More info about ${previewTitle}`}
-                  className="ml-auto grid size-10 place-items-center rounded-full border border-white/40 text-white transition-colors hover:border-white"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              </div>
-
-              <p className="text-sm font-bold text-white">{previewTitle}</p>
-              <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] font-semibold text-[#bcbcbc]">
-                <span className="text-[#46d369]">{previewMatch}% Match</span>
-                {previewYear && <span>{previewYear}</span>}
-                <span className="rounded-[2px] border border-white/30 px-1 text-[9px] leading-4">
-                  HD
-                </span>
-                <span>{previewKind}</span>
-              </div>
-              {item.overview && (
-                <p className="mt-2 line-clamp-2 text-[11px] leading-snug text-[#d2d2d2]">
-                  {item.overview}
-                </p>
-              )}
-            </div>
-          </motion.div>,
-          document.body,
-        )}
-    </motion.div>
-  );
+	return (
+		<TitleHoverCard
+			item={item}
+			mediaType={mediaType}
+			href={linkUrl}
+			enabled={experience.cards.previewOnHover}
+			className={`flex-none ${experience.cards.width} snap-start group`}
+		>
+			<motion.div
+				data-xp-card=""
+				whileHover={{
+					y: experience.cards.hover.y,
+					scale: experience.cards.hover.scale,
+				}}
+				whileTap={{ scale: 0.98 }}
+				transition={{ type: "spring", ...experience.motion.spring }}
+			>
+				<Link
+					ref={ref}
+					href={linkUrl}
+					onClick={onLinkClick}
+					draggable={false}
+					className={`tv-focusable block cursor-pointer select-none rounded-xl ${focused ? "tv-focused" : ""}`}
+				>
+					<div
+						data-xp-card-media=""
+						data-hover-media=""
+						className={`relative ${landscape ? "aspect-video" : "aspect-2/3"} w-full bg-surface rounded-xl overflow-hidden border border-white/4 shadow-md transition-all duration-500 group-hover:border-accent group-hover:shadow-[0_8px_25px_rgba(0,0,0,0.8)]`}
+					>
+						<Image
+							src={imageSrc}
+							alt={item.title || item.name || ""}
+							fill
+							sizes={
+								landscape
+									? "(max-width: 640px) 208px, 260px"
+									: "(max-width: 640px) 140px, 180px"
+							}
+							className="object-cover transition duration-700 group-hover:scale-108"
+							draggable={false}
+						/>
+						<WishlistHeart
+							item={item}
+							mediaType={mediaType}
+							className={hasPreview ? "pointer-fine:min-[900px]:hidden" : ""}
+						/>
+						<div
+							data-xp-card-hover=""
+							className={`absolute inset-0 flex items-center justify-center gap-2.5 opacity-0 group-hover:opacity-100 bg-black/55 transition-opacity duration-300 z-20 ${hasPreview ? "pointer-fine:min-[900px]:hidden" : ""}`}
+						>
+							<span
+								className="w-11 h-11 bg-accent-strong text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(var(--accent-rgb),0.45)] transform scale-75 group-hover:scale-100 transition-transform duration-300"
+								title="Play"
+							>
+								<Play className="w-4.5 h-4.5 fill-white translate-x-0.5" />
+							</span>
+							<button
+								onClick={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+									openTrailer({
+										id: String(item.id),
+										mediaType: (item.media_type as "movie" | "tv") || mediaType,
+										title: item.title || item.name || "",
+										rating: item.vote_average,
+										date: item.release_date || item.first_air_date,
+									});
+								}}
+								title="Watch trailer"
+								aria-label="Watch trailer"
+								className="w-11 h-11 bg-white/15 text-white border border-white/30 rounded-full flex items-center justify-center backdrop-blur-md hover:bg-white/25 transform scale-75 group-hover:scale-100 transition-all duration-300 cursor-pointer"
+							>
+								<Clapperboard className="w-4 h-4" />
+							</button>
+						</div>
+						<div
+							data-xp-card-score=""
+							className="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/95 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
+						>
+							<div className="flex items-center gap-1 text-[11px] font-bold text-gold">
+								<Star className="w-3.5 h-3.5 fill-gold stroke-gold" />
+								<span>
+									{item.vote_average ? item.vote_average.toFixed(1) : "N/A"}
+								</span>
+							</div>
+						</div>
+						{currentBadge && (
+							<span
+								className={`absolute top-2 left-2 text-[9px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider z-20 shadow-md ${currentBadge.style}`}
+							>
+								{currentBadge.label}
+							</span>
+						)}
+						{experience.cards.overlayTitle && (
+							<span className="xp-card-overlay">
+								<span>{item.title || item.name}</span>
+							</span>
+						)}
+					</div>
+					{experience.cards.showCaption && (
+						<div data-xp-card-caption="" className="pt-2 px-1">
+							<h3 className="text-xs sm:text-sm font-semibold truncate text-fg group-hover:text-accent transition-colors">
+								{item.title || item.name}
+							</h3>
+							<p className="text-[10px] sm:text-xs text-muted mt-0.5 font-medium">
+								{item.release_date
+									? item.release_date.split("-")[0]
+									: item.first_air_date
+										? item.first_air_date.split("-")[0]
+										: ""}{" "}
+								&bull;{" "}
+								{item.media_type === "tv" || mediaType === "tv"
+									? "TV"
+									: "Movie"}
+							</p>
+						</div>
+					)}
+				</Link>
+			</motion.div>
+		</TitleHoverCard>
+	);
 }
 
 interface MediaCarouselProps {
-  /** Plain text, or a node (e.g. with only part of it linked). Omit for a row
-   *  that sits under a heading owned by the page — pass `label` instead. */
-  title?: React.ReactNode;
-  /** Accessible name for the row when it renders without a visible heading. */
-  label?: string;
-  items: TMDBMedia[];
-  mediaType?: "movie" | "tv";
-  badge?: "trend" | "new" | "top";
-  /** When provided, the "See All" grid can keep paging this source via Load More. */
-  source?: MediaSource;
+	/** Plain text, or a node (e.g. with only part of it linked). Omit for a row
+	 *  that sits under a heading owned by the page — pass `label` instead. */
+	title?: React.ReactNode;
+	/** Accessible name for the row when it renders without a visible heading. */
+	label?: string;
+	items: TMDBMedia[];
+	mediaType?: "movie" | "tv";
+	badge?: "trend" | "new" | "top";
+	/** When provided, the "See All" grid can keep paging this source via Load More. */
+	source?: MediaSource;
 }
 
 export default function MediaCarousel({
-  title,
-  label,
-  items,
-  mediaType = "movie",
-  badge,
-  source,
+	title,
+	label,
+	items,
+	mediaType = "movie",
+	badge,
+	source,
 }: MediaCarouselProps) {
-  // An empty title used to still render an empty <h2>, which reads as a
-  // structural heading with no content to a screen reader.
-  const hasTitle = title !== undefined && title !== null && title !== "";
-  const seeAllLabel = typeof title === "string" && title ? `See all ${title}` : "See all";
-  const { experience } = useTheme();
-  const activeExperience = getExperience(experience);
-  const { openTrailer } = useTrailer();
-  const [isFullScreen, setIsFullScreen] = useState(false);
+	// An empty title used to still render an empty <h2>, which reads as a
+	// structural heading with no content to a screen reader.
+	const hasTitle = title !== undefined && title !== null && title !== "";
+	const seeAllLabel =
+		typeof title === "string" && title ? `See all ${title}` : "See all";
+	const { experience } = useTheme();
+	const activeExperience = getExperience(experience);
+	const { openTrailer } = useTrailer();
+	const [isFullScreen, setIsFullScreen] = useState(false);
 
-  // "See All" grid state — starts from the row's items, then pages the source.
-  const [gridItems, setGridItems] = useState<TMDBMedia[]>(items);
-  const [gridPage, setGridPage] = useState(1);
-  const [gridTotalPages, setGridTotalPages] = useState<number>(source ? Number.MAX_SAFE_INTEGER : 1);
-  const [isLoadingMore, startLoadMore] = useTransition();
+	// "See All" grid state — starts from the row's items, then pages the source.
+	const [gridItems, setGridItems] = useState<TMDBMedia[]>(items);
+	const [gridPage, setGridPage] = useState(1);
+	const [gridTotalPages, setGridTotalPages] = useState<number>(
+		source ? Number.MAX_SAFE_INTEGER : 1,
+	);
+	const [isLoadingMore, startLoadMore] = useTransition();
 
-  const openFullScreen = () => {
-    setGridItems(items);
-    setGridPage(1);
-    setGridTotalPages(source ? Number.MAX_SAFE_INTEGER : 1);
-    setIsFullScreen(true);
-  };
+	const openFullScreen = () => {
+		setGridItems(items);
+		setGridPage(1);
+		setGridTotalPages(source ? Number.MAX_SAFE_INTEGER : 1);
+		setIsFullScreen(true);
+	};
 
-  // Lock background page scroll while the fullscreen "See All" grid is open
-  // (otherwise the body and the modal each show their own scrollbar).
-  useEffect(() => {
-    if (isFullScreen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isFullScreen]);
+	// Lock background page scroll while the fullscreen "See All" grid is open
+	// (otherwise the body and the modal each show their own scrollbar).
+	useEffect(() => {
+		if (isFullScreen) {
+			document.body.style.overflow = "hidden";
+		} else {
+			document.body.style.overflow = "";
+		}
+		return () => {
+			document.body.style.overflow = "";
+		};
+	}, [isFullScreen]);
 
-  const hasMore = !!source && gridPage < gridTotalPages;
+	const hasMore = !!source && gridPage < gridTotalPages;
 
-  const loadMore = () => {
-    if (!source) return;
-    startLoadMore(async () => {
-      const next = gridPage + 1;
-      const res = await loadMediaPageAction(source, next);
-      if (res.success) {
-        setGridItems((prev) => {
-          const seen = new Set(prev.map((i) => i.id));
-          return [...prev, ...res.data.filter((i) => !seen.has(i.id))];
-        });
-        setGridPage(next);
-        setGridTotalPages(res.totalPages);
-      }
-    });
-  };
+	const loadMore = () => {
+		if (!source) return;
+		startLoadMore(async () => {
+			const next = gridPage + 1;
+			const res = await loadMediaPageAction(source, next);
+			if (res.success) {
+				setGridItems((prev) => {
+					const seen = new Set(prev.map((i) => i.id));
+					return [...prev, ...res.data.filter((i) => !seen.has(i.id))];
+				});
+				setGridPage(next);
+				setGridTotalPages(res.totalPages);
+			}
+		});
+	};
 
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const isDown = useRef(false);
-  const startX = useRef(0);
-  const scrollLeft = useRef(0);
-  const dragDistance = useRef(0);
+	const carouselRef = useRef<HTMLDivElement>(null);
+	const isDown = useRef(false);
+	const startX = useRef(0);
+	const scrollLeft = useRef(0);
+	const dragDistance = useRef(0);
 
-  // Pause auto-pan while the user interacts (hover / drag / touch), and for a
-  // short grace window after a programmatic scroll so it doesn't fight it.
-  const pausedRef = useRef(false);
-  const resumeAtRef = useRef(0);
-  const [dragging, setDragging] = useState(false);
+	// Pause auto-pan while the user interacts (hover / drag / touch), and for a
+	// short grace window after a programmatic scroll so it doesn't fight it.
+	const pausedRef = useRef(false);
+	const resumeAtRef = useRef(0);
+	const [dragging, setDragging] = useState(false);
 
-  // Smooth sub-pixel infinite auto-panning (right-to-left). The loop only runs
-  // while the row is on screen: the home page stacks six of these, and six rAF
-  // callbacks writing `scrollLeft` every frame kept the main thread busy during
-  // load for rows nobody could see, delaying the hero's paint.
-  const [onScreen, setOnScreen] = useState(false);
-  useEffect(() => {
-    const container = carouselRef.current;
-    if (!container) return;
-    const io = new IntersectionObserver(
-      ([entry]) => setOnScreen(entry.isIntersecting),
-      { rootMargin: "100px" }
-    );
-    io.observe(container);
-    return () => io.disconnect();
-  }, []);
+	// Smooth sub-pixel infinite auto-panning (right-to-left). The loop only runs
+	// while the row is on screen: the home page stacks six of these, and six rAF
+	// callbacks writing `scrollLeft` every frame kept the main thread busy during
+	// load for rows nobody could see, delaying the hero's paint.
+	const [onScreen, setOnScreen] = useState(false);
+	useEffect(() => {
+		const container = carouselRef.current;
+		if (!container) return;
+		const io = new IntersectionObserver(
+			([entry]) => setOnScreen(entry.isIntersecting),
+			{ rootMargin: "100px" },
+		);
+		io.observe(container);
+		return () => io.disconnect();
+	}, []);
 
-  useEffect(() => {
-    const container = carouselRef.current;
-    // Only the signature Cinevo rows drift on their own; the experience rows
-    // stay put and are driven by the arrows, drag or a D-pad.
-    if (!container || !onScreen || isFullScreen || activeExperience.id !== "cinevo") return;
-    let animationId: number;
-    const step = () => {
-      if (!pausedRef.current && !isDown.current && performance.now() > resumeAtRef.current) {
-        container.scrollLeft += 0.4;
-        if (container.scrollLeft >= container.scrollWidth - container.clientWidth - 2) {
-          container.scrollLeft = 0;
-        }
-      }
-      animationId = requestAnimationFrame(step);
-    };
-    animationId = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(animationId);
-  }, [activeExperience.id, isFullScreen, onScreen]);
+	useEffect(() => {
+		const container = carouselRef.current;
+		// Only the signature Cinevo rows drift on their own; the experience rows
+		// stay put and are driven by the arrows, drag or a D-pad.
+		if (
+			!container ||
+			!onScreen ||
+			isFullScreen ||
+			activeExperience.id !== "cinevo"
+		)
+			return;
+		let animationId: number;
+		const step = () => {
+			if (
+				!pausedRef.current &&
+				!isDown.current &&
+				performance.now() > resumeAtRef.current
+			) {
+				container.scrollLeft += 0.4;
+				if (
+					container.scrollLeft >=
+					container.scrollWidth - container.clientWidth - 2
+				) {
+					container.scrollLeft = 0;
+				}
+			}
+			animationId = requestAnimationFrame(step);
+		};
+		animationId = requestAnimationFrame(step);
+		return () => cancelAnimationFrame(animationId);
+	}, [activeExperience.id, isFullScreen, onScreen]);
 
-  const scroll = (direction: number) => {
-    const el = carouselRef.current;
-    if (!el) return;
-    // Hold off the auto-pan so it doesn't cancel this smooth scroll.
-    resumeAtRef.current = performance.now() + 4000;
-    const amount = direction * Math.max(el.clientWidth * 0.8, 300);
-    el.scrollTo({ left: el.scrollLeft + amount, behavior: "smooth" });
-  };
+	const scroll = (direction: number) => {
+		const el = carouselRef.current;
+		if (!el) return;
+		// Hold off the auto-pan so it doesn't cancel this smooth scroll.
+		resumeAtRef.current = performance.now() + 4000;
+		const amount = direction * Math.max(el.clientWidth * 0.8, 300);
+		el.scrollTo({ left: el.scrollLeft + amount, behavior: "smooth" });
+	};
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!carouselRef.current) return;
-    isDown.current = true;
-    setDragging(true);
-    startX.current = e.pageX - carouselRef.current.offsetLeft;
-    scrollLeft.current = carouselRef.current.scrollLeft;
-    dragDistance.current = 0;
-  };
+	const handleMouseDown = (e: React.MouseEvent) => {
+		if (!carouselRef.current) return;
+		isDown.current = true;
+		setDragging(true);
+		startX.current = e.pageX - carouselRef.current.offsetLeft;
+		scrollLeft.current = carouselRef.current.scrollLeft;
+		dragDistance.current = 0;
+	};
 
-  const endDrag = () => {
-    isDown.current = false;
-    setDragging(false);
-    resumeAtRef.current = performance.now() + 2000; // brief grace before auto-pan resumes
-  };
+	const endDrag = () => {
+		isDown.current = false;
+		setDragging(false);
+		resumeAtRef.current = performance.now() + 2000; // brief grace before auto-pan resumes
+	};
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDown.current || !carouselRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - carouselRef.current.offsetLeft;
-    const walk = (x - startX.current) * 1.5; // scroll speed multiplier
-    carouselRef.current.scrollLeft = scrollLeft.current - walk;
-    dragDistance.current = Math.abs(x - startX.current);
-  };
+	const handleMouseMove = (e: React.MouseEvent) => {
+		if (!isDown.current || !carouselRef.current) return;
+		e.preventDefault();
+		const x = e.pageX - carouselRef.current.offsetLeft;
+		const walk = (x - startX.current) * 1.5; // scroll speed multiplier
+		carouselRef.current.scrollLeft = scrollLeft.current - walk;
+		dragDistance.current = Math.abs(x - startX.current);
+	};
 
-  // Touch: pause auto-pan during the gesture so native momentum scrolls smoothly.
-  const handleTouchStart = () => { pausedRef.current = true; };
-  const handleTouchEnd = () => { pausedRef.current = false; resumeAtRef.current = performance.now() + 2500; };
+	// Touch: pause auto-pan during the gesture so native momentum scrolls smoothly.
+	const handleTouchStart = () => {
+		pausedRef.current = true;
+	};
+	const handleTouchEnd = () => {
+		pausedRef.current = false;
+		resumeAtRef.current = performance.now() + 2500;
+	};
 
-  const handleLinkClick = (e: React.MouseEvent) => {
-    if (dragDistance.current > 10) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  };
+	const handleLinkClick = (e: React.MouseEvent) => {
+		if (dragDistance.current > 10) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
+	};
 
-  // When a card gains D-pad focus, hold the auto-pan off so it doesn't fight
-  // the focus scroll-into-view.
-  const pauseAutoPan = () => { resumeAtRef.current = performance.now() + 60000; };
+	// When a card gains D-pad focus, hold the auto-pan off so it doesn't fight
+	// the focus scroll-into-view.
+	const pauseAutoPan = () => {
+		resumeAtRef.current = performance.now() + 60000;
+	};
 
-  if (items.length === 0) return null;
+	if (items.length === 0) return null;
 
-  return (
-    <MotionConfig reducedMotion="user">
-      <section
-      data-xp-row=""
-      className="px-6 md:px-12 mb-12 relative w-full group/carousel"
-      aria-label={hasTitle ? undefined : label}
-    >
-      {/* Header */}
-      <div className={`flex items-center mb-4 ${hasTitle ? "justify-between" : "justify-end"}`}>
-        {hasTitle && (
-          <h2 data-xp-row-title="" className="font-display text-lg md:text-xl font-bold tracking-tight text-fg">
-            {title}
-          </h2>
-        )}
-        <button
-          type="button"
-          onClick={openFullScreen}
-          aria-label={seeAllLabel}
-          data-xp-seeall=""
-          className="text-xs text-accent font-semibold hover:opacity-80 cursor-pointer transition-opacity"
-        >
-          {activeExperience.seeAll} &rarr;
-        </button>
-      </div>
+	return (
+		<MotionConfig reducedMotion="user">
+			<section
+				data-xp-row=""
+				className="px-6 md:px-12 mb-12 relative w-full group/carousel"
+				aria-label={hasTitle ? undefined : label}
+			>
+				{/* Header */}
+				<div
+					className={`flex items-center mb-4 ${hasTitle ? "justify-between" : "justify-end"}`}
+				>
+					{hasTitle && (
+						<h2
+							data-xp-row-title=""
+							className="font-display text-lg md:text-xl font-bold tracking-tight text-fg"
+						>
+							{title}
+						</h2>
+					)}
+					<button
+						type="button"
+						onClick={openFullScreen}
+						aria-label={seeAllLabel}
+						data-xp-seeall=""
+						className="text-xs text-accent font-semibold hover:opacity-80 cursor-pointer transition-opacity"
+					>
+						{activeExperience.seeAll} &rarr;
+					</button>
+				</div>
 
-      {/* Carousel Container */}
-      <div
-        className="relative"
-        onMouseEnter={() => { pausedRef.current = true; }}
-        onMouseLeave={() => { pausedRef.current = false; resumeAtRef.current = performance.now() + 1500; }}
-      >
-        {/* Left Arrow */}
-        <button
-          onClick={() => scroll(-1)}
-          className="absolute left-0 top-0 bottom-4 w-12 bg-linear-to-r from-bg/95 to-transparent z-20 flex items-center justify-start pl-2 text-white/80 hover:text-white opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 pointer-events-none group-hover/carousel:pointer-events-auto cursor-pointer border-0 outline-none"
-          aria-label="Scroll left"
-        >
-          <ChevronLeft className="w-8 h-8 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
-        </button>
+				{/* Carousel Container */}
+				<div
+					className="relative"
+					onMouseEnter={() => {
+						pausedRef.current = true;
+					}}
+					onMouseLeave={() => {
+						pausedRef.current = false;
+						resumeAtRef.current = performance.now() + 1500;
+					}}
+				>
+					{/* Left Arrow */}
+					<button
+						onClick={() => scroll(-1)}
+						className="absolute left-0 top-0 bottom-4 w-12 bg-linear-to-r from-bg/95 to-transparent z-20 flex items-center justify-start pl-2 text-white/80 hover:text-white opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 pointer-events-none group-hover/carousel:pointer-events-auto cursor-pointer border-0 outline-none"
+						aria-label="Scroll left"
+					>
+						<ChevronLeft className="w-8 h-8 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
+					</button>
 
-        {/* Scrollable list */}
-        <div
-          ref={carouselRef}
-          onMouseDown={handleMouseDown}
-          onMouseLeave={endDrag}
-          onMouseUp={endDrag}
-          onMouseMove={handleMouseMove}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          style={{ WebkitOverflowScrolling: "touch" }}
-          className={`flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x cursor-grab active:cursor-grabbing select-none transition-transform duration-300 ${dragging ? "scale-[0.985]" : "scale-100"}`}
-        >
-          <FocusSection className="flex gap-4">
-            {items.map((item) => (
-              <PosterCard
-                key={item.id}
-                item={item}
-                mediaType={mediaType}
-                badge={badge}
-                experience={activeExperience}
-                onLinkClick={handleLinkClick}
-                onCardFocus={pauseAutoPan}
-              />
-            ))}
-          </FocusSection>
-        </div>
+					{/* Scrollable list */}
+					<div
+						ref={carouselRef}
+						onMouseDown={handleMouseDown}
+						onMouseLeave={endDrag}
+						onMouseUp={endDrag}
+						onMouseMove={handleMouseMove}
+						onTouchStart={handleTouchStart}
+						onTouchEnd={handleTouchEnd}
+						style={{ WebkitOverflowScrolling: "touch" }}
+						className={`flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x cursor-grab active:cursor-grabbing select-none transition-transform duration-300 ${dragging ? "scale-[0.985]" : "scale-100"}`}
+					>
+						<FocusSection className="flex gap-4">
+							{items.map((item) => (
+								<PosterCard
+									key={item.id}
+									item={item}
+									mediaType={mediaType}
+									badge={badge}
+									experience={activeExperience}
+									onLinkClick={handleLinkClick}
+									onCardFocus={pauseAutoPan}
+								/>
+							))}
+						</FocusSection>
+					</div>
 
-        {/* Right Arrow */}
-        <button
-          onClick={() => scroll(1)}
-          className="absolute right-0 top-0 bottom-4 w-12 bg-linear-to-l from-bg/95 to-transparent z-20 flex items-center justify-end pr-2 text-white/80 hover:text-white opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 pointer-events-none group-hover/carousel:pointer-events-auto cursor-pointer border-0 outline-none"
-          aria-label="Scroll right"
-        >
-          <ChevronRight className="w-8 h-8 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
-        </button>
-      </div>
+					{/* Right Arrow */}
+					<button
+						onClick={() => scroll(1)}
+						className="absolute right-0 top-0 bottom-4 w-12 bg-linear-to-l from-bg/95 to-transparent z-20 flex items-center justify-end pr-2 text-white/80 hover:text-white opacity-0 group-hover/carousel:opacity-100 transition-opacity duration-300 pointer-events-none group-hover/carousel:pointer-events-auto cursor-pointer border-0 outline-none"
+						aria-label="Scroll right"
+					>
+						<ChevronRight className="w-8 h-8 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
+					</button>
+				</div>
 
-      {/* Full-Screen See All Grid Modal Overlay */}
-      <AnimatePresence>
-      {isFullScreen && (
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 12 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
-          className="fixed inset-0 bg-bg/98 backdrop-blur-3xl z-50 overflow-y-auto overscroll-contain flex flex-col px-6 md:px-24 pt-20 pb-12"
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between w-full max-w-350 mx-auto border-b border-white/8 pb-4 mb-8">
-            <div>
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-accent">Category view</span>
-              <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight">
-                {hasTitle ? title : label ?? "All titles"} ({gridItems.length})
-              </h3>
-            </div>
-            <button
-              onClick={() => setIsFullScreen(false)}
-              className="p-2.5 bg-surface hover:bg-surface-hover hover:text-accent text-fg-secondary border border-border rounded-xl transition-all cursor-pointer flex items-center justify-center"
-              aria-label="Close fullscreen grid"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+				{/* Full-Screen See All Grid Modal Overlay */}
+				<AnimatePresence>
+					{isFullScreen && (
+						<motion.div
+							initial={{ opacity: 0, y: 16 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: 12 }}
+							transition={{ duration: 0.25, ease: "easeOut" }}
+							className="fixed inset-0 bg-bg/98 backdrop-blur-3xl z-50 overflow-y-auto overscroll-contain flex flex-col px-6 md:px-24 pt-20 pb-12"
+						>
+							{/* Header */}
+							<div className="flex items-center justify-between w-full max-w-350 mx-auto border-b border-white/8 pb-4 mb-8">
+								<div>
+									<span className="text-[10px] font-extrabold uppercase tracking-widest text-accent">
+										Category view
+									</span>
+									<h3 className="text-xl md:text-2xl font-bold text-white tracking-tight">
+										{hasTitle ? title : (label ?? "All titles")} (
+										{gridItems.length})
+									</h3>
+								</div>
+								<button
+									onClick={() => setIsFullScreen(false)}
+									className="p-2.5 bg-surface hover:bg-surface-hover hover:text-accent text-fg-secondary border border-border rounded-xl transition-all cursor-pointer flex items-center justify-center"
+									aria-label="Close fullscreen grid"
+								>
+									<X className="w-5 h-5" />
+								</button>
+							</div>
 
-          {/* Grid display */}
-          <div className="w-full max-w-[1400px] mx-auto flex-1">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-6 pb-8">
-              {gridItems.map((item) => {
-                const currentBadge = badge ? badgeConfig[badge] : null;
-                const linkUrl = `/watch/${item.media_type || mediaType}/${item.id}`;
+							{/* Grid display */}
+							<div className="w-full max-w-[1400px] mx-auto flex-1">
+								<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-6 pb-8">
+									{gridItems.map((item) => {
+										const currentBadge = badge ? badgeConfig[badge] : null;
+										const linkUrl = `/watch/${item.media_type || mediaType}/${item.id}`;
 
-                return (
-                  <motion.div
-                    key={item.id}
-                    whileHover={{ y: -6, scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                    className="group"
-                  >
-                    <Link
-                      href={linkUrl}
-                      onClick={() => setIsFullScreen(false)}
-                      className="block cursor-pointer select-none"
-                    >
-                      <div className="relative aspect-2/3 w-full bg-surface rounded-xl overflow-hidden border border-white/4 shadow-md transition-all duration-500 hover:border-accent hover:shadow-[0_8px_25px_rgba(0,0,0,0.8)]">
-                        <Image
-                          src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : "https://picsum.photos/seed/cinevoposter/300/450"}
-                          alt={item.title || item.name || ""}
-                          fill
-                          sizes="(max-width: 640px) 50vw, 14vw"
-                          className="object-cover transition duration-700 group-hover:scale-108"
-                          draggable={false}
-                        />
+										return (
+											<motion.div
+												key={item.id}
+												whileHover={{ y: -6, scale: 1.02 }}
+												whileTap={{ scale: 0.98 }}
+												transition={{
+													type: "spring",
+													stiffness: 400,
+													damping: 25,
+												}}
+												className="group"
+											>
+												<Link
+													href={linkUrl}
+													onClick={() => setIsFullScreen(false)}
+													className="block cursor-pointer select-none"
+												>
+													<div className="relative aspect-2/3 w-full bg-surface rounded-xl overflow-hidden border border-white/4 shadow-md transition-all duration-500 hover:border-accent hover:shadow-[0_8px_25px_rgba(0,0,0,0.8)]">
+														<Image
+															src={
+																item.poster_path
+																	? `https://image.tmdb.org/t/p/w500${item.poster_path}`
+																	: "https://picsum.photos/seed/cinevoposter/300/450"
+															}
+															alt={item.title || item.name || ""}
+															fill
+															sizes="(max-width: 640px) 50vw, 14vw"
+															className="object-cover transition duration-700 group-hover:scale-108"
+															draggable={false}
+														/>
 
-                        <WishlistHeart item={item} mediaType={mediaType} />
+														<WishlistHeart item={item} mediaType={mediaType} />
 
-                        {/* Hover preview: Play + Watch Trailer actions */}
-                        <div className="absolute inset-0 flex items-center justify-center gap-2.5 opacity-0 group-hover:opacity-100 bg-black/55 transition-opacity duration-300 z-20">
-                          <span className="w-11 h-11 bg-accent-strong text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(var(--accent-rgb),0.45)] transform scale-75 group-hover:scale-100 transition-transform duration-300" title="Play">
-                            <Play className="w-4.5 h-4.5 fill-white translate-x-0.5" />
-                          </span>
-                          <button
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); openTrailer({ id: String(item.id), mediaType: (item.media_type as "movie" | "tv") || mediaType, title: item.title || item.name || "", rating: item.vote_average, date: item.release_date || item.first_air_date }); }}
-                            title="Watch trailer"
-                            aria-label="Watch trailer"
-                            className="w-11 h-11 bg-white/15 text-white border border-white/30 rounded-full flex items-center justify-center backdrop-blur-md hover:bg-white/25 transform scale-75 group-hover:scale-100 transition-all duration-300 cursor-pointer"
-                          >
-                            <Clapperboard className="w-4 h-4" />
-                          </button>
-                        </div>
+														{/* Hover preview: Play + Watch Trailer actions */}
+														<div className="absolute inset-0 flex items-center justify-center gap-2.5 opacity-0 group-hover:opacity-100 bg-black/55 transition-opacity duration-300 z-20">
+															<span
+																className="w-11 h-11 bg-accent-strong text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(var(--accent-rgb),0.45)] transform scale-75 group-hover:scale-100 transition-transform duration-300"
+																title="Play"
+															>
+																<Play className="w-4.5 h-4.5 fill-white translate-x-0.5" />
+															</span>
+															<button
+																onClick={(e) => {
+																	e.preventDefault();
+																	e.stopPropagation();
+																	openTrailer({
+																		id: String(item.id),
+																		mediaType:
+																			(item.media_type as "movie" | "tv") ||
+																			mediaType,
+																		title: item.title || item.name || "",
+																		rating: item.vote_average,
+																		date:
+																			item.release_date || item.first_air_date,
+																	});
+																}}
+																title="Watch trailer"
+																aria-label="Watch trailer"
+																className="w-11 h-11 bg-white/15 text-white border border-white/30 rounded-full flex items-center justify-center backdrop-blur-md hover:bg-white/25 transform scale-75 group-hover:scale-100 transition-all duration-300 cursor-pointer"
+															>
+																<Clapperboard className="w-4 h-4" />
+															</button>
+														</div>
 
-                        {/* Bottom Metadata Hover Overlay */}
-                        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/95 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-                          <div className="flex items-center gap-1 text-[11px] font-bold text-gold">
-                            <Star className="w-3.5 h-3.5 fill-gold stroke-gold" />
-                            <span>{item.vote_average ? item.vote_average.toFixed(1) : "N/A"}</span>
-                          </div>
-                        </div>
+														{/* Bottom Metadata Hover Overlay */}
+														<div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/95 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+															<div className="flex items-center gap-1 text-[11px] font-bold text-gold">
+																<Star className="w-3.5 h-3.5 fill-gold stroke-gold" />
+																<span>
+																	{item.vote_average
+																		? item.vote_average.toFixed(1)
+																		: "N/A"}
+																</span>
+															</div>
+														</div>
 
-                        {/* Optional Ribbon Badge */}
-                        {currentBadge && (
-                          <span className={`absolute top-2 left-2 text-[9px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider z-20 shadow-md ${currentBadge.style}`}>
-                            {currentBadge.label}
-                          </span>
-                        )}
-                      </div>
+														{/* Optional Ribbon Badge */}
+														{currentBadge && (
+															<span
+																className={`absolute top-2 left-2 text-[9px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider z-20 shadow-md ${currentBadge.style}`}
+															>
+																{currentBadge.label}
+															</span>
+														)}
+													</div>
 
-                      {/* Text Metadata */}
-                      <div className="pt-2 px-1">
-                        <h3 className="text-xs sm:text-sm font-semibold truncate text-fg group-hover:text-accent transition-colors">
-                          {item.title || item.name}
-                        </h3>
-                        <p className="text-[10px] sm:text-xs text-muted mt-0.5 font-medium">
-                          {item.release_date ? item.release_date.split("-")[0] : item.first_air_date ? item.first_air_date.split("-")[0] : ""} &bull; {item.media_type === "tv" || mediaType === "tv" ? "TV" : "Movie"}
-                        </p>
-                      </div>
-                    </Link>
-                  </motion.div>
-                );
-              })}
-            </div>
+													{/* Text Metadata */}
+													<div className="pt-2 px-1">
+														<h3 className="text-xs sm:text-sm font-semibold truncate text-fg group-hover:text-accent transition-colors">
+															{item.title || item.name}
+														</h3>
+														<p className="text-[10px] sm:text-xs text-muted mt-0.5 font-medium">
+															{item.release_date
+																? item.release_date.split("-")[0]
+																: item.first_air_date
+																	? item.first_air_date.split("-")[0]
+																	: ""}{" "}
+															&bull;{" "}
+															{item.media_type === "tv" || mediaType === "tv"
+																? "TV"
+																: "Movie"}
+														</p>
+													</div>
+												</Link>
+											</motion.div>
+										);
+									})}
+								</div>
 
-            {hasMore && (
-              <div className="flex justify-center pb-12">
-                <button
-                  onClick={loadMore}
-                  disabled={isLoadingMore}
-                  className="inline-flex items-center gap-2 px-7 py-3 rounded-full text-sm font-semibold bg-surface border border-border text-fg hover:border-accent hover:text-accent transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {isLoadingMore ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" /> Loading…
-                    </>
-                  ) : (
-                    "Load More"
-                  )}
-                </button>
-              </div>
-            )}
-          </div>
-        </motion.div>
-      )}
-      </AnimatePresence>
-      </section>
-    </MotionConfig>
-  );
+								{hasMore && (
+									<div className="flex justify-center pb-12">
+										<button
+											onClick={loadMore}
+											disabled={isLoadingMore}
+											className="inline-flex items-center gap-2 px-7 py-3 rounded-full text-sm font-semibold bg-surface border border-border text-fg hover:border-accent hover:text-accent transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+										>
+											{isLoadingMore ? (
+												<>
+													<Loader2 className="w-4 h-4 animate-spin" /> Loading…
+												</>
+											) : (
+												"Load More"
+											)}
+										</button>
+									</div>
+								)}
+							</div>
+						</motion.div>
+					)}
+				</AnimatePresence>
+			</section>
+		</MotionConfig>
+	);
 }
