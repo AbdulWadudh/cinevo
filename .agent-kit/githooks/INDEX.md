@@ -23,3 +23,6 @@ that opted in; `task close` runs the scope check either way.
   commit, so the check stays silent there.
 - **Never** bypass with `--no-verify`; close the task or amend the write set instead.
 - Opt-in per clone. `setup` prints the command; it does not rewrite your git config.
+- Both files are tracked `100755`: git silently skips a hook without the execute bit, so a clone
+  that lost it needs `git update-index --chmod=+x .agent-kit/githooks/pre-commit .agent-kit/githooks/commit-msg`.
+  `doctor`'s `hook mode` row says when.

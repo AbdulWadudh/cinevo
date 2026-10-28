@@ -35,8 +35,13 @@ context.
 Context cost is the number of characters read, not the number of lines. How the text is wrapped
 does not change what a session pays: many short lines can be cheaper than a few long ones. So
 every cap on text a session reads counts characters — the harness pointer, the task skeleton,
-the change title. A source file's ceiling counts lines: its job is to decide when to split one
-file, not to bound what a session reads.
+the change title. A source file's ceiling is 300 lines, counted in lines because its job is to
+decide when to split one file, not to bound what a session reads: past the cap, the file becomes a
+folder and its functions split by area, never one file per function.
+
+A session pays for `AGENTS.md`, `.agent-kit/SKILL.md`, `.agent-kit/rules/INDEX.md` and this file
+before it plans anything, so those four are the budget and `doctor` fails a file past its cap. A
+new capability earns a file behind an index; it does not earn a paragraph in front of one.
 
 ## 3. Plans contain no code, task files contain no narrative
 
@@ -127,11 +132,11 @@ identity, attribution, split, staging, subject, body and hooks live there, not h
 
 ## 12. Sources before memory
 
-Check installed skills and MCP servers first, and name the one you used; a skill that applies is part of the plan. where each pays off: 
- - ponytail — over-building; 
- - prompt-master — prompts as readable prose; 
- - caveman — session token cost; 
- - anthropic skills — documents, slides, PDFs,frontend; 
+Check installed skills and MCP servers first, and name the one you used; a skill that applies is part of the plan. where each pays off:
+ - ponytail — over-building;
+ - prompt-master — prompts as readable prose;
+ - caveman — session token cost;
+ - anthropic skills — documents, slides, PDFs,frontend;
  - agent-browser — real pages, opt-in and asked separately, because it can reach live
   sites and accounts.
 - Keep an installed skill current from its own source when asked; never re-add one the owner

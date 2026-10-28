@@ -8,7 +8,8 @@ do not read the directory.
 
 | Path | Holds | Open when |
 |---|---|---|
-| `agent-kit.mjs` | every command and gate, zero dependencies | debugging a gate or changing the kit |
+| `agent-kit.mjs` | the only entry point: argv parsing and dispatch | a new subcommand or flag |
+| `lib/` | INDEX -> a module or folder per command area, imported by the entry | changing a command or debugging a gate |
 | `SKILL.md` | the work loop: classify, open, gate, verify, close, report | every session, first |
 | `project.md` | stack, entry points and the exact commands (the only home for commands) | every session |
 | `docs/INDEX.md` | the codebase map: architecture, API shape, entry points | a task touches code you have not read |
@@ -18,6 +19,7 @@ do not read the directory.
 | `logs/INDEX.md` | the change-log model and the five newest changes | recording or looking up a change |
 | `releases/` | one `vX.Y.Z.md` per release, rolled up from the change files | cutting or reading a release |
 | `githooks/INDEX.md` | the optional commit guard | wiring or debugging the hooks |
+| `prompts/INDEX.md` | the long jobs an agent runs: docs fill, entry-file trim, kit review, template upgrade | the owner asks for one, or a trim/review/upgrade trigger applies |
 | `templates/INDEX.md` | seeds, copyable rule examples, and the steps for adding or changing a rule | editing a seed or a rule |
 | `sync-manifest.json` | what travels to a target repo, and what never does | installing, pulling, auditing the kit |
 

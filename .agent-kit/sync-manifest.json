@@ -2,15 +2,17 @@
   "version": 1,
   "machinery": [
     ".agent-kit/agent-kit.mjs",
-    ".github/workflows/agent-kit.yml",
+    ".agent-kit/lib",
     ".agent-kit/githooks",
     ".agent-kit/SKILL.md",
     ".agent-kit/INDEX.md",
     ".agent-kit/sync-manifest.json",
     ".agent-kit/templates",
+    ".agent-kit/prompts",
     ".agent-kit/rules/INDEX.md",
     ".agent-kit/rules/_behavior.md",
     ".agent-kit/rules/commits.md",
+    ".agent-kit/rules/releases.md",
     ".agent-kit/rules/anti-patterns.md"
   ],
   "seeds": {

@@ -10,8 +10,8 @@ an empty item, source or next step.
 
 | ID | Status | Item | Source | Next step |
 |---|---|---|---|---|
-
-_Nothing parked._
+| `B-01` | `later` | trim `AGENTS.md` (17,585/9,000 chars) and shave the 39-char `SKILL.md` overage that fail `doctor --strict` context budget | `AGENTS.md:1`, `.agent-kit/SKILL.md:1` | run `.agent-kit/prompts/trim-agents-md.md`; move product sections behind `.agent-kit/rules/INDEX.md` |
+| `B-02` | `later` | fix 24 pre-existing ESLint errors (`no-explicit-any`, `setState` in effect) that keep `verify` red and block `task close` | `npm run lint`, 17 files under `src/` | fix by file, then close TASK-101 |
 
 ```
 | ID | Status | Item | Source | Next step |

@@ -134,11 +134,9 @@ every subtask's, and the commit message is under the main id.
 
 Before committing, read `.agent-kit/rules/commits.md` — the split, subject, body and staging.
 
-`agent-kit release <version>` rolls every card no earlier release claims into
-`.agent-kit/releases/<version>.md` — `# Release vX.Y.Z`, the date, then `### Added`, `### Changed`,
-`### Fixed` and `### Removed`, one line per task. It writes the file and prints the
-`gh release create --notes-file` line; running git stays with the owner. Stage those files, never
-the tree; `.agent-kit/githooks/commit-msg` warns when the shape misses and never blocks.
+Cutting a release is its own procedure: read `.agent-kit/rules/releases.md`. `agent-kit release
+<version>` writes the note from every card no earlier release claims; running git stays with the
+owner.
 
 ## 9. Report
 
@@ -163,6 +161,8 @@ follow-up suggestions unless asked.
   the `path:line` and a next step. Do not leave it only in the report or a comment, and do not
   open a task for it. Picking it up later means `task new`, then delete the row.
 - **The change outgrows QUICK.** Stop, reopen it as PLANNED, take the gate.
+- **The process is the friction.** A rule or gate that cost two sessions is a kit task: cite the
+  two changes, then follow `.agent-kit/prompts/kit-review.md`. It is not a product task.
 
 ## Not yours
 

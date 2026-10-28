@@ -64,7 +64,7 @@ the vocabulary, the IDs and the cells, so a malformed row fails before it wastes
 ## Active
 
 <!-- ACTIVE:START -->
-_Nothing in flight._
+- `TASK-101` [IN_PROGRESS] QUICK — [2026-10-28-TASK-101-upgrade-agent-kit.md](active/2026-10-28-TASK-101-upgrade-agent-kit.md)
 <!-- ACTIVE:END -->
 
 ## Recent

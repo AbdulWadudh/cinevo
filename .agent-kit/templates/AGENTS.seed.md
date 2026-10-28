@@ -83,11 +83,11 @@ under one change file and one commit message.
 | `task block "<question>"` | park the in-progress task on an owner decision; it stops holding the slot and the question waits in the file |
 | `task resume [<id>]` | continue a blocked task; pass the id when more than one is waiting |
 | `task close` | a subtask runs the **quick** suite, is marked DONE and stays active for the main close; the main task refuses while a subtask is open, runs the **full** suite, scope-checks against git (its own write set plus every subtask's), records the inventory, archives the family, writes one change file under `.agent-kit/logs/MM-YYYY/`, and prints a ready commit message; `--pr` adds a PR body; `--amend "<why>"` accepts a declared breach and writes the reason into the plan; `--no-verify` only when the suite cannot run here |
-| `release <version>` | write `.agent-kit/releases/<version>.md` from the change files no earlier release claims; prints the `gh release create --notes-file` line and never runs git |
+| `release <version>` | write `.agent-kit/releases/<version>.md` from the change files no earlier release claims; `release --tag <version>` creates the annotated tag whose message is that note |
 | `verify` | the inner loop: runs the `always` rows and writes the evidence table; `--full` adds the `milestone` rows, which the baseline and `task close` already run; at three identical red runs it refuses until the Plan changes |
 | `task guard [--message <file>]` | the hooks: `pre-commit` refuses a commit outside the declared write set (silent when no task is open); `commit-msg` warns — never blocks — on a subject that is not `type (TASK-ID): summary` or a body with no summary. **Opt-in per clone** via `git config core.hooksPath .agent-kit/githooks` |
 | `learnings archive` | move entries past the 30 cap into `.agent-kit/learnings/archive/`; the live list is the part a session reads |
-| `check` / `pull --dry-run` / `pull` | drift against the template; `pull` never overwrites a locally modified file without `--force` |
+| `check` / `pull --dry-run` / `pull [--ref <tag>]` | the release tag this repo tracks and whether a newer one exists, plus drift against it; `pull` never overwrites a locally modified file without `--force` |
 
 The owner is not expected to type any of this. The agent runs `task new` and `task close`, and
 `task close` is where the write set is checked — that check always runs. The hooks are a

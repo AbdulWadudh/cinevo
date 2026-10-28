@@ -1,8 +1,8 @@
-# templates — the seeds, the docs pass, and examples to copy
+# templates — the seeds and copyable rule examples
 
-**Why** — a target repo authors its own docs. This folder holds the blank shapes `setup` copies,
-the prompt that fills them, and one worked example per rule type, so no file has to be
-duplicated by hand.
+**Why** — a target repo authors its own docs. This folder holds the blank shapes `setup` copies
+and one worked example per rule type, so no file has to be duplicated by hand. The long jobs an
+agent runs, such as filling those docs, live in `.agent-kit/prompts/`.
 
 **Load it when** — you are changing what an installed repo starts with, populating `.agent-kit/docs/`, or
 adding, changing or removing a rule.
@@ -15,7 +15,6 @@ adding, changing or removing a rule.
 | `backlog.seed.md` | the parked-work file and its three statuses | changing where TODOs are tracked |
 | `logs-INDEX.seed.md` | the change-log model and last-five list | same |
 | `learnings.seed.md` | the live-learnings shape and its cap | same |
-| `docs-populate.md` | the docs fill pass: inventory, interview, learnings, backlog | asked to populate or refresh `.agent-kit/docs/` |
 | `task.md` | the per-task plan shape | `task new` reads it; you rarely need to |
 | `rule-examples/INDEX.md` | one rule file per domain | adding a rule for a new domain |
 

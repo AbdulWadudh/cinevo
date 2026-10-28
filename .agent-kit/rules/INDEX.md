@@ -13,15 +13,15 @@ matches.
 | Repo memory | `learnings.md` | before planning anything |
 | Hallucination guards | `anti-patterns.md` | adding an import, endpoint or dependency |
 | Commits | `commits.md` | before the first commit of a task |
+| Releases | `releases.md` | cutting a release, or proposing its version |
 | API and route handlers | `api.md` | adding or changing a route handler, a fetch, or a Server Action |
 | TypeScript and code style | `code.md` | writing or reshaping any `.ts` / `.tsx` file |
 | Config and environment | `config.md` | touching `.env`, `vercel.json`, env vars or build config |
 
-The files above ship with every repo. Add one more per domain you actually
-have — `typescript`, `database`, `payments`, `auth`, `mobile` — by copying the matching
-example from `.agent-kit/templates/rule-examples/` and editing it. The steps for adding,
-changing or removing a rule are in `.agent-kit/templates/INDEX.md`. A domain with no file is a
-domain with no rule.
+The files above ship with every repo. Add one per domain you have — `typescript`, `database`,
+`payments`, `auth`, `mobile` — by copying its example from
+`.agent-kit/templates/rule-examples/`. Adding or changing a rule is
+`.agent-kit/templates/INDEX.md`; a domain with no file has no rule.
 
 Two invariants `doctor` enforces:
 
