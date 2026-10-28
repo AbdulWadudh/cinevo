@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { Check, Globe2, Layers, Loader2, Palette, RotateCcw, Sparkles, Type, Upload, X } from "lucide-react";
+import { Check, Film, Globe2, Layers, Loader2, Palette, RotateCcw, Sparkles, Type, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   clearSiteTheme,
@@ -10,9 +10,11 @@ import {
   publishSiteTheme,
   type SiteThemeAdminState,
 } from "@/app/actions/site-theme";
+import DetailLayoutPicker from "@/components/theme/DetailLayoutPicker";
 import FontsourceBrowser from "@/components/theme/FontsourceBrowser";
 import { ExperienceGrid } from "@/components/theme/ExperienceSwitcher";
 import { accentDelta } from "@/lib/theme/accent";
+import { getDetailLayout } from "@/lib/theme/detail-layouts";
 import { getExperience } from "@/lib/theme/experiences";
 import {
   ELEVATION_PRESETS,
@@ -84,6 +86,7 @@ export default function ThemeStudio() {
     themes,
     tokens,
     experience,
+    detailLayout,
     customizations,
     hasCustomizations,
     isStudioOpen,
@@ -181,8 +184,11 @@ export default function ThemeStudio() {
   const publishedExperience = publishedTheme
     ? getExperience(publishedTheme.experience)
     : null;
+  const publishedLayout = publishedTheme
+    ? getDetailLayout(publishedTheme.detailLayout)
+    : null;
   const publishedLabel = publishedTheme
-    ? `${publishedExperience?.name ?? "Cinevo"} · ${publishedPreset?.name ?? publishedTheme.themeId}${publishedTheme.delta ? " with overrides" : ""}`
+    ? `${publishedExperience?.name ?? "Cinevo"} · ${publishedPreset?.name ?? publishedTheme.themeId} · ${publishedLayout?.name ?? "Stage"}${publishedTheme.delta ? " with overrides" : ""}`
     : "Shipped Cinevo palette";
 
   const publishCurrentTheme = useCallback(async () => {
@@ -190,7 +196,7 @@ export default function ThemeStudio() {
     setSiteBusy("publish");
 
     try {
-      const result = await publishSiteTheme({ themeId: theme, experience, delta: customizations });
+      const result = await publishSiteTheme({ themeId: theme, experience, detailLayout, delta: customizations });
       if (!result.success) {
         toast.error(result.error ?? "Couldn't publish the site theme");
         return;
@@ -207,7 +213,7 @@ export default function ThemeStudio() {
     } finally {
       setSiteBusy(null);
     }
-  }, [siteBusy, theme, experience, customizations]);
+  }, [siteBusy, theme, experience, detailLayout, customizations]);
 
   const resetPublishedTheme = useCallback(async () => {
     if (siteBusy) return;
@@ -366,6 +372,10 @@ export default function ThemeStudio() {
                     Switching loads its shipped palette and chrome; the controls below then layer on
                     top.
                   </p>
+                </Section>
+
+                <Section icon={<Film className="size-3.5" />} title="Details page" delay={0.04}>
+                  <DetailLayoutPicker />
                 </Section>
 
                 <Section icon={<Palette className="size-3.5" />} title="Palette" delay={0.06}>
@@ -588,7 +598,8 @@ export default function ThemeStudio() {
                       <p className="mt-1 text-xs font-bold text-fg">{publishedLabel}</p>
                       <p className="mt-1.5 text-[11px] leading-relaxed text-muted">
                         Shown to every visitor without a theme saved in their browser.
-                        Publish the active experience, palette and overrides above to replace it.
+                        Publish the active experience, details layout, palette and overrides
+                        above to replace it.
                       </p>
 
                       {!siteAdmin.storageReady && (

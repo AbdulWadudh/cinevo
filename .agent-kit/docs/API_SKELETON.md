@@ -129,10 +129,22 @@ export async function computeEpisodeNotifications(profileId: string): Promise<Ep
 ```ts
 export const getActiveThemeState: () => Promise<{
   themeId: string; experience: string; delta: Record<string, string>;
+  detailLayout: DetailLayoutId; // cookie `l` → SiteTheme.detailLayout → "stage"
   published: { themeId: string; experience: string; delta: Record<string, string>; fingerprint: string } | null;
   showMismatch: boolean;
   // ... the resolved SSR state from studio/cookie
 }>;
+```
+
+### `src/lib/theme/detail-layouts.ts`
+
+```ts
+export const DETAIL_LAYOUT_IDS: readonly ["stage", "dossier", "console"];
+export type DetailLayoutId = (typeof DETAIL_LAYOUT_IDS)[number];
+export const DEFAULT_DETAIL_LAYOUT_ID: DetailLayoutId;
+export const DETAIL_LAYOUTS: { id: DetailLayoutId; name: string; description: string }[];
+export function isDetailLayoutId(value: unknown): value is DetailLayoutId;
+export function getDetailLayout(id: string | null | undefined): (typeof DETAIL_LAYOUTS)[number];
 ```
 
 ### `src/lib/theme/experiences.ts`, `presets.ts`, `site.ts`
@@ -178,6 +190,41 @@ export function relativeTime(ms: number): string;
 export default function cinevoImageLoader({ src, width }: ImageLoaderProps): string;
 ```
 
+### `src/components/hover/` — the shared hover preview
+
+```ts
+export function useHoverPopover(options: {
+  enabled?: boolean; minWidth?: number; maxWidth?: number; widthFactor?: number;
+  headerRatio?: number; estimatedBody: number; onOpen?: () => void;
+}): HoverPopoverState;
+
+export interface HoverPopoverLayout { width: number; left: number; top: number; originX: number; originY: number }
+export interface HoverPopoverState {
+  hostRef: RefObject<HTMLDivElement | null>; panelRef: RefObject<HTMLDivElement | null>;
+  layout: HoverPopoverLayout | null;
+  schedule(): void; closeSoon(event?: React.PointerEvent): void;
+  keepOpen(event?: React.PointerEvent): void; dismiss(): void;
+}
+
+export interface TitlePreview { overview: string; genres: string[]; certification: string; runtime: string; cast: PreviewCastMember[] }
+export interface PersonPreview {
+  biography: string; birthday: string | null; deathday: string | null;
+  placeOfBirth: string | null; knownForDepartment: string | null; knownFor: PersonKnownFor[];
+}
+
+export default function TitleHoverCard(props: {
+  item: TMDBMedia; mediaType: "movie" | "tv"; href: string;
+  enabled?: boolean; className?: string; children: ReactNode;
+}): ReactNode;
+
+export default function PersonHoverCard(props: {
+  personId: number; name: string; character?: string; profilePath: string | null;
+  enabled?: boolean; className?: string; children: ReactNode;
+}): ReactNode;
+
+export default function Skeleton(props: { className?: string }): ReactNode;
+```
+
 ### Server Actions (`src/app/actions/`)
 
 Every module begins `"use server"`. The shapes that matter across a boundary:
@@ -194,6 +241,10 @@ export async function toggleWishlist(item: WishlistItemInput): Promise<{ success
 export interface WatchProgressInput { /* mediaId, mediaType, season, episode, progress, duration */ }
 export async function syncWatchProgress(/* entries */): Promise</* synced keys */>;
 export async function getWatchProgressList(): Promise</* rows */>;
+
+// tmdb-actions.ts — the hover previews
+export async function getTitlePreviewAction(mediaId: string, mediaType: "movie" | "tv"): Promise<{ success: boolean; data: TitlePreview | null }>;
+export async function getPersonPreviewAction(personId: string): Promise<{ success: boolean; data: PersonPreview | null }>;
 ```
 
 ## Types shared across boundaries

@@ -2,31 +2,34 @@
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
-import { Star, Film } from "lucide-react";
+import { Film } from "lucide-react";
 import { tmdb } from "@/lib/tmdb";
-import Nav from "@/components/Nav";
-import FloatingBackButton from "@/components/watch/FloatingBackButton";
 import RadioAutoPause from "@/components/watch/RadioAutoPause";
-import WatchProviders from "@/components/watch/WatchProviders";
 import IframePlayer from "@/components/player/IframePlayer";
 import TrackWatch from "@/components/watch/TrackWatch";
-import CollectionRow from "@/components/watch/CollectionRow";
-import WishlistButton from "@/components/wishlist/WishlistButton";
 import { getSingleWatchProgress } from "@/app/actions/progress";
 import { checkWishlistStatus } from "@/app/actions/wishlist";
-import CastSection from "@/components/watch/CastSection";
-import ShareButton from "@/components/watch/ShareButton";
-import WishlistHeart from "@/components/wishlist/WishlistHeart";
-import SeasonList from "@/components/watch/SeasonList";
 import DetailPage, { type DetailVariant } from "@/components/experience/DetailPage";
+import {
+  ClassicLayout,
+  ConsoleLayout,
+  DossierLayout,
+  StageLayout,
+} from "@/components/watch/detail";
 import { getActiveThemeState } from "@/lib/theme/active";
 import { site } from "@/config";
 
 interface PageProps {
   params: Promise<{ type: string; id: string }>;
-  searchParams: Promise<{ season?: string; episode?: string; t?: string; source?: string; sandbox?: string; theme?: string; preview?: string }>;
+  searchParams: Promise<{ season?: string; episode?: string; t?: string; source?: string; sandbox?: string; theme?: string; preview?: string; view?: string }>;
 }
+
+const LAYOUT_COMPONENTS = {
+  classic: ClassicLayout,
+  stage: StageLayout,
+  dossier: DossierLayout,
+  console: ConsoleLayout,
+} as const;
 
 // Sets the browser tab title to "{Title} · <app>" via the layout template
 // (getDetails is cached).
@@ -89,10 +92,9 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
   const isTV = type === "tv";
   const mediaType: "movie" | "tv" = isTV ? "tv" : "movie";
 
-  // Fetch details, cast, similar movies, progress, and wishlist parallelly!
+  // Fetch details, similar titles, progress, providers and the theme in parallel.
   const [
     details,
-    cast,
     similar,
     progressRes,
     wishlistRes,
@@ -100,7 +102,6 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
     themeState,
   ] = await Promise.all([
     tmdb.getDetails(id, mediaType),
-    tmdb.getCast(id, mediaType),
     tmdb.getSimilar(id, mediaType),
     getSingleWatchProgress(id, mediaType, isTV ? season : undefined, isTV ? episode : undefined),
     checkWishlistStatus(id, mediaType),
@@ -125,24 +126,19 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
   const savedProgress = progressRes.success && progressRes.data ? progressRes.data.progress : 0;
   const initialTime = queryTime !== undefined ? queryTime : savedProgress;
 
-  // Full release date in moment's "ll" style (e.g. "Jun 2, 2026"); falls back
-  // to just the year, then empty. Formatted in UTC to avoid off-by-one shifts.
-  const rawReleaseDate = details.release_date || details.first_air_date || "";
-  const releaseDateText = rawReleaseDate
-    ? new Date(rawReleaseDate).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      timeZone: "UTC",
-    })
-    : "";
-
-  const durationText = isTV
-    ? `${details.number_of_seasons} Seasons`
-    : details.runtime
-      ? `${Math.floor(details.runtime / 60)}h ${details.runtime % 60}m`
-      : "";
+  // `getDetails` now carries the credits, so the separate /credits round-trip is
+  // gone. `CastSection` does its own trimming.
+  const cast = details.credits?.cast ?? [];
   const theme = search.theme;
+
+  // Console tabs are server-rendered `?view=` links; every other query key has
+  // to survive the hop or the player would reset its season, provider or time.
+  const tabParams = new URLSearchParams();
+  for (const key of ["season", "episode", "t", "source", "sandbox", "theme", "preview"] as const) {
+    const value = search[key];
+    if (value) tabParams.set(key, value);
+  }
+  const tabQuery = tabParams.toString();
 
   const bgGradientClass =
     theme === "marvel" ? "bg-[#0c0202] bg-linear-to-b from-red-600/10 to-transparent" :
@@ -218,154 +214,28 @@ export default async function WatchPage({ params, searchParams }: PageProps) {
     );
   }
 
+  const Layout = LAYOUT_COMPONENTS[themeState.detailLayout];
+
   return (
-    <div className={`flex-1 w-full pb-16 overflow-x-hidden ${bgGradientClass}`}>
-      {/* Scroll responsive transparent nav */}
-      <Nav />
-
-      {/* Embedded Iframe Player Container (relative z-20 so the player's source/season/
-          episode dropdowns render above the metadata section below) */}
-      <FloatingBackButton accentClass={backButtonBorderClass} />
-      <RadioAutoPause />
-
-      <section className="relative z-20 w-full px-3 pt-16 sm:px-6 md:px-12 md:pt-18">
-
-        {/* Records this view into the user's watch history (no-op when signed
-            out, and no-op in preview — see `?preview=1` above) */}
-        <TrackWatch
-          mediaId={id}
-          mediaType={mediaType}
-          title={details.title || details.name || ""}
-          posterPath={details.poster_path || details.backdrop_path || undefined}
-          season={isTV ? season : undefined}
-          episode={isTV ? episode : undefined}
-          preview={preview}
-        />
-
-        {/* Sandboxed Video Player Component */}
-        <IframePlayer
-          mediaId={id}
-          mediaType={mediaType}
-          title={details.title || details.name || ""}
-          posterPath={details.backdrop_path || details.poster_path || undefined}
-          season={isTV ? season : undefined}
-          episode={isTV ? episode : undefined}
-          initialProgress={initialTime}
-          initialSourceKey={initialSourceKey}
-          initialSandbox={initialSandbox}
-          seasons={isTV && details.seasons ? (details.seasons as any[]).filter((s: any) => s.season_number > 0) : undefined}
-          runtimeMinutes={details.runtime || undefined}
-          preview={preview}
-        />
-      </section>
-
-      {/* Content & Metadata Layout — the `main` landmark lives in the root layout. */}
-      <div className="px-6 md:px-12 pt-8">
-        <h1 className="font-display text-3xl md:text-5xl font-extrabold leading-tight tracking-tight mb-4">
-          {details.title || details.name}
-        </h1>
-
-        <div className="flex items-center gap-3 text-xs sm:text-sm font-semibold mb-6 flex-wrap">
-          <span className="bg-gold text-black font-extrabold px-2.5 py-0.75 rounded flex items-center gap-1 shadow-sm">
-            <Star className="w-3.5 h-3.5 fill-black stroke-black" />
-            {details.vote_average ? details.vote_average.toFixed(1) : "N/A"}
-          </span>
-          <span className="text-fg-secondary">{releaseDateText}</span>
-          <span>&bull;</span>
-          <span className="text-fg-secondary">{durationText}</span>
-        </div>
-
-        {/* Genres Tags */}
-        <div className="flex gap-2 flex-wrap mb-6">
-          {details.genres.map((g) => (
-            <Link
-              key={g.id}
-              href={`/?genre=${g.id}&genreName=${encodeURIComponent(g.name)}`}
-              className={`px-3.5 py-1 rounded-full text-xs font-semibold bg-surface border border-border text-fg-secondary transition-colors cursor-pointer ${tagHoverClass}`}
-            >
-              {g.name}
-            </Link>
-          ))}
-        </div>
-
-        <p className="text-sm md:text-base text-fg-secondary leading-relaxed max-w-3xl mb-6">
-          {details.overview}
-        </p>
-
-        {/* My List, Share and Where to watch — all inline */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <WishlistButton
-            mediaId={id}
-            mediaType={mediaType}
-            title={details.title || details.name || ""}
-            posterPath={details.poster_path || undefined}
-            rating={details.vote_average}
-            releaseDate={details.release_date || details.first_air_date || undefined}
-            initialExists={wishlistRes.exists}
-          />
-          <ShareButton title={details.title || details.name || ""} />
-          <WatchProviders providers={watchProviders} bare />
-        </div>
-      </div>
-
-      {/* Dynamic Seasons & Episodes List matching reference */}
-      {isTV && details.seasons && (
-        <SeasonList
-          seriesId={id}
-          seasons={details.seasons as any}
-          currentSeason={season}
-          currentEpisode={episode}
-          backdropPath={details.backdrop_path}
-          preview={preview}
-        />
-      )}
-
-      {/* Interactive Cast Section showing Person Filmographies */}
-      <CastSection cast={cast} />
-
-      {/* Franchise / collection row (movies that belong to a collection) */}
-      {!isTV && details.belongs_to_collection && (
-        <section className="px-6 md:px-12 pt-12">
-          <CollectionRow
-            collectionId={details.belongs_to_collection.id}
-            name={details.belongs_to_collection.name}
-          />
-        </section>
-      )}
-
-      {/* Similar Titles */}
-      {similar.length > 0 && (
-        <section className="px-6 md:px-12 pt-12">
-          <h2 className="font-display text-xl md:text-2xl font-bold mb-5">More Like This</h2>
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x">
-            {similar.slice(0, 24).map((m) => (
-              <div
-                key={m.id}
-                className="flex-none w-32.5 sm:w-40 snap-start group"
-              >
-                <Link href={`/watch/${m.media_type || mediaType}/${m.id}`} className="block cursor-pointer">
-                  <div className="relative w-full aspect-2/3 rounded-lg overflow-hidden bg-surface border border-white/4">
-                    <Image
-                      src={m.poster_path ? `https://image.tmdb.org/t/p/w300${m.poster_path}` : "https://picsum.photos/seed/similar/300/450"}
-                      alt={m.title || m.name || ""}
-                      fill
-                      sizes="(max-width: 640px) 130px, 160px"
-                      className="object-cover transition duration-400 group-hover:scale-105"
-                    />
-                    <WishlistHeart item={m} mediaType={mediaType} />
-                  </div>
-                  <div className="pt-2 px-0.5">
-                    <div className="text-xs font-semibold truncate text-fg group-hover:text-accent transition-colors">{m.title || m.name}</div>
-                    <div className="text-[10px] text-muted mt-0.5">
-                      {m.release_date ? m.release_date.split("-")[0] : m.first_air_date ? m.first_air_date.split("-")[0] : ""}
-                    </div>
-                  </div>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-    </div>
+    <Layout
+      details={details}
+      cast={cast}
+      similar={similar}
+      watchProviders={watchProviders}
+      mediaId={id}
+      mediaType={mediaType}
+      season={season}
+      episode={episode}
+      preview={preview}
+      initialTime={initialTime}
+      initialSourceKey={initialSourceKey}
+      initialSandbox={initialSandbox}
+      wishlistExists={wishlistRes.exists}
+      tabQuery={tabQuery}
+      view={search.view ?? "story"}
+      bgGradientClass={bgGradientClass}
+      backButtonBorderClass={backButtonBorderClass}
+      tagHoverClass={tagHoverClass}
+    />
   );
 }

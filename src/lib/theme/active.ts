@@ -1,5 +1,9 @@
 import { cookies } from "next/headers";
 import { cache } from "react";
+import {
+  DEFAULT_DETAIL_LAYOUT_ID,
+  isDetailLayoutId,
+} from "./detail-layouts";
 import { DEFAULT_EXPERIENCE_ID, EXPERIENCE_IDS } from "./experiences";
 import {
   normalizeThemeDelta,
@@ -56,6 +60,13 @@ export const getActiveThemeState = cache(async () => {
     DEFAULT_EXPERIENCE_ID,
   );
 
+  // A saved layout is the visitor's; without one the published default applies,
+  // and only then the shipped layout.
+  const detailLayout =
+    hasPersonalTheme && isDetailLayoutId(personalTheme.l)
+      ? personalTheme.l
+      : siteTheme?.detailLayout ?? DEFAULT_DETAIL_LAYOUT_ID;
+
   const published: ThemeChoice | null = siteTheme
     ? {
         themeId: siteTheme.themeId,
@@ -74,6 +85,7 @@ export const getActiveThemeState = cache(async () => {
 
   return {
     ...resolved,
+    detailLayout,
     published: published && fingerprint ? { ...published, fingerprint } : null,
     // A skip only silences the revision the visitor actually saw: republishing
     // changes the fingerprint, so the notice comes back on its own.

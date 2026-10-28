@@ -17,6 +17,11 @@ import {
   type ReactNode,
 } from "react";
 import { getExperience, isExperienceId } from "../experiences";
+import {
+  DEFAULT_DETAIL_LAYOUT_ID,
+  isDetailLayoutId,
+  type DetailLayoutId,
+} from "../detail-layouts";
 import { THEME_COOKIE } from "./cookie";
 import { loadFont } from "./fonts";
 import { resolveActiveTokens, tokensToCssVars } from "./tokens";
@@ -54,12 +59,17 @@ export function ThemeProvider<T extends BaseTokens>({
   children: ReactNode;
   themes: ThemeDefinition<T>[];
   defaultTheme: string;
-  initialState: { themeId: string; delta?: Partial<T>; experience?: string };
+  initialState: { themeId: string; delta?: Partial<T>; experience?: string; detailLayout?: string };
 }) {
   const [themeId, setThemeId] = useState(initialState.themeId);
   const [delta, setDelta] = useState<Partial<T> | undefined>(initialState.delta);
   const [experience, setExperienceId] = useState(
     isExperienceId(initialState.experience) ? initialState.experience : "cinevo",
+  );
+  const [detailLayout, setDetailLayoutId] = useState<DetailLayoutId>(
+    isDetailLayoutId(initialState.detailLayout)
+      ? initialState.detailLayout
+      : DEFAULT_DETAIL_LAYOUT_ID,
   );
   const [isStudioOpen, setStudioOpen] = useState(false);
 
@@ -85,10 +95,16 @@ export function ThemeProvider<T extends BaseTokens>({
   }, [tokens, experience]);
 
   const persist = useCallback(
-    (id: string, nextDelta?: Partial<T>, nextExperience?: string) => {
+    (
+      id: string,
+      nextDelta: Partial<T> | undefined,
+      nextExperience: string,
+      nextLayout: string,
+    ) => {
       const payload: CompactCookiePayload<T> = { id, def: defaultTheme };
       if (nextDelta && Object.keys(nextDelta).length > 0) payload.d = nextDelta;
       if (nextExperience && nextExperience !== "cinevo") payload.x = nextExperience;
+      if (isDetailLayoutId(nextLayout)) payload.l = nextLayout;
       writeCookie(payload);
     },
     [defaultTheme],
@@ -101,9 +117,9 @@ export function ThemeProvider<T extends BaseTokens>({
       // chrome stays put so studio palettes can retint Netflix/Disney+/Apple.
       setThemeId(id);
       setDelta(undefined);
-      persist(id, undefined, experience);
+      persist(id, undefined, experience, detailLayout);
     },
-    [persist, experience],
+    [persist, experience, detailLayout],
   );
 
   const setExperience = useCallback(
@@ -115,20 +131,29 @@ export function ThemeProvider<T extends BaseTokens>({
       setExperienceId(next.id);
       setThemeId(next.paletteId);
       setDelta(undefined);
-      persist(next.paletteId, undefined, next.id);
+      persist(next.paletteId, undefined, next.id, detailLayout);
     },
-    [persist],
+    [persist, detailLayout],
+  );
+
+  const setDetailLayout = useCallback(
+    (id: string) => {
+      if (!isDetailLayoutId(id) || id === detailLayout) return;
+      setDetailLayoutId(id);
+      persist(themeId, delta, experience, id);
+    },
+    [persist, themeId, delta, experience, detailLayout],
   );
 
   const setCustomTokens = useCallback(
     (partial: Partial<T>) => {
       setDelta((previous) => {
         const next = { ...previous, ...partial };
-        persist(themeId, next, experience);
+        persist(themeId, next, experience, detailLayout);
         return next;
       });
     },
-    [persist, themeId, experience],
+    [persist, themeId, experience, detailLayout],
   );
 
   const clearCustomTokens = useCallback(
@@ -137,17 +162,17 @@ export function ThemeProvider<T extends BaseTokens>({
         if (!previous) return previous;
         const next = { ...previous };
         for (const key of keys) delete next[key];
-        persist(themeId, Object.keys(next).length > 0 ? next : undefined, experience);
+        persist(themeId, Object.keys(next).length > 0 ? next : undefined, experience, detailLayout);
         return Object.keys(next).length > 0 ? next : undefined;
       });
     },
-    [persist, themeId, experience],
+    [persist, themeId, experience, detailLayout],
   );
 
   const resetTheme = useCallback(() => {
     setDelta(undefined);
-    persist(themeId, undefined, experience);
-  }, [persist, themeId, experience]);
+    persist(themeId, undefined, experience, detailLayout);
+  }, [persist, themeId, experience, detailLayout]);
 
   const applyThemeChoice = useCallback(
     (choice: { themeId: string; experience?: string; delta?: Partial<T> }) => {
@@ -164,9 +189,9 @@ export function ThemeProvider<T extends BaseTokens>({
       setThemeId(choice.themeId);
       setExperienceId(nextExperience);
       setDelta(nextDelta);
-      persist(choice.themeId, nextDelta, nextExperience);
+      persist(choice.themeId, nextDelta, nextExperience, detailLayout);
     },
-    [persist, experience, themes],
+    [persist, experience, themes, detailLayout],
   );
 
   const openStudio = useCallback(() => setStudioOpen(true), []);
@@ -178,6 +203,7 @@ export function ThemeProvider<T extends BaseTokens>({
       tokens,
       themes,
       experience,
+      detailLayout,
       customizations: delta,
       hasCustomizations: Boolean(delta && Object.keys(delta).length > 0),
       isStudioOpen,
@@ -185,6 +211,7 @@ export function ThemeProvider<T extends BaseTokens>({
       closeStudio,
       setTheme,
       setExperience,
+      setDetailLayout,
       setCustomTokens,
       clearCustomTokens,
       resetTheme,
@@ -195,12 +222,14 @@ export function ThemeProvider<T extends BaseTokens>({
       tokens,
       themes,
       experience,
+      detailLayout,
       delta,
       isStudioOpen,
       openStudio,
       closeStudio,
       setTheme,
       setExperience,
+      setDetailLayout,
       setCustomTokens,
       clearCustomTokens,
       resetTheme,

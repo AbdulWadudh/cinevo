@@ -136,11 +136,12 @@ model Wishlist {
 // The studio theme an admin published as the site-wide default. Visitors with
 // their own saved theme keep it; everyone else is served this singleton row.
 model SiteTheme {
-  id         String   @id @default("active")
-  themeId    String
-  experience String   @default("cinevo")
-  delta      Json?
-  updatedAt  DateTime @updatedAt
+  id           String   @id @default("active")
+  themeId      String
+  experience   String   @default("cinevo")
+  detailLayout String   @default("stage")
+  delta        Json?
+  updatedAt    DateTime @updatedAt
 }
 
 // One playlist from the m3u-rest-api index (4,684 of them). `count` is the

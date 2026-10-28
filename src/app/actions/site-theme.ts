@@ -45,6 +45,7 @@ export async function getSiteThemeAdminState(): Promise<SiteThemeAdminState> {
 						themeId: row.themeId,
 						delta: row.delta,
 						experience: row.experience,
+						detailLayout: row.detailLayout,
 					})
 				: null,
 			storageReady: true,
@@ -57,6 +58,7 @@ export async function getSiteThemeAdminState(): Promise<SiteThemeAdminState> {
 export async function publishSiteTheme(input: {
 	themeId: string;
 	experience?: string;
+	detailLayout?: string;
 	delta?: Record<string, string | undefined>;
 }): Promise<{ success: boolean; error?: string; siteTheme?: SiteThemeState }> {
 	try {
@@ -76,11 +78,13 @@ export async function publishSiteTheme(input: {
 				id: SITE_THEME_ROW_ID,
 				themeId: normalized.themeId,
 				experience: normalized.experience,
+				detailLayout: normalized.detailLayout,
 				delta: normalized.delta,
 			},
 			update: {
 				themeId: normalized.themeId,
 				experience: normalized.experience,
+				detailLayout: normalized.detailLayout,
 				// `undefined` would leave the old overrides in place, so an
 				// uncustomised preset has to write a database NULL explicitly.
 				delta: normalized.delta ?? Prisma.DbNull,

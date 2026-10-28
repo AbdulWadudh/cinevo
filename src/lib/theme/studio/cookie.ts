@@ -29,6 +29,7 @@ export function parseThemeCookie<T extends BaseTokens = BaseTokens>(
       d: parsed.d && typeof parsed.d === "object" ? parsed.d : undefined,
       def: typeof parsed.def === "string" ? parsed.def : undefined,
       x: typeof parsed.x === "string" ? parsed.x : undefined,
+      l: typeof parsed.l === "string" ? parsed.l : undefined,
     };
   } catch {
     return { id: fallbackThemeId };

@@ -172,6 +172,81 @@ export interface TMDBSeasonDetails extends Omit<TMDBSeason, "episode_count"> {
 	episodes: TMDBEpisode[];
 }
 
+export interface TMDBCrewMember {
+	id: number;
+	name: string;
+	job: string;
+	department: string;
+	profile_path: string | null;
+}
+
+export interface TMDBCompany {
+	id: number;
+	name: string;
+	logo_path: string | null;
+	origin_country: string;
+}
+
+export interface TMDBProductionCountry {
+	iso_3166_1: string;
+	name: string;
+}
+
+export interface TMDBSpokenLanguage {
+	english_name: string;
+	iso_639_1: string;
+	name: string;
+}
+
+export interface TMDBKeyword {
+	id: number;
+	name: string;
+}
+
+export interface TMDBExternalIds {
+	imdb_id?: string | null;
+	tvdb_id?: number | null;
+	facebook_id?: string | null;
+	instagram_id?: string | null;
+	twitter_id?: string | null;
+}
+
+export interface TMDBImage {
+	file_path: string;
+	aspect_ratio: number;
+	width: number;
+	height: number;
+	iso_639_1: string | null;
+	vote_average: number;
+}
+
+export interface TMDBImages {
+	backdrops: TMDBImage[];
+	posters: TMDBImage[];
+}
+
+export interface TMDBReleaseDate {
+	certification: string;
+	iso_639_1: string;
+	note: string;
+	release_date: string;
+	type: number;
+}
+
+export interface TMDBReleaseDates {
+	results: {
+		iso_3166_1: string;
+		release_dates: TMDBReleaseDate[];
+	}[];
+}
+
+export interface TMDBContentRatings {
+	results: {
+		iso_3166_1: string;
+		rating: string;
+	}[];
+}
+
 export interface TMDBDetails extends TMDBMedia {
 	genres: { id: number; name: string }[];
 	runtime?: number;
@@ -190,6 +265,24 @@ export interface TMDBDetails extends TMDBMedia {
 		poster_path: string | null;
 		backdrop_path: string | null;
 	} | null;
+	credits?: { cast: TMDBCast[]; crew: TMDBCrewMember[] };
+	keywords?: { keywords?: TMDBKeyword[]; results?: TMDBKeyword[] };
+	external_ids?: TMDBExternalIds;
+	images?: TMDBImages;
+	release_dates?: TMDBReleaseDates;
+	content_ratings?: TMDBContentRatings;
+	production_companies?: TMDBCompany[];
+	production_countries?: TMDBProductionCountry[];
+	spoken_languages?: TMDBSpokenLanguage[];
+	networks?: TMDBCompany[];
+	created_by?: { id: number; name: string; profile_path: string | null }[];
+	budget?: number;
+	revenue?: number;
+	vote_count?: number;
+	original_title?: string;
+	original_name?: string;
+	homepage?: string;
+	imdb_id?: string | null;
 }
 
 export interface TMDBPerson {
@@ -285,7 +378,10 @@ export const tmdb = {
 		type: "movie" | "tv" = "movie",
 	): Promise<TMDBDetails | null> => {
 		try {
-			return await tmdbFetch<TMDBDetails>(`/${type}/${id}`);
+			return await tmdbFetch<TMDBDetails>(`/${type}/${id}`, {
+				append_to_response:
+					"credits,keywords,external_ids,images,release_dates,content_ratings",
+			});
 		} catch {
 			return null;
 		}

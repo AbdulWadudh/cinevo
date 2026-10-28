@@ -10,10 +10,12 @@ One row per directory that exists. An invented layer is worse than a missing one
 | `src/app/actions/` | `"use server"` mutations and queries called from client components | side-effect (I/O) | imports `src/lib/db.ts`, `src/lib/auth.ts`, `src/lib/tmdb.ts` |
 | `src/app/api/` | HTTP route handlers: health, push cron, radio resolve | side-effect (I/O) | imports `src/lib/` only |
 | `src/components/` | client UI, grouped by feature (dashboard, watch, radio, admin, theme, tv, reactbits) | mixed; client components | imports `src/lib/`, `src/config.ts` |
+| `src/components/hover/` | the shared hover preview: open delay, portal, pointer hit-test, title and person panels | mixed; client components | imports `src/lib/tmdb.ts` types and `src/app/actions/` |
 | `src/lib/` | domain logic, integrations, client stores | mixed | never imports `src/app/` or `src/components/` |
 | `src/lib/supabase/` | Supabase client factories for browser, server and the session refresher | side-effect (I/O) | imported by auth and the proxy |
-| `src/lib/theme/` | theme + experience resolution: presets, cookie codec, tokens, provider | mixed; `active.ts` is the server entry | imported by the root layout and pages |
+| `src/lib/theme/` | theme, experience and detail-layout resolution: presets, cookie codec, tokens, provider | mixed; `active.ts` is the server entry | imported by the root layout and pages |
 | `src/lib/theme/studio/` | Theme Studio: cookie parse/validate, token → CSS vars, provider, server style tag | mixed | re-exported through `src/lib/theme/studio/index.ts` |
+| `src/components/watch/detail/` | the three Cinevo details layouts plus the one props/format contract they share | client components | imports `src/components/watch/`, `src/components/reactbits/`, `src/lib/tmdb.ts` types |
 | `src/lib/radio/` | the radio category taxonomy distilled from the upstream index | pure | imported by radio actions and UI |
 | `src/lib/stores/` | tiny cross-component stores (persistence options) | mixed | imported by components |
 | `src/data/` | static data shipped with the app (currently `src/data/radio/`) | pure | imported by `src/lib/radio/` |
@@ -51,6 +53,7 @@ One row per directory that exists. An invented layer is worse than a missing one
 | TMDB fetch or shape | `src/lib/tmdb.ts` |
 | watch progress persistence | `src/lib/watchStore.ts` + `src/lib/watchSyncClient.ts` + `src/app/actions/progress.ts` |
 | a provider embed URL | `src/lib/providers.ts` |
-| theme, experience or tokens | `src/lib/theme/` |
+| theme, experience, tokens or detail layout | `src/lib/theme/` |
+| a Cinevo details layout | `src/components/watch/detail/` (selection in `src/lib/theme/detail-layouts.ts`) |
 | a table or column | `prisma/schema.prisma` + a new migration |
 | admin capability | `src/app/actions/admin.ts` (and its `requireAdmin` guard) |

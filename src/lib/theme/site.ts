@@ -1,5 +1,10 @@
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
+import {
+  DEFAULT_DETAIL_LAYOUT_ID,
+  isDetailLayoutId,
+  type DetailLayoutId,
+} from "./detail-layouts";
 import { DEFAULT_EXPERIENCE_ID, EXPERIENCE_IDS } from "./experiences";
 import { CUSTOMIZABLE_THEME_KEYS, themePresets } from "./presets";
 import { sanitizeCssValue } from "./studio/sanitize";
@@ -12,6 +17,7 @@ export interface SiteThemeState {
   themeId: string;
   delta?: SiteThemeDelta;
   experience: string;
+  detailLayout: DetailLayoutId;
 }
 
 const PRESET_IDS = new Set(themePresets.map((preset) => preset.id));
@@ -25,10 +31,11 @@ const CUSTOMIZABLE_KEYS = new Set<string>(CUSTOMIZABLE_THEME_KEYS);
 export function normalizeSiteTheme(input: unknown): SiteThemeState | null {
   if (!input || typeof input !== "object") return null;
 
-  const { themeId, delta, experience } = input as {
+  const { themeId, delta, experience, detailLayout } = input as {
     themeId?: unknown;
     delta?: unknown;
     experience?: unknown;
+    detailLayout?: unknown;
   };
   if (typeof themeId !== "string" || !PRESET_IDS.has(themeId)) return null;
 
@@ -49,6 +56,9 @@ export function normalizeSiteTheme(input: unknown): SiteThemeState | null {
   return {
     themeId,
     experience: normalizedExperience,
+    detailLayout: isDetailLayoutId(detailLayout)
+      ? detailLayout
+      : DEFAULT_DETAIL_LAYOUT_ID,
     ...(Object.keys(normalized).length > 0 ? { delta: normalized } : {}),
   };
 }
@@ -73,6 +83,7 @@ export async function getSiteTheme(): Promise<SiteThemeState | null> {
           themeId: row.themeId,
           delta: row.delta,
           experience: row.experience,
+          detailLayout: row.detailLayout,
         })
       : null;
     return lastKnownTheme;
