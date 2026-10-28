@@ -23,5 +23,5 @@ it), and nothing from the plan: the link is the pointer.
 ## Recent
 
 <!-- RECENT:START -->
-_Nothing yet._
+- `2026-10-28` [TASK-101](10-2026/2026-10-28-TASK-101-upgrade-agent-kit.md) — Upgrade the kit to v1.1.0, clear the lint errors, trim AGENTS.md and SKILL.md
 <!-- RECENT:END -->

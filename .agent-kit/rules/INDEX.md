@@ -1,11 +1,7 @@
 # Rules Index
 
-**Why** — a rule is written once and loaded only where it applies, so an unrelated task does
-not pay for it.
-
 **Load it when** — every session. Open `_behavior.md`; add only the domain files whose "read
-when" column matches the files you will touch or the step you are about to take. Load only what
-matches.
+when" column matches the files you will touch or the step you are about to take.
 
 | Domain | File | Read when |
 |---|---|---|
@@ -14,21 +10,18 @@ matches.
 | Hallucination guards | `anti-patterns.md` | adding an import, endpoint or dependency |
 | Commits | `commits.md` | before the first commit of a task |
 | Releases | `releases.md` | cutting a release, or proposing its version |
-| API and route handlers | `api.md` | adding or changing a route handler, a fetch, or a Server Action |
-| TypeScript and code style | `code.md` | writing or reshaping any `.ts` / `.tsx` file |
-| Config and environment | `config.md` | touching `.env`, `vercel.json`, env vars or build config |
+| API and route handlers | `api.md` | a route handler, fetch or Server Action, admin gating included |
+| TypeScript, hooks, Tailwind | `code.md` | writing or reshaping any `.ts` / `.tsx` file |
+| Next.js | `nextjs.md` | a page, layout, route or data fetch |
+| Motion | `motion.md` | adding or changing any UI element |
+| Pointer and touch | `pointer-and-touch.md` | hover-revealed controls, tap targets, input gating |
+| Scroll | `scroll.md` | a list, table or panel that can grow |
+| Theming | `theming.md` | the theme cookie, franchise portals, accent colours |
+| Data and migrations | `database.md` | `prisma/schema.prisma`, a migration, a query module |
+| Config and environment | `config.md` | `.env`, `vercel.json`, env vars or build config |
 
-The files above ship with every repo. Add one per domain you have — `typescript`, `database`,
-`payments`, `auth`, `mobile` — by copying its example from
-`.agent-kit/templates/rule-examples/`. Adding or changing a rule is
-`.agent-kit/templates/INDEX.md`; a domain with no file has no rule.
-
-Two invariants `doctor` enforces:
-
-- **The table and the folder agree.** A row without a file fails, and a file without a row
-  fails, so neither side can rot silently.
-- **A rule reading a diff cannot check fails.** "Handle X sensibly" is advice; "no `any` in a
-  diff" is a rule. The check is a phrase list, so it is a floor, not a proof.
-
-**One home per fact.** If a rule appears twice, one copy is already wrong: keep the home,
-replace the other with a pointer.
+A domain needs a file **and** a row; `doctor` fails either half alone. Add one by copying its
+example from `.agent-kit/templates/rule-examples/` — the procedure is
+`.agent-kit/templates/INDEX.md`. A rule a diff cannot check is not a rule; "handle X
+sensibly" is advice. **One home per fact:** a second copy is already wrong — keep the home,
+point at it.

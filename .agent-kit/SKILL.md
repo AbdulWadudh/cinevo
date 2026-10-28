@@ -15,8 +15,7 @@ declared commands and their tiers, what is in flight, the gate, the last evidenc
 action. `task show` opens the active task in full. Resume what is in flight before opening
 anything new. Load only the rule files that match the files you will touch.
 
-Every directory the kit owns has an `INDEX.md`. Open the index of the next directory you need,
-then the one file it names; do not list a folder into context.
+Open a directory through its `INDEX.md`, then the one file it names — never by listing it.
 
 ## Skills and tools, before you plan
 

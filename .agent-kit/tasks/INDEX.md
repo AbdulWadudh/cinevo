@@ -64,13 +64,13 @@ the vocabulary, the IDs and the cells, so a malformed row fails before it wastes
 ## Active
 
 <!-- ACTIVE:START -->
-- `TASK-101` [IN_PROGRESS] QUICK — [2026-10-28-TASK-101-upgrade-agent-kit.md](active/2026-10-28-TASK-101-upgrade-agent-kit.md)
+_Nothing in flight._
 <!-- ACTIVE:END -->
 
 ## Recent
 
 <!-- RECENT:START -->
-_Nothing yet._
+- `2026-10-28` [TASK-101](archive/2026-10/2026-10-28-TASK-101-upgrade-agent-kit.md) — Upgrade the kit to v1.1.0, clear the lint errors, trim AGENTS.md and SKILL.md
 <!-- RECENT:END -->
 
 ## History

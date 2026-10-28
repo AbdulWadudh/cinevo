@@ -17,10 +17,9 @@ actually does. `AGENTS.md` overrides this file, never the reverse.
 3. **Feature folders.** A split file becomes a folder named for the feature, re-exported
    through `index.ts` — the pattern already used by `src/lib/theme/studio/index.ts`. Never a
    flat directory of loose files. Code used by two features moves up a level, never copied.
-4. **Types.** `strict` is on in `tsconfig.json`; keep it. Never `any` — narrow from `unknown`.
-   This rule is currently violated 13 times and `npm run lint` fails on it; do not add a
-   fourteenth. Exported functions declare their return type. Discriminated unions over
-   optional-field soup.
+4. **Types.** `strict` is on in `tsconfig.json`; keep it. Never `any` — narrow from `unknown`;
+   `npm run lint` fails on one. Exported functions declare their return type. Discriminated
+   unions over optional-field soup.
 5. **Functions.** Pure by default, side effects at the edges. One reason to change per
    module. Early return over nesting. No default exports unless the framework demands one —
    `src/lib/imageLoader.ts` is the sanctioned exception, because Next requires it.
@@ -30,14 +29,20 @@ actually does. `AGENTS.md` overrides this file, never the reverse.
    bug — the ones in `src/lib/tmdb.ts` and `src/lib/safeStorage.ts` are deliberate fallbacks
    to an empty result and a comment there says so. New code fails loudly at startup,
    gracefully at runtime.
-8. **Tailwind.** Canonical class first; arbitrary values only when nothing canonical exists.
-   A bare CSS variable takes parentheses: `rounded-(--radius-card)`, not
-   `rounded-[var(--radius-card)]`. Lengths on the spacing scale use it: `w-31`, not
-   `w-[124px]`. Keep an off-scale value when it has to move with something else in the same
-   layout, not with the text size.
+8. **Tailwind v4.** Canonical class first; arbitrary values only when nothing canonical
+   exists. `aspect-video`, not `aspect-[16/9]`; `bg-linear-to-b`, not `bg-gradient-to-b`;
+   `bg-white/10` and `border-white/4`, not `bg-white/[0.1]` and `border-white/[0.04]`;
+   `w-40`, not `w-[160px]`. A bare CSS variable takes parentheses:
+   `rounded-(--radius-card)`, not `rounded-[var(--radius-card)]`. Keep an off-scale value
+   when it has to move with something else in the same layout, not with the text size.
 9. **Server vs client.** A file that exports a Server Action starts with `"use server"` and
    exports nothing but async functions. A file that touches `window`, a store or an effect
    starts with `"use client"`. `src/lib/db.ts` and every module importing it are server-only;
    a client component reaching one is a build error, not a refactor.
-10. **Terse rule files.** These load every session; length is a permanent cost. Short
+10. **Hooks.** Every function passed as a dependency to `useEffect` or another hook is wrapped
+    in `useCallback`; `react-hooks/exhaustive-deps` passes without an exception. The React
+    Compiler rules are not suppressed: no state set during render, no ref read during render,
+    nothing read before it is declared. Derive during render, reset with a key, and put a
+    client-only initial value in a microtask.
+11. **Terse rule files.** These load every session; length is a permanent cost. Short
     bullets, no tables. One home per rule.
