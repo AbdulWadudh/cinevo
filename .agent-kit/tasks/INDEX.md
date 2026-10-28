@@ -70,6 +70,8 @@ _Nothing in flight._
 ## Recent
 
 <!-- RECENT:START -->
+- `2026-10-28` [TASK-103](archive/2026-10/2026-10-28-TASK-103-remove-project-changelog.md) — Drop the parallel project changelog; agent-kit change cards are the only record.
+- `2026-10-28` [TASK-102](archive/2026-10/2026-10-28-TASK-102-gallery-route-blank.md) — Scope the dome container rule to the div the component now renders so /gallery is visible again.
 - `2026-10-28` [TASK-101](archive/2026-10/2026-10-28-TASK-101-upgrade-agent-kit.md) — Upgrade the kit to v1.1.0, clear the lint errors, trim AGENTS.md and SKILL.md
 <!-- RECENT:END -->
 

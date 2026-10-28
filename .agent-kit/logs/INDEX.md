@@ -23,5 +23,7 @@ it), and nothing from the plan: the link is the pointer.
 ## Recent
 
 <!-- RECENT:START -->
+- `2026-10-28` [TASK-103](10-2026/2026-10-28-TASK-103-remove-project-changelog.md) — Drop the parallel project changelog; agent-kit change cards are the only record.
+- `2026-10-28` [TASK-102](10-2026/2026-10-28-TASK-102-gallery-route-blank.md) — Scope the dome container rule to the div the component now renders so /gallery is visible again.
 - `2026-10-28` [TASK-101](10-2026/2026-10-28-TASK-101-upgrade-agent-kit.md) — Upgrade the kit to v1.1.0, clear the lint errors, trim AGENTS.md and SKILL.md
 <!-- RECENT:END -->

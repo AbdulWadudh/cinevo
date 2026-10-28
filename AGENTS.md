@@ -14,7 +14,7 @@ can repaint the whole site.
 3. `.agent-kit/tasks/INDEX.md` — resume the active task, or open a new one.
 4. `.agent-kit/rules/INDEX.md` — load only the rule files matching what you will touch.
 5. `.agent-kit/docs/INDEX.md` — find where the logic lives before searching the tree.
-6. `CHANGELOG.md` — read it before proposing a feature; it records what already ships.
+6. `agent-kit start` and `.agent-kit/logs/INDEX.md` — what is in flight and what already shipped.
 7. Any other directory you open has an `INDEX.md`: read that first, then the one file it names.
 
 ## Boundary protocol
@@ -24,8 +24,8 @@ can repaint the whole site.
 - Run `agent-kit verify` before and after edits; it is the quick suite. The full one runs at the
   baseline and at `task close`. Evidence goes in the task file; memory does not count.
 - Take the smallest complete change: reuse what exists, delete before adding, no speculative abstraction.
-- Update `CHANGELOG.md` in the change that ships the work, and `README.md` when a change adds a
-  user-facing feature, a script or a setup step.
+- Update `README.md` when a change adds a user-facing feature, a script or a setup step. The
+  change record is the change card `task close` writes; there is no separate changelog.
 
 **Ask first**
 - New dependency, schema or migration, public interface change.
