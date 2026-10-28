@@ -110,6 +110,16 @@ sets `allowImportingTsExtensions`.
   `app-release-*.apk` are release outputs, not workspace noise. Leave them alone unless a
   release task says otherwise.
 
+## Tasks
+
+Who allocates a task id. `local` derives the next number from this repo's own task
+files and change cards; `issue` takes the GitHub issue number, so two sessions on two
+clones cannot mint the same id. `task renumber` moves a local id; it refuses in issue mode.
+
+| Fact | Value |
+|---|---|
+| ids | issue |
+
 ---
 
 Generated 2026-10-27. Re-run `agent-kit setup` only to refresh a missing file.
