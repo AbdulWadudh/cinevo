@@ -79,7 +79,7 @@ the vocabulary, the IDs and the cells, so a malformed row fails before it wastes
 ## Active
 
 <!-- ACTIVE:START -->
-_Nothing in flight._
+- `TASK-9` [IN_PROGRESS] PLANNED — [2026-10-28-TASK-9-studio-card-effects.md](active/2026-10-28-TASK-9-studio-card-effects.md)
 <!-- ACTIVE:END -->
 
 ## History

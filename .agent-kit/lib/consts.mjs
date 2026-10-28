@@ -25,6 +25,8 @@ export const CATEGORIES = [
 	["removed", "Removed"],
 ];
 export const ENTRY_LIMIT = 140;
+// A reference Markdown file past this becomes a folder with an INDEX.md and one file per section.
+export const DOC_LIMIT = 12000;
 // A loop is the same red set over the same code: past this many identical runs, a new plan.
 export const LOOP_LIMIT = 3;
 // `always` runs on every verify; `milestone` only on the baseline, `verify --full` and close.

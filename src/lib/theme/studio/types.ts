@@ -9,6 +9,8 @@
  * its own press feedback.
  */
 
+import type { CardEffectId, HeroEffectId } from "../card-effects";
+
 export interface BaseTokens {
   canvas: string;
   surface: string;
@@ -47,6 +49,13 @@ export interface CompactCookiePayload<T extends BaseTokens = BaseTokens> {
   x?: string;
   /** Details page layout id ("stage", "dossier", "console"). */
   l?: string;
+  /** Home-card effect id ("none", "decay"). */
+  ce?: string;
+  /** Hero carousel effect id ("none", "swap"). */
+  he?: string;
+  /** Decay ring thickness in px. */
+  cr?: number;
+  cd?: number;
 }
 
 export interface ThemeContextValue<T extends BaseTokens = BaseTokens> {
@@ -57,6 +66,13 @@ export interface ThemeContextValue<T extends BaseTokens = BaseTokens> {
   experience: string;
   /** Active details page layout. */
   detailLayout: string;
+  /** Active home-card effect. */
+  cardEffect: CardEffectId;
+  /** Active hero carousel effect. */
+  heroEffect: HeroEffectId;
+  /** Active decay border thickness in px. */
+  decayRing: number;
+  cardDistance: number;
   /** The overrides layered on the active preset, if any. */
   customizations?: Partial<T>;
   hasCustomizations: boolean;
@@ -67,6 +83,10 @@ export interface ThemeContextValue<T extends BaseTokens = BaseTokens> {
   /** Loads an experience's palette and chrome, clearing studio overrides. */
   setExperience: (experienceId: string) => void;
   setDetailLayout: (layoutId: string) => void;
+  setCardEffect: (effectId: string) => void;
+  setHeroEffect: (effectId: string) => void;
+  setDecayRing: (value: number) => void;
+  setCardDistance: (value: number) => void;
   setCustomTokens: (tokens: Partial<T>) => void;
   clearCustomTokens: (keys: (keyof T)[]) => void;
   resetTheme: () => void;

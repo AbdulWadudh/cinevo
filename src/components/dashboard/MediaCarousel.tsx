@@ -17,6 +17,7 @@ import type React from "react";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { loadMediaPageAction } from "@/app/actions/tmdb-actions";
 import TitleHoverCard from "@/components/hover/TitleHoverCard";
+import DecayBorder from "@/components/media/DecayBorder";
 import { useTrailer } from "@/components/TrailerProvider";
 import { FocusSection } from "@/components/tv/Focusable";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
@@ -52,6 +53,7 @@ function PosterCard({
 	onCardFocus: () => void;
 }) {
 	const { openTrailer } = useTrailer();
+	const { cardEffect } = useTheme();
 	const { ref, focused } = useFocusable({
 		onEnterPress: () => ref.current?.click(),
 		onFocus: () => {
@@ -67,6 +69,7 @@ function PosterCard({
 	const currentBadge = badge ? badgeConfig[badge] : null;
 	const linkUrl = `/watch/${item.media_type || mediaType}/${item.id}`;
 	const landscape = experience.cards.orientation === "landscape";
+	const decayOnCards = cardEffect === "decay" && experience.id === "cinevo";
 	const hasPreview = experience.cards.previewOnHover;
 	const imageSrc = landscape
 		? item.backdrop_path
@@ -81,14 +84,14 @@ function PosterCard({
 			item={item}
 			mediaType={mediaType}
 			href={linkUrl}
-			enabled={experience.cards.previewOnHover}
+			enabled={hasPreview}
 			className={`flex-none ${experience.cards.width} snap-start group`}
 		>
 			<motion.div
 				data-xp-card=""
 				whileHover={{
-					y: experience.cards.hover.y,
-					scale: experience.cards.hover.scale,
+					y: decayOnCards ? 0 : experience.cards.hover.y,
+					scale: decayOnCards ? 1 : experience.cards.hover.scale,
 				}}
 				whileTap={{ scale: 0.98 }}
 				transition={{ type: "spring", ...experience.motion.spring }}
@@ -114,9 +117,14 @@ function PosterCard({
 									? "(max-width: 640px) 208px, 260px"
 									: "(max-width: 640px) 140px, 180px"
 							}
-							className="object-cover transition duration-700 group-hover:scale-108"
+							className={
+								decayOnCards
+									? "object-cover"
+									: "object-cover transition duration-700 group-hover:scale-108"
+							}
 							draggable={false}
 						/>
+						<DecayBorder />
 						<WishlistHeart
 							item={item}
 							mediaType={mediaType}
@@ -423,7 +431,6 @@ export default function MediaCarousel({
 					</button>
 				</div>
 
-				{/* Carousel Container */}
 				<div
 					className="relative"
 					onMouseEnter={() => {

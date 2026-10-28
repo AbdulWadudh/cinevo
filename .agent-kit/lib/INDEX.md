@@ -19,9 +19,9 @@ directory.
 | `sync.mjs` | `check`, `pull` | drift or an upgrade |
 | `doctor/` | `doctor`: the fix pass, seven check groups, the summary | a truth check fails |
 | `verify/` | `verify`, evidence rows, loop guard | `verify`, or a task's evidence is stale |
-| `tasks/` | `task new/show/block/resume/publish/renumber/close`, `start` | opening or closing work |
+| `tasks/` | `task new/show/block/resume/publish/migrate/renumber/close`, `start` | opening or closing work |
 | `changelog.mjs` | change cards; retiring a pre-127 recent block | a close writes a card |
-| `release.mjs` | `release` | cutting a note |
+| `release.mjs` | `release`: the note from each card's paragraph and commit | cutting a note |
 | `guard.mjs` | `task guard` | the commit hooks |
 | `learnings.mjs` | `learnings archive` | the cap is hit |
 | `selftest/` | `selftest`: one fixture, the gate scenarios grouped by area | a gate needs its failing fixture |

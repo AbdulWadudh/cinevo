@@ -21,6 +21,7 @@ import {
 	closingNote,
 	currentTask,
 	parentId,
+	queueRows,
 	refreshActive,
 	scopeTouches,
 } from "../taskfile.mjs";
@@ -42,9 +43,7 @@ export function cmdTaskClose({ root, id, amend, noVerify, pr, sync }) {
 	const openKids = kids.filter((t) => t.fm.status !== "DONE");
 
 	if (fm.status === "BLOCKED") {
-		console.error(
-			`\nCannot close ${file}: it is BLOCKED — resume it first (\`task resume\`).\n`,
-		);
+		console.error(`\nCannot close ${file}: it is BLOCKED — resume it first (\`task resume\`).\n`);
 		return 1;
 	}
 	if (fm.status === "DONE") {
@@ -61,26 +60,25 @@ export function cmdTaskClose({ root, id, amend, noVerify, pr, sync }) {
 			`subtasks still open: ${openKids.map((t) => `${t.fm.id} (${t.fm.status || "?"})`).join(", ")} — close them first; the main close is where build runs`,
 		);
 
+	// A request that arrived while this task was open has to be delivered or parked, not dropped.
+	const openQueue = isChild
+		? []
+		: queueRows(text).filter(([, , s]) => ["queued", "in progress"].includes(s));
+	if (openQueue.length)
+		problems.push(`queue still open: row(s) ${openQueue.map(([n]) => n).join(", ")} — work them as subtasks, or mark them dropped and move them to BACKLOG.md`);
 	if (!fm.summary)
-		problems.push(
-			"front-matter summary is empty (it becomes the change file title)",
-		);
+		problems.push("front-matter summary is empty (it becomes the change file title)");
 	if (fm.summary && fm.summary.length > ENTRY_LIMIT)
-		problems.push(
-			`front-matter summary is ${fm.summary.length} characters (limit ${ENTRY_LIMIT}: the change file title is one clause)`,
-		);
+		problems.push(`front-matter summary is ${fm.summary.length} characters (limit ${ENTRY_LIMIT}: the change file title is one clause)`);
 	const type = (fm.type || "changed").toLowerCase();
 	if (!CATEGORIES.some(([t]) => t === type))
-		problems.push(
-			`front-matter type "${fm.type}" is not one of ${CATEGORIES.map(([t]) => t).join(", ")}`,
-		);
+		problems.push(`front-matter type "${fm.type}" is not one of ${CATEGORIES.map(([t]) => t).join(", ")}`);
 	if (list(fm.touches).length === 0 && !kids.length)
 		problems.push("front-matter touches is empty (declare the write set)");
 	if (/<!--\s*FILL:/.test(text))
 		problems.push("unfilled <!-- FILL: --> marker left in the task file");
 
-	// A subtask answers for the family's files; the main task answers for its own plus every
-	// child's, because the one change file it writes covers the whole delivery.
+	// A subtask answers for the family's files; the main task also answers for every child's.
 	const touches = scopeTouches(base, fm);
 
 	// Close runs the suite itself: the last moment the tree is still "as delivered" is the
@@ -119,8 +117,7 @@ export function cmdTaskClose({ root, id, amend, noVerify, pr, sync }) {
 			"no git baseline recorded; the changed-file inventory cannot be derived",
 		);
 	}
-	// Inventory is product files only: the kit's own bookkeeping (task file, index, counter,
-	// changelog) is written by these commands, so counting it would flag every close as a breach.
+	// Inventory is product files only: the kit's own bookkeeping would flag every close.
 	changed = changed.filter(
 		(c) =>
 			c !== rel && !c.startsWith(`${TASKS}/`) && !c.startsWith(`${LOG_DIR}/`),
@@ -163,8 +160,7 @@ export function cmdTaskClose({ root, id, amend, noVerify, pr, sync }) {
 		console.log(`\nScope amended: ${outOfScope.join(", ")}`);
 	}
 
-	// A subtask closes quietly: it keeps its file for the main close to archive, and its share
-	// of the inventory is already inside the parent's baseline diff.
+	// A subtask closes quietly: its share of the inventory is already in the parent's diff.
 	if (isChild) {
 		const own = list(fm.touches);
 		const files = changed.filter((c) => own.some((t) => covers(t, c)));

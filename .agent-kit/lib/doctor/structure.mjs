@@ -1,8 +1,8 @@
 /** doctor/structure.mjs — files, indexes, pointers, budgets */
 import fs from "node:fs";
-import { LOG_DIR, MANIFEST, PROJECT, SKIP_DIRS, STATE, TASK_INDEX } from "../consts.mjs";
+import { DOC_LIMIT, LOG_DIR, MANIFEST, PROJECT, SKIP_DIRS, STATE, TASKS, TASK_INDEX } from "../consts.mjs";
 import { prerequisites } from "../env.mjs";
-import { abs, exists, isDir, read, walk, walkDirs } from "../io.mjs";
+import { abs, exists, expand, isDir, read, walk, walkDirs } from "../io.mjs";
 import { idsMode } from "../taskfile.mjs";
 
 export function structureChecks({ base, add, isTemplate }) {
@@ -96,6 +96,42 @@ export function structureChecks({ base, add, isTemplate }) {
 		"context budget",
 		over.length
 			? `${over.map((r) => `${r.rel} ${r.chars}/${r.cap}`).join(", ")} - move detail behind an index, see .agent-kit/prompts/trim-agents-md.md`
+			: "",
+	);
+
+	// A reference doc past the character ceiling becomes a folder with an index. Records are the
+	// state, not a page a session reads for guidance, so they are exempt.
+	const mdExempt = [
+		`${TASKS}/active/`,
+		`${TASKS}/archive/`,
+		`${LOG_DIR}/`,
+		".agent-kit/releases/",
+		`${TASKS}/BACKLOG.md`,
+		".agent-kit/rules/learnings.md",
+	];
+	const mdOver = [
+		"AGENTS.md",
+		"CLAUDE.md",
+		"README.md",
+		"SETUP.md",
+		"docs",
+		"setup",
+		"examples",
+		".agent-kit",
+	]
+		.flatMap((entry) => expand(base, entry))
+		.filter(
+			(rel) =>
+				rel.endsWith(".md") &&
+				!mdExempt.some((p) => rel === p || rel.startsWith(p)),
+		)
+		.map((rel) => ({ rel, chars: read(abs(base, rel)).length }))
+		.filter((f) => f.chars > DOC_LIMIT);
+	add(
+		mdOver.length ? "FAIL" : "PASS",
+		"markdown ceiling",
+		mdOver.length
+			? `${mdOver.map((f) => `${f.rel} ${f.chars}/${DOC_LIMIT}`).join(", ")} — split it into a folder with an INDEX.md, one file per section`
 			: "",
 	);
 }

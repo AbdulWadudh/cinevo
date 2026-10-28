@@ -1,6 +1,16 @@
 import { cookies } from "next/headers";
 import { cache } from "react";
 import {
+  DEFAULT_CARD_EFFECT_ID,
+  DEFAULT_CARD_DISTANCE,
+  DEFAULT_DECAY_RING,
+  DEFAULT_HERO_EFFECT_ID,
+  isCardEffectId,
+  isCardDistance,
+  isDecayRing,
+  isHeroEffectId,
+} from "./card-effects";
+import {
   DEFAULT_DETAIL_LAYOUT_ID,
   isDetailLayoutId,
 } from "./detail-layouts";
@@ -66,6 +76,22 @@ export const getActiveThemeState = cache(async () => {
     hasPersonalTheme && isDetailLayoutId(personalTheme.l)
       ? personalTheme.l
       : siteTheme?.detailLayout ?? DEFAULT_DETAIL_LAYOUT_ID;
+  const cardEffect =
+    hasPersonalTheme && isCardEffectId(personalTheme.ce)
+      ? personalTheme.ce
+      : siteTheme?.cardEffect ?? DEFAULT_CARD_EFFECT_ID;
+  const heroEffect =
+    hasPersonalTheme && isHeroEffectId(personalTheme.he)
+      ? personalTheme.he
+      : siteTheme?.heroEffect ?? DEFAULT_HERO_EFFECT_ID;
+  const decayRing =
+    hasPersonalTheme && isDecayRing(personalTheme.cr)
+      ? personalTheme.cr
+      : siteTheme?.decayRing ?? DEFAULT_DECAY_RING;
+  const cardDistance =
+    hasPersonalTheme && isCardDistance(personalTheme.cd)
+      ? personalTheme.cd
+      : siteTheme?.cardDistance ?? DEFAULT_CARD_DISTANCE;
 
   const published: ThemeChoice | null = siteTheme
     ? {
@@ -86,6 +112,10 @@ export const getActiveThemeState = cache(async () => {
   return {
     ...resolved,
     detailLayout,
+    cardEffect,
+    heroEffect,
+    decayRing,
+    cardDistance,
     published: published && fingerprint ? { ...published, fingerprint } : null,
     // A skip only silences the revision the visitor actually saw: republishing
     // changes the fingerprint, so the notice comes back on its own.

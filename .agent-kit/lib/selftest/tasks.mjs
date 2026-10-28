@@ -39,9 +39,10 @@ export function scopeScenarios(ctx) {
 	);
 	assert(
 		freshText.includes("**Decisions**") &&
+			freshText.includes("| # | Request | Status | Subtask |") &&
 			!/Assumptions taken|Learnings promoted|\*\*Files\*\*/.test(freshText) &&
-			freshText.length < 1800,
-		"a new task is a skeleton — intent, scope, decisions, plan, proof, no guidance prose",
+			freshText.length < 2000,
+		"a new task is a skeleton — intent, scope, queue, decisions, plan, proof, no guidance prose",
 	);
 	fillTask(
 		["src/index.ts"],

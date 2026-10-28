@@ -50,7 +50,7 @@ You are working in <PROJECT NAME>. Read this file once per session, then follow 
 
 5. **Context discipline.** Every directory the kit owns carries an `INDEX.md`: read the index, then the one file it points at — never list a folder into context. Search narrowly; read at most three source files at a time. History (`.agent-kit/tasks/archive/`, `.agent-kit/logs/MM-YYYY/`) is read only when the user asks; `agent-kit start` prints the five newest closes.
 6. **One home per fact.** A rule lives in exactly one file; everywhere else cites it.
-7. **Planning.** Anything beyond the QUICK lane (three files or fewer, reversible, no contract change) needs a task file in `.agent-kit/tasks/active/`, with the plan approved before the first edit.
+7. **Planning.** Anything beyond the QUICK lane (reversible, one domain, no contract change) needs a task file in `.agent-kit/tasks/active/`, with the plan approved before the first edit.
 8. **Subagents.** Every subagent prompt names the files to read and the deliverable. It never restates the plan.
 9. **Shell output.** Prefix commands with `rtk` (`rtk git status`, `rtk npm test`); `rtk bypass <cmd>` when the full output is the evidence. Name the active task ID with any savings you report — the detail is in `.agent-kit/SKILL.md` §Shell output.
 
@@ -60,11 +60,12 @@ The quick suite and the full one are green (the full one is `verify --full`, whi
 runs itself), the task's evidence table holds real exit codes, `.agent-kit/tasks/INDEX.md` is
 current, and `agent-kit doctor` reports no failures. Then `agent-kit task close`.
 
-A task too big for one sitting splits into subtasks (`task new --parent TASK-N`). A subtask
-closes on the quick suite: `task close` marks it DONE and keeps it in `active/`. The main
-task's close is the milestone — it refuses while a subtask is open, runs the full suite, and
-build failures are fixed right there before it closes; green, it archives the family
-under one change file and one commit message.
+A request that arrives while a task is open goes in its `## Queue` and becomes its subtask
+(`task new --parent TASK-N`); only a separate delivery earns a new task, and the owner chooses
+that. Work too big for one sitting splits the same way. A subtask closes on the quick suite:
+`task close` marks it DONE and keeps it in `active/`. The main task's close is the milestone —
+it refuses while a subtask is open, runs the full suite, and build failures are fixed right
+there before it closes; green, it archives the family under one change file.
 
 ---
 
@@ -78,9 +79,10 @@ under one change file and one commit message.
 | `doctor` | truth checks over docs, declarations and tasks; `--strict` also fails on unfilled markers; `--fix` repairs encoding only; `--json` for CI |
 | `harnesses` | list the coding agents installed on this machine (HOME, PATH, repo) — the repo may show none; a report, not a gate |
 | `start` | read-only session brief: branch, declared commands and their tiers, the five newest closes, active tasks, the gate, last evidence, loop and stale state, and one next action |
-| `task new <slug> --lane quick\|planned [--parent TASK-N] [--from <issue>]` | open a task **and record the baseline run**, a full one (`--no-baseline` to skip); `--parent` opens `TASK-N.M`, queues the main task, and records a quick baseline; in `ids: issue` it also mints the issue and takes its number, and `--from` imports an existing issue instead |
+| `task new <slug> --lane quick\|planned [--summary "<one clause>"] [--intent "<paragraph>"] [--parent TASK-N] [--from <issue>]` | open a task **and record the baseline run**, a full one (`--no-baseline` to skip); `--summary` is the card's title and, in `ids: issue`, the issue title (required there); `--intent` seeds the Intent block and the issue body; `--parent` opens `TASK-N.M`, queues the main task, and records a quick baseline; in `ids: issue` it also mints the issue and takes its number, and `--from` imports an existing issue instead |
 | `task show` | print the active task's scope, plan and evidence — the thing G1/G2 asks a human to read |
 | `task publish [--id TASK-N]` | issue ids only: send the task's approved plan to its issue (the front matter stays in the repo) |
+| `task migrate [--dry-run]` | backfill: one **closed** issue per archived task, titled `TASK-N — summary` with the change card's paragraph, for a repo that ran on local ids first; titles starting with an id are the record, so a second run adds nothing |
 | `task renumber <old> <new> \| <old> --next [--file <name>]` | local ids only: move an id after a collision, rewriting the file name, a parent's children and every `depends_on`; `--file` picks one of two same-id files |
 | `task block "<question>"` | park the in-progress task on an owner decision; it stops holding the slot and the question waits in the file |
 | `task resume [<id>]` | continue a blocked task; pass the id when more than one is waiting |

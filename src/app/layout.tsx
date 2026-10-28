@@ -100,6 +100,10 @@ export default async function RootLayout({
 						delta: themeState.delta,
 						experience: themeState.experience,
 						detailLayout: themeState.detailLayout,
+						cardEffect: themeState.cardEffect,
+						heroEffect: themeState.heroEffect,
+						decayRing: themeState.decayRing,
+						cardDistance: themeState.cardDistance,
 					}}
 				>
 					{/* Owns the audio element, so radio keeps playing across navigation. */}

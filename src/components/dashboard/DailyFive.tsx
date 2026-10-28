@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useSyncExternalStore } from "react";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
+import DecayBorder from "@/components/media/DecayBorder";
 import { storageKey } from "@/config";
 import { safeStorage } from "@/lib/safeStorage";
 import type { TMDBMedia } from "@/lib/tmdb";
@@ -130,6 +131,7 @@ export default function DailyFive({
 														className="object-cover transition duration-500 group-hover:scale-105 group-hover:brightness-75"
 													/>
 												</Link>
+												<DecayBorder />
 												<WishlistHeart
 													item={item}
 													mediaType={mediaType}

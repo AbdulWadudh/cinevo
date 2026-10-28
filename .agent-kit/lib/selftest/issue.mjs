@@ -1,10 +1,6 @@
 /** selftest/issue.mjs — ids from GitHub: the mint, the import, the publish and the sync */
 import { abs, exists, read, write } from "../io.mjs";
-import {
-	cmdTaskClose,
-	cmdTaskNew,
-	cmdTaskPublish,
-} from "../tasks/index.mjs";
+import { cmdTaskClose, cmdTaskNew, cmdTaskPublish } from "../tasks/index.mjs";
 import { activeTasks, idsMode } from "../taskfile.mjs";
 import { cli, fixture, row, stubFetch } from "./ids.mjs";
 
@@ -60,7 +56,13 @@ export async function issueIdScenarios(ctx) {
 
 		fail = true;
 		const refused = await ctx.spokenAsync(() =>
-			cmdTaskNew({ root: dir, slug: "nope", lane: "quick", noBaseline: true }),
+			cmdTaskNew({
+				root: dir,
+				slug: "nope",
+				lane: "quick",
+				noBaseline: true,
+				summary: "a refused mint",
+			}),
 		);
 		assert(refused.code === 1, "a refused mint returns 1");
 		assert(
@@ -74,6 +76,19 @@ export async function issueIdScenarios(ctx) {
 		);
 		fail = false;
 
+		const postCount = () => spy.calls.filter((c) => c.method === "POST").length;
+		const posts = postCount();
+		const missing = await ctx.spokenAsync(() =>
+			cmdTaskNew({ root: dir, slug: "no-title", lane: "quick", noBaseline: true }),
+		);
+		assert(
+			missing.code === 1 &&
+				missing.out.includes("--summary") &&
+				postCount() === posts &&
+				activeTasks(dir).length === 0,
+			"a mint without --summary refuses before any request",
+		);
+
 		assert(
 			(await ctx.quietAsync(() =>
 				cmdTaskNew({
@@ -81,18 +96,35 @@ export async function issueIdScenarios(ctx) {
 					slug: "issue-task",
 					lane: "quick",
 					noBaseline: true,
+					summary: "Detail layouts overlap at 1024px",
+					intent:
+						"At 1024px the detail column overlaps the sidebar; keep the two apart.",
 				}),
 			)) === 0,
 			"task new mints the issue",
 		);
 		const minted = activeTasks(dir)[0];
 		assert(minted.fm.id === "TASK-501", "the issue number is the task id");
-		assert(
-			spy.calls.some(
+		const mintCall = spy.calls
+			.filter(
 				(c) =>
-					c.method === "POST" && c.body && c.body.title === "issue task",
-			),
-			"the mint carries the slug as the title",
+					c.method === "POST" &&
+					c.body &&
+					typeof c.body === "object" &&
+					"title" in c.body,
+			)
+			.at(-1);
+		assert(
+			mintCall?.body?.title === "Detail layouts overlap at 1024px" &&
+				mintCall.body.body ===
+					"At 1024px the detail column overlaps the sidebar; keep the two apart." &&
+				!/agent-kit/.test(mintCall.body.body),
+			"the mint is titled by the summary and described by the intent",
+		);
+		assert(
+			minted.fm.summary === "Detail layouts overlap at 1024px" &&
+				minted.text.includes("the detail column overlaps the sidebar"),
+			"the same summary and intent land in the task file",
 		);
 
 		assert(
@@ -115,6 +147,13 @@ export async function issueIdScenarios(ctx) {
 			"the issue's first paragraph seeds the intent",
 		);
 
+		write(
+			minted.path,
+			read(minted.path).replace(
+				/^summary: .*$/m,
+				'summary: "Overlap fixed at 1024px"',
+			),
+		);
 		assert(
 			(await ctx.quietAsync(() =>
 				cmdTaskPublish({ root: dir, id: "TASK-501" }),
@@ -125,9 +164,10 @@ export async function issueIdScenarios(ctx) {
 			.filter((c) => c.method === "PATCH" && c.url.endsWith("/issues/501"))
 			.at(-1);
 		assert(
-			published?.body?.body?.includes("Published from") &&
+			published?.body?.title === "Overlap fixed at 1024px" &&
+				published.body.body.includes("Published from") &&
 				!published.body.body.includes("touches:"),
-			"the plan travels and the front matter stays in the repo",
+			"the plan and the sharpened title travel; the front matter stays in the repo",
 		);
 
 		// The sync runs after the local close is written: a failure reports, and the close stands.
@@ -135,7 +175,10 @@ export async function issueIdScenarios(ctx) {
 			minted.path,
 			read(minted.path)
 				.replace(/touches: \[\]/, 'touches: ["src/index.ts"]')
-				.replace(/summary: ""/, 'summary: "prove a failed sync keeps the close"')
+				.replace(
+					/^summary: .*$/m,
+					'summary: "prove a failed sync keeps the close"',
+				)
 				.replace(/<!--\s*FILL:[\s\S]*?-->/g, "filled by selftest"),
 		);
 		fail = true;
@@ -155,7 +198,10 @@ export async function issueIdScenarios(ctx) {
 			imported.path,
 			read(imported.path)
 				.replace(/touches: \[\]/, 'touches: ["src/synced.txt"]')
-				.replace(/summary: ""/, 'summary: "prove the close syncs the issue"')
+				.replace(
+					/^summary: .*$/m,
+					'summary: "prove the close syncs the issue"',
+				)
 				.replace(/<!--\s*FILL:[\s\S]*?-->/g, "filled by selftest"),
 		);
 		write(abs(dir, "src/synced.txt"), "synced\n");
@@ -170,8 +216,9 @@ export async function issueIdScenarios(ctx) {
 			.at(-1);
 		assert(
 			closedIssue?.body?.state === "closed" &&
+				closedIssue.body.title === "prove the close syncs the issue" &&
 				closedIssue.body.body.includes("**Summary**"),
-			"the final record travels with the close",
+			"the final record and its title travel with the close",
 		);
 		const cardPath = spy.calls
 			.filter(
@@ -193,6 +240,28 @@ export async function issueIdScenarios(ctx) {
 			renumber.code === 1 && renumber.out.includes("ids: issue"),
 			"renumber refuses a repo whose ids belong to issues",
 		);
+
+		// A repo that ran on local ids first can reach a number its history already carries.
+		number = 131;
+		const clash = await ctx.spokenAsync(() =>
+			cmdTaskNew({
+				root: dir,
+				slug: "reused-number",
+				summary: "a number the history already carries",
+				lane: "quick",
+				noBaseline: true,
+			}),
+		);
+		assert(
+			clash.code === 1 &&
+				clash.out.includes("TASK-131") &&
+				clash.out.includes("not reused"),
+			"a mint that lands on a used id refuses and names both",
+		);
+		assert(
+			activeTasks(dir).length === 0,
+			"the refused mint leaves no task file",
+		);
 	} finally {
 		spy.restore();
 		for (const [name, value] of [
@@ -203,23 +272,4 @@ export async function issueIdScenarios(ctx) {
 			else process.env[name] = value;
 		}
 	}
-}
-
-export function prerequisiteScenarios(ctx) {
-	const { assert, doctorRow } = ctx;
-	console.log("\n37. a missing prerequisite fails the row");
-	const saved = process.env.PATH;
-	process.env.PATH = "";
-	try {
-		assert(
-			doctorRow("prerequisites").status === "FAIL",
-			"doctor fails while a tool every task needs is missing",
-		);
-	} finally {
-		process.env.PATH = saved;
-	}
-	assert(
-		doctorRow("prerequisites").status === "PASS",
-		"the row clears once the tools are back",
-	);
 }

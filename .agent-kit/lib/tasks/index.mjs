@@ -1,6 +1,7 @@
 /** tasks/index.mjs — the task commands, re-exported one home per area */
 
 export { cmdTaskClose } from "./close.mjs";
+export { cmdTaskMigrate } from "./migrate.mjs";
 export { cmdTaskBlock, cmdTaskNew, cmdTaskResume } from "./open.mjs";
 export { cmdTaskPublish } from "./publish.mjs";
 export { cmdTaskRenumber } from "./renumber.mjs";

@@ -235,4 +235,18 @@ export function budgetScenario(ctx) {
 		doctorRow("source ceiling").status === "PASS",
 		"the ceiling clears once the module is back under the cap",
 	);
+
+	const docPath = abs(tmp, ".agent-kit/docs/LONG.md");
+	write(docPath, `# Long\n\n${"word ".repeat(2500)}`);
+	const longDoc = doctorRow("markdown ceiling");
+	assert(
+		longDoc.status === "FAIL" && longDoc.detail.includes("LONG.md"),
+		"a reference doc past its character ceiling fails, so the ceiling can bind",
+	);
+	write(docPath, "# Long\n\nshort\n");
+	assert(
+		doctorRow("markdown ceiling").status === "PASS",
+		"the markdown ceiling clears once the doc is back under the cap",
+	);
+	fs.rmSync(docPath);
 }

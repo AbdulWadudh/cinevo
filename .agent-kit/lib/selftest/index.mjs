@@ -5,16 +5,37 @@ import path from "node:path";
 import { TASKS } from "../consts.mjs";
 import { cmdDoctor } from "../doctor/index.mjs";
 import { abs, read, write } from "../io.mjs";
-import { installScenarios, copyScenario, syncScenarios } from "./install.mjs";
-import { scopeScenarios, redRunScenario } from "./tasks.mjs";
-import { rulesScenarios, learningsScenario, routerScenarios } from "./rules.mjs";
-import { changeLogScenario, releaseScenarios, tagScenarios } from "./release.mjs";
-import { inventoryScenario, blockScenarios, collisionScenario } from "./state.mjs";
-import { pointersScenario, identityScenario, machineScenarios, setupPointerScenario, hookScenario, budgetScenario } from "./surface.mjs";
-import { loopScenarios } from "./loop.mjs";
 import { familyScenarios } from "./family.mjs";
 import { localIdScenarios } from "./ids.mjs";
-import { issueIdScenarios, prerequisiteScenarios } from "./issue.mjs";
+import { copyScenario, installScenarios, syncScenarios } from "./install.mjs";
+import { issueIdScenarios } from "./issue.mjs";
+import { loopScenarios } from "./loop.mjs";
+import { migrateScenarios, prerequisiteScenarios } from "./migrate.mjs";
+import {
+	changeLogScenario,
+	releaseScenarios,
+	tagScenarios,
+} from "./release.mjs";
+import {
+	learningsScenario,
+	routerScenarios,
+	rulesScenarios,
+} from "./rules.mjs";
+import {
+	blockScenarios,
+	collisionScenario,
+	inventoryScenario,
+	queueScenario,
+} from "./state.mjs";
+import {
+	budgetScenario,
+	hookScenario,
+	identityScenario,
+	machineScenarios,
+	pointersScenario,
+	setupPointerScenario,
+} from "./surface.mjs";
+import { redRunScenario, scopeScenarios } from "./tasks.mjs";
 
 /**
  * `setup` and `doctor` require rtk, and a suite that needs a tool on the host is a suite that
@@ -137,9 +158,9 @@ export async function cmdSelftest(dispatch) {
 		}
 	};
 	const doctorRow = (name) =>
-		JSON.parse(captured(() => cmdDoctor({ root: tmp, jsonOut: true }))).rows.find(
-			(r) => r.name === name,
-		);
+		JSON.parse(
+			captured(() => cmdDoctor({ root: tmp, jsonOut: true })),
+		).rows.find((r) => r.name === name);
 	const ctx = {
 		tmp,
 		dispatch,
@@ -190,12 +211,14 @@ export async function cmdSelftest(dispatch) {
 		familyScenarios(ctx);
 		releaseScenarios(ctx);
 		collisionScenario(ctx);
+		queueScenario(ctx);
 		setupPointerScenario(ctx);
 		hookScenario(ctx);
 		budgetScenario(ctx);
 		tagScenarios(ctx);
 		await localIdScenarios(ctx);
 		await issueIdScenarios(ctx);
+		await migrateScenarios(ctx);
 		prerequisiteScenarios(ctx);
 	} finally {
 		unshim();

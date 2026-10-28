@@ -16,6 +16,16 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import {
+  clampCardDistance,
+  clampDecayRing,
+  DEFAULT_CARD_EFFECT_ID,
+  DEFAULT_HERO_EFFECT_ID,
+  isCardEffectId,
+  isHeroEffectId,
+  type CardEffectId,
+  type HeroEffectId,
+} from "../card-effects";
 import { getExperience, isExperienceId } from "../experiences";
 import {
   DEFAULT_DETAIL_LAYOUT_ID,
@@ -59,7 +69,16 @@ export function ThemeProvider<T extends BaseTokens>({
   children: ReactNode;
   themes: ThemeDefinition<T>[];
   defaultTheme: string;
-  initialState: { themeId: string; delta?: Partial<T>; experience?: string; detailLayout?: string };
+  initialState: {
+    themeId: string;
+    delta?: Partial<T>;
+    experience?: string;
+    detailLayout?: string;
+    cardEffect?: string;
+    heroEffect?: string;
+    decayRing?: number;
+    cardDistance?: number;
+  };
 }) {
   const [themeId, setThemeId] = useState(initialState.themeId);
   const [delta, setDelta] = useState<Partial<T> | undefined>(initialState.delta);
@@ -71,6 +90,18 @@ export function ThemeProvider<T extends BaseTokens>({
       ? initialState.detailLayout
       : DEFAULT_DETAIL_LAYOUT_ID,
   );
+  const [cardEffect, setCardEffectId] = useState<CardEffectId>(
+    isCardEffectId(initialState.cardEffect)
+      ? initialState.cardEffect
+      : DEFAULT_CARD_EFFECT_ID,
+  );
+  const [heroEffect, setHeroEffectId] = useState<HeroEffectId>(
+    isHeroEffectId(initialState.heroEffect)
+      ? initialState.heroEffect
+      : DEFAULT_HERO_EFFECT_ID,
+  );
+  const [decayRing, setDecayRingState] = useState(clampDecayRing(initialState.decayRing));
+  const [cardDistance, setCardDistanceState] = useState(clampCardDistance(initialState.cardDistance));
   const [isStudioOpen, setStudioOpen] = useState(false);
 
   const activePreset = useMemo(
@@ -100,11 +131,19 @@ export function ThemeProvider<T extends BaseTokens>({
       nextDelta: Partial<T> | undefined,
       nextExperience: string,
       nextLayout: string,
+      nextEffect: CardEffectId,
+      nextHero: HeroEffectId,
+      nextRing: number,
+      nextDistance: number,
     ) => {
       const payload: CompactCookiePayload<T> = { id, def: defaultTheme };
       if (nextDelta && Object.keys(nextDelta).length > 0) payload.d = nextDelta;
       if (nextExperience && nextExperience !== "cinevo") payload.x = nextExperience;
       if (isDetailLayoutId(nextLayout)) payload.l = nextLayout;
+      if (isCardEffectId(nextEffect)) payload.ce = nextEffect;
+      if (isHeroEffectId(nextHero)) payload.he = nextHero;
+      payload.cr = clampDecayRing(nextRing);
+      payload.cd = clampCardDistance(nextDistance);
       writeCookie(payload);
     },
     [defaultTheme],
@@ -117,9 +156,9 @@ export function ThemeProvider<T extends BaseTokens>({
       // chrome stays put so studio palettes can retint Netflix/Disney+/Apple.
       setThemeId(id);
       setDelta(undefined);
-      persist(id, undefined, experience, detailLayout);
+      persist(id, undefined, experience, detailLayout, cardEffect, heroEffect, decayRing, cardDistance);
     },
-    [persist, experience, detailLayout],
+    [persist, experience, detailLayout, cardEffect, heroEffect, decayRing, cardDistance],
   );
 
   const setExperience = useCallback(
@@ -131,29 +170,66 @@ export function ThemeProvider<T extends BaseTokens>({
       setExperienceId(next.id);
       setThemeId(next.paletteId);
       setDelta(undefined);
-      persist(next.paletteId, undefined, next.id, detailLayout);
+      persist(next.paletteId, undefined, next.id, detailLayout, cardEffect, heroEffect, decayRing, cardDistance);
     },
-    [persist, detailLayout],
+    [persist, detailLayout, cardEffect, heroEffect, decayRing, cardDistance],
   );
 
   const setDetailLayout = useCallback(
     (id: string) => {
       if (!isDetailLayoutId(id) || id === detailLayout) return;
       setDetailLayoutId(id);
-      persist(themeId, delta, experience, id);
+      persist(themeId, delta, experience, id, cardEffect, heroEffect, decayRing, cardDistance);
     },
-    [persist, themeId, delta, experience, detailLayout],
+    [persist, themeId, delta, experience, detailLayout, cardEffect, heroEffect, decayRing, cardDistance],
+  );
+
+  const setCardEffect = useCallback(
+    (id: string) => {
+      if (!isCardEffectId(id) || id === cardEffect) return;
+      setCardEffectId(id);
+      persist(themeId, delta, experience, detailLayout, id, heroEffect, decayRing, cardDistance);
+    },
+    [persist, themeId, delta, experience, detailLayout, cardEffect, heroEffect, decayRing, cardDistance],
+  );
+
+  const setHeroEffect = useCallback(
+    (id: string) => {
+      if (!isHeroEffectId(id) || id === heroEffect) return;
+      setHeroEffectId(id);
+      persist(themeId, delta, experience, detailLayout, cardEffect, id, decayRing, cardDistance);
+    },
+    [persist, themeId, delta, experience, detailLayout, cardEffect, heroEffect, decayRing, cardDistance],
+  );
+
+  const setDecayRing = useCallback(
+    (value: number) => {
+      const next = clampDecayRing(value);
+      if (next === decayRing) return;
+      setDecayRingState(next);
+      persist(themeId, delta, experience, detailLayout, cardEffect, heroEffect, next, cardDistance);
+    },
+    [persist, themeId, delta, experience, detailLayout, cardEffect, heroEffect, decayRing, cardDistance],
+  );
+  const setCardDistance = useCallback(
+    (value: number) => {
+      const next = clampCardDistance(value);
+      if (next === cardDistance) return;
+      setCardDistanceState(next);
+      persist(themeId, delta, experience, detailLayout, cardEffect, heroEffect, decayRing, next);
+    },
+    [persist, themeId, delta, experience, detailLayout, cardEffect, heroEffect, decayRing, cardDistance],
   );
 
   const setCustomTokens = useCallback(
     (partial: Partial<T>) => {
       setDelta((previous) => {
         const next = { ...previous, ...partial };
-        persist(themeId, next, experience, detailLayout);
+        persist(themeId, next, experience, detailLayout, cardEffect, heroEffect, decayRing, cardDistance);
         return next;
       });
     },
-    [persist, themeId, experience, detailLayout],
+    [persist, themeId, experience, detailLayout, cardEffect, heroEffect, decayRing, cardDistance],
   );
 
   const clearCustomTokens = useCallback(
@@ -162,17 +238,17 @@ export function ThemeProvider<T extends BaseTokens>({
         if (!previous) return previous;
         const next = { ...previous };
         for (const key of keys) delete next[key];
-        persist(themeId, Object.keys(next).length > 0 ? next : undefined, experience, detailLayout);
+        persist(themeId, Object.keys(next).length > 0 ? next : undefined, experience, detailLayout, cardEffect, heroEffect, decayRing, cardDistance);
         return Object.keys(next).length > 0 ? next : undefined;
       });
     },
-    [persist, themeId, experience, detailLayout],
+    [persist, themeId, experience, detailLayout, cardEffect, heroEffect, decayRing, cardDistance],
   );
 
   const resetTheme = useCallback(() => {
     setDelta(undefined);
-    persist(themeId, undefined, experience, detailLayout);
-  }, [persist, themeId, experience, detailLayout]);
+    persist(themeId, undefined, experience, detailLayout, cardEffect, heroEffect, decayRing, cardDistance);
+  }, [persist, themeId, experience, detailLayout, cardEffect, heroEffect, decayRing, cardDistance]);
 
   const applyThemeChoice = useCallback(
     (choice: { themeId: string; experience?: string; delta?: Partial<T> }) => {
@@ -189,9 +265,9 @@ export function ThemeProvider<T extends BaseTokens>({
       setThemeId(choice.themeId);
       setExperienceId(nextExperience);
       setDelta(nextDelta);
-      persist(choice.themeId, nextDelta, nextExperience, detailLayout);
+      persist(choice.themeId, nextDelta, nextExperience, detailLayout, cardEffect, heroEffect, decayRing, cardDistance);
     },
-    [persist, experience, themes, detailLayout],
+    [persist, experience, themes, detailLayout, cardEffect, heroEffect, decayRing, cardDistance],
   );
 
   const openStudio = useCallback(() => setStudioOpen(true), []);
@@ -204,6 +280,10 @@ export function ThemeProvider<T extends BaseTokens>({
       themes,
       experience,
       detailLayout,
+      cardEffect,
+      heroEffect,
+      decayRing,
+      cardDistance,
       customizations: delta,
       hasCustomizations: Boolean(delta && Object.keys(delta).length > 0),
       isStudioOpen,
@@ -212,6 +292,10 @@ export function ThemeProvider<T extends BaseTokens>({
       setTheme,
       setExperience,
       setDetailLayout,
+      setCardEffect,
+      setHeroEffect,
+      setDecayRing,
+      setCardDistance,
       setCustomTokens,
       clearCustomTokens,
       resetTheme,
@@ -223,6 +307,10 @@ export function ThemeProvider<T extends BaseTokens>({
       themes,
       experience,
       detailLayout,
+      cardEffect,
+      heroEffect,
+      decayRing,
+      cardDistance,
       delta,
       isStudioOpen,
       openStudio,
@@ -230,6 +318,10 @@ export function ThemeProvider<T extends BaseTokens>({
       setTheme,
       setExperience,
       setDetailLayout,
+      setCardEffect,
+      setHeroEffect,
+      setDecayRing,
+      setCardDistance,
       setCustomTokens,
       clearCustomTokens,
       resetTheme,

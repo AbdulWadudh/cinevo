@@ -247,6 +247,36 @@ export async function getTitlePreviewAction(mediaId: string, mediaType: "movie" 
 export async function getPersonPreviewAction(personId: string): Promise<{ success: boolean; data: PersonPreview | null }>;
 ```
 
+## Card effects and the hero deck
+
+```ts
+// src/lib/theme/card-effects.ts
+export const CARD_EFFECT_IDS = ["none", "decay"] as const;
+export type CardEffectId = (typeof CARD_EFFECT_IDS)[number];
+export const HERO_EFFECT_IDS = ["none", "swap"] as const;
+export type HeroEffectId = (typeof HERO_EFFECT_IDS)[number];
+export const DECAY_RING_MIN = 1;
+export const DECAY_RING_MAX = 12;
+export const DEFAULT_DECAY_RING = 2;
+export function isCardEffectId(value: unknown): value is CardEffectId;
+export function isHeroEffectId(value: unknown): value is HeroEffectId;
+export function isDecayRing(value: unknown): value is number;
+export function clampDecayRing(value: unknown): number;
+
+// src/components/reactbits/card-swap/index.ts
+export default function CardSwap(props: CardSwapProps): ReactNode;
+export interface CardSwapHandle { next(): void; prev(): void }
+export interface CardSwapProps {
+  width?: number; height?: number; cardDistance?: number; verticalDistance?: number;
+  depth?: number; skewAmount?: number; visibleCards?: number; delay?: number;
+  autoplay?: boolean; pauseOnHover?: boolean; draggable?: boolean; speed?: number;
+  bounce?: number; parallax?: number; hoverSpread?: number; dim?: number;
+  cardRadius?: number; intro?: boolean; theme?: "dark" | "light";
+  onCardClick?: (index: number) => void; onChange?: (index: number) => void;
+  className?: string; children?: ReactNode;
+}
+```
+
 ## Types shared across boundaries
 
 - **`MediaSource`** (`"movie" | "tv"`) — `src/lib/tmdb.ts` defines it; providers, watch

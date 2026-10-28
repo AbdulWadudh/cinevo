@@ -8,6 +8,7 @@ import { useState, useTransition } from "react";
 import { loadMediaPageAction } from "@/app/actions/tmdb-actions";
 import TitleHoverCard from "@/components/hover/TitleHoverCard";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
+import DecayBorder from "@/components/media/DecayBorder";
 import type { MediaSource, TMDBMedia } from "@/lib/tmdb";
 
 interface GenreSectionProps {
@@ -135,6 +136,7 @@ export default function GenreSection({
 										sizes="(max-width: 640px) 33vw, (max-width: 1280px) 16vw, 12vw"
 										className="object-cover transition duration-500 group-hover:scale-105"
 									/>
+									<DecayBorder />
 									<WishlistHeart
 										item={item}
 										mediaType={mediaType}

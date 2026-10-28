@@ -10,8 +10,11 @@ from every change file under `.agent-kit/logs/` that no earlier release claims. 
 nothing new.
 
 The file it writes: `# Release vX.Y.Z`, the date, then `### Added`, `### Changed`, `### Fixed` and
-`### Removed`, one line per task, and a `RELEASED` block naming the tasks it claims. That block is
-what the next release reads; deleting an id from it ships that task a second time.
+`### Removed`. Each task is its summary in bold with the commit that shipped it
+(`TASK-127 · 544f2dc`), then the card's `## What changed` paragraph, so the note reads as prose and
+points at the code. The commit comes from `git log` on the card, so the card must be committed
+before the note is cut; the command names any that are not. A `RELEASED` block names the tasks it
+claims — it is what the next release reads, so deleting an id from it ships that task a second time.
 
 ## Pick the number
 

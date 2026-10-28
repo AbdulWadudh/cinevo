@@ -1,9 +1,57 @@
 /** release.mjs — `release`: the note built from unclaimed change files */
 import path from "node:path";
 import { CATEGORIES, LOG_DIR } from "./consts.mjs";
-import { abs, exists, expand, frontMatter, git, read, write } from "./io.mjs";
-import { CHILD_ID } from "./taskfile.mjs";
+import { repoSlug } from "./github.mjs";
+import { abs, exists, expand, frontMatter, git, posix, read, run, write } from "./io.mjs";
+import { CHILD_ID, idsMode } from "./taskfile.mjs";
 
+
+/** The archived task a card points at, repo-relative, or "" when the card has no link. */
+function taskRelOf(cardRel, text) {
+	const m = text.match(/^\*\*Task:\*\*\s+\[[^\]]+\]\(([^)]+)\)/m);
+	if (!m) return "";
+	const rel = path.posix.normalize(
+		path.posix.join(path.posix.dirname(cardRel), m[1]),
+	);
+	return rel.startsWith("..") ? "" : posix(rel);
+}
+
+/**
+ * Issue number by task id. A task minted under issue ids is `TASK-<issue>`; a task that was
+ * backfilled from a local id has that id in its issue title. `gh` is the same credential the
+ * mint uses, and a failure leaves the note without issue links rather than stopping the cut.
+ */
+function issueNumbers(base) {
+	const r = run(
+		"gh issue list --state all --limit 500 --json number,title",
+		base,
+		30000,
+	);
+	if (r.code !== 0) return new Map();
+	try {
+		const map = new Map();
+		for (const issue of JSON.parse(r.out)) {
+			const n = Number(issue.number);
+			if (!Number.isInteger(n)) continue;
+			map.set(`TASK-${n}`, n);
+			const m = String(issue.title || "").match(/^(TASK-\d+)\b/);
+			if (m) map.set(m[1], n);
+		}
+		return map;
+	} catch {
+		return new Map();
+	}
+}
+/** The close wrote this paragraph; the note quotes it instead of asking for a second text. */
+export function cardNote(text) {
+	const section = text.split(/^## /m).find((s) => s.startsWith("What changed"));
+	return section ? section.split(/\r?\n/).slice(1).join("\n").trim() : "";
+}
+
+/** The commit that last touched this card: the one that shipped its task, once it is committed. */
+function shippedIn(base, rel) {
+	return git(base, ["log", "-1", "--format=%h", "--", rel]) || "";
+}
 
 /** The change files no earlier release claims, oldest first. */
 export function unreleasedChanges(base) {
@@ -17,12 +65,16 @@ export function unreleasedChanges(base) {
 	return expand(base, LOG_DIR)
 		.filter((rel) => rel.endsWith(".md") && !rel.endsWith("INDEX.md"))
 		.map((rel) => {
-			const fm = frontMatter(read(abs(base, rel)));
+			const text = read(abs(base, rel));
+			const fm = frontMatter(text);
 			return {
 				id: fm.id || "",
 				type: (fm.type || "changed").toLowerCase(),
 				summary: fm.summary || "",
 				date: fm.date || "",
+				note: cardNote(text),
+				commit: shippedIn(base, rel),
+				taskRel: taskRelOf(rel, text),
 			};
 		})
 		.filter((e) => e.id && !CHILD_ID.test(e.id) && !claimed.has(e.id))
@@ -33,8 +85,8 @@ export function unreleasedChanges(base) {
 
 /**
  * `.agent-kit/releases/vX.Y.Z.md` — the short, user-facing layer over the change files. It is written
- * once per version and read by git and people, not by an agent index. Cutting the note never runs
- * git; `--tag` is the second half, and it refuses to tag a note that is not committed yet.
+ * once per version and read by git and people, not by an agent index. Cutting the note never commits
+ * or tags; `--tag` is the second half, and it refuses to tag a note that is not committed yet.
  */
 export function cmdRelease({ root, version, tag }) {
 	const base = path.resolve(root || process.cwd());
@@ -102,24 +154,47 @@ export function cmdRelease({ root, version, tag }) {
 	}
 
 	const day = new Date().toISOString().slice(0, 10);
+	const slug = repoSlug(base);
+	const issueById = idsMode(base) === "issue" ? issueNumbers(base) : new Map();
+	const tagName = `v${raw}`;
+	const taskLink = (e) =>
+		slug && e.taskRel
+			? `[${e.id}](https://github.com/${slug}/blob/${tagName}/${e.taskRel})`
+			: e.id;
+	const issueLink = (e) => {
+		const n = slug ? issueById.get(e.id) : null;
+		return n
+			? ` · [issue #${n}](https://github.com/${slug}/issues/${n})`
+			: "";
+	};
 	const lines = [`# Release v${raw}`, "", `**Date:** ${day}`, ""];
 	for (const [type, label] of CATEGORIES) {
 		const group = fresh.filter((e) => e.type === type);
 		if (!group.length) continue;
 		lines.push(`### ${label}`, "");
-		for (const e of group) lines.push(`- ${e.summary} (${e.id})`);
-		lines.push("");
+		for (const e of group) {
+			lines.push(
+				`**${e.summary}** (${taskLink(e)}${e.commit ? ` · ${e.commit}` : ""})`,
+				"",
+			);
+			if (e.note && e.note !== e.summary) lines.push(e.note, "");
+		}
 	}
 	lines.push(
 		"---",
 		"",
 		"<!-- RELEASED:START -->",
-		...fresh.map((e) => `- ${e.id}`),
+		...fresh.map((e) => `- ${taskLink(e)}${issueLink(e)}`),
 		"<!-- RELEASED:END -->",
 		"",
 	);
 	write(abs(base, rel), lines.join("\n"));
 	console.log(`\nWrote ${rel} — ${fresh.length} change(s)\n`);
+	const unnamed = fresh.filter((e) => !e.commit);
+	if (unnamed.length)
+		console.log(
+			`Note    ${unnamed.length} card(s) are not committed yet — the note cannot name their commits: ${unnamed.map((e) => e.id).join(", ")}\n`,
+		);
 	console.log(`Commit  git add ${rel} && git commit -m "docs: release v${raw}"`);
 	console.log(
 		`Tag     agent-kit release --tag v${raw}   (the note becomes the tag message)`,

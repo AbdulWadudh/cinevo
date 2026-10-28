@@ -20,6 +20,8 @@
  *   verify [--full|--baseline]             run the always-tier commands; --full adds milestone rows
  *   harnesses                              list the coding agents on this machine (HOME, PATH, repo)
  *   task new <slug> [--lane quick|planned] open a task and record the baseline run
+ *            [--summary "<one clause>"]    its card title; the issue title in ids: issue (required)
+ *            [--intent "<paragraph>"]      seeds the Intent block; the issue body at mint
  *            [--parent TASK-N]             ... as TASK-N.M, closing on the quick suite
  *            [--from <issue>]              ... from an existing issue, whose number is the id
  *   task show [--id TASK-N]                the active task's scope, plan, evidence and staleness
@@ -28,6 +30,7 @@
  *   task close [--amend "<why>"] [--pr]    quick for a subtask, full suite + archive for the main
  *              [--sync]                   ... and close the task's issue with the final record
  *   task publish [--id TASK-N]             send the task file to its issue (ids: issue only)
+ *   task migrate [--dry-run]               give every archived task the closed issue it never got
  *   task renumber <TASK-N> <TASK-M>|--next change a local id and its references (--file: which one)
  *   task guard [--message <file>]          hook gate: scope (pre-commit), message (commit-msg)
  *   learnings archive                      move entries past the 30 cap into .agent-kit/learnings/

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import TitleHoverCard from "@/components/hover/TitleHoverCard";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
+import DecayBorder from "@/components/media/DecayBorder";
 import type { TMDBMedia } from "@/lib/tmdb";
 
 interface SimilarTitlesProps {
@@ -63,6 +64,7 @@ export default function SimilarTitles({
 										sizes="(max-width: 640px) 130px, 160px"
 										className="object-cover transition duration-400 group-hover:scale-105"
 									/>
+									<DecayBorder />
 									<WishlistHeart
 										item={item}
 										mediaType={mediaType}

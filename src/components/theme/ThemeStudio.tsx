@@ -10,10 +10,13 @@ import {
   publishSiteTheme,
   type SiteThemeAdminState,
 } from "@/app/actions/site-theme";
+import CardEffectPicker from "@/components/theme/CardEffectPicker";
 import DetailLayoutPicker from "@/components/theme/DetailLayoutPicker";
+import HeroEffectPicker from "@/components/theme/HeroEffectPicker";
 import FontsourceBrowser from "@/components/theme/FontsourceBrowser";
 import { ExperienceGrid } from "@/components/theme/ExperienceSwitcher";
 import { accentDelta } from "@/lib/theme/accent";
+import { getCardEffect, getHeroEffect } from "@/lib/theme/card-effects";
 import { getDetailLayout } from "@/lib/theme/detail-layouts";
 import { getExperience } from "@/lib/theme/experiences";
 import {
@@ -87,6 +90,10 @@ export default function ThemeStudio() {
     tokens,
     experience,
     detailLayout,
+    cardEffect,
+    heroEffect,
+    decayRing,
+    cardDistance,
     customizations,
     hasCustomizations,
     isStudioOpen,
@@ -187,8 +194,14 @@ export default function ThemeStudio() {
   const publishedLayout = publishedTheme
     ? getDetailLayout(publishedTheme.detailLayout)
     : null;
+  const publishedEffect = publishedTheme
+    ? getCardEffect(publishedTheme.cardEffect)
+    : null;
+  const publishedHero = publishedTheme
+    ? getHeroEffect(publishedTheme.heroEffect)
+    : null;
   const publishedLabel = publishedTheme
-    ? `${publishedExperience?.name ?? "Cinevo"} · ${publishedPreset?.name ?? publishedTheme.themeId} · ${publishedLayout?.name ?? "Stage"}${publishedTheme.delta ? " with overrides" : ""}`
+    ? `${publishedExperience?.name ?? "Cinevo"} · ${publishedPreset?.name ?? publishedTheme.themeId} · ${publishedLayout?.name ?? "Classic"} · ${publishedEffect?.name ?? "Standard"} cards · ${publishedHero?.name ?? "Standard"} hero${publishedTheme.delta ? " with overrides" : ""}`
     : "Shipped Cinevo palette";
 
   const publishCurrentTheme = useCallback(async () => {
@@ -196,7 +209,7 @@ export default function ThemeStudio() {
     setSiteBusy("publish");
 
     try {
-      const result = await publishSiteTheme({ themeId: theme, experience, detailLayout, delta: customizations });
+      const result = await publishSiteTheme({ themeId: theme, experience, detailLayout, cardEffect, heroEffect, decayRing, cardDistance, delta: customizations });
       if (!result.success) {
         toast.error(result.error ?? "Couldn't publish the site theme");
         return;
@@ -213,7 +226,7 @@ export default function ThemeStudio() {
     } finally {
       setSiteBusy(null);
     }
-  }, [siteBusy, theme, experience, detailLayout, customizations]);
+  }, [siteBusy, theme, experience, detailLayout, cardEffect, heroEffect, decayRing, cardDistance, customizations]);
 
   const resetPublishedTheme = useCallback(async () => {
     if (siteBusy) return;
@@ -376,6 +389,14 @@ export default function ThemeStudio() {
 
                 <Section icon={<Film className="size-3.5" />} title="Details page" delay={0.04}>
                   <DetailLayoutPicker />
+                </Section>
+
+                <Section icon={<Sparkles className="size-3.5" />} title="Card effect" delay={0.05}>
+                  <CardEffectPicker />
+                </Section>
+
+                <Section icon={<Layers className="size-3.5" />} title="Hero carousel" delay={0.055}>
+                  <HeroEffectPicker />
                 </Section>
 
                 <Section icon={<Palette className="size-3.5" />} title="Palette" delay={0.06}>

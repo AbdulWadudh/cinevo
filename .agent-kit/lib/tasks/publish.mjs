@@ -28,6 +28,7 @@ export async function cmdTaskPublish({ root, id }) {
 		die(`${fm.id} is a subtask — its parent's issue carries the family`);
 	try {
 		const issue = await patchIssue(base, issueNumber(fm), {
+			...(fm.summary ? { title: fm.summary } : {}),
 			body: issueBody(text, rel),
 		});
 		console.log(
@@ -48,7 +49,11 @@ export async function syncAfterClose({ base, fm, body, rel, change }) {
 	if (CHILD_ID.test(fm.id || "")) return 0;
 	const n = issueNumber(fm);
 	try {
-		await patchIssue(base, n, { state: "closed", body: issueBody(body, rel) });
+		await patchIssue(base, n, {
+			state: "closed",
+			...(fm.summary ? { title: fm.summary } : {}),
+			body: issueBody(body, rel),
+		});
 		await commentIssue(
 			base,
 			n,

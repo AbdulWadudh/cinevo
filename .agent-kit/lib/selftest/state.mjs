@@ -236,3 +236,53 @@ export function collisionScenario(ctx) {
 		"doctor drops a blocked task's write set",
 	);
 }
+
+export function queueScenario(ctx) {
+	const { tmp, assert, doctorRow, spoken } = ctx;
+	console.log("\n40. the task queue holds requests under fixed statuses");
+	const task = activeTasks(tmp).find((t) => t.fm.status === "IN_PROGRESS");
+	const p = task.path;
+	const withRows = (rows) =>
+		write(
+			p,
+			read(p).replace(
+				/(## Queue[\s\S]*?\| # \| Request \| Status \| Subtask \|\r?\n\|[^\n]*\n)([\s\S]*?)(?=\n## Plan)/,
+				`$1${rows}\n`,
+			),
+		);
+	assert(read(p).includes("## Queue"), "a new task carries the queue section");
+	withRows("| 1 | finish the export | someday |  |");
+	const badStatus = doctorRow("task queue");
+	assert(
+		badStatus.status === "FAIL" && badStatus.detail.includes("someday"),
+		"doctor fails a status outside the four the queue allows",
+	);
+	withRows("| 1 | finish the export | queued | TASK-999.1 |");
+	assert(
+		doctorRow("task queue").status === "FAIL",
+		"a queued row cannot name a subtask",
+	);
+	withRows("| 1 | finish the export | in progress |  |");
+	assert(
+		doctorRow("task queue").status === "FAIL",
+		"an in-progress row must name its subtask",
+	);
+	withRows(
+		"| 1 | finish the export | queued |  |\n| 1 | fix the import | queued |  |",
+	);
+	assert(
+		doctorRow("task queue").status === "FAIL",
+		"a reused row number fails",
+	);
+	withRows("| 1 | finish the export | queued |  |");
+	assert(
+		doctorRow("task queue").status === "PASS",
+		"a well-formed queue passes",
+	);
+	const held = spoken(() => cmdTaskClose({ root: tmp }));
+	assert(
+		held.code === 1 && held.out.includes("queue still open"),
+		"close refuses while a queue row is open",
+	);
+	withRows("");
+}

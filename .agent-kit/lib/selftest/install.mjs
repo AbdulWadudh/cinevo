@@ -2,7 +2,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { MANIFEST, PROJECT, SCRIPT_ROOT, TASK_INDEX } from "../consts.mjs";
+import { MANIFEST, PROJECT, SCRIPT_ROOT, TASK_INDEX, TASKS } from "../consts.mjs";
 import { cmdDoctor } from "../doctor/index.mjs";
 import { abs, exists, read, run, write } from "../io.mjs";
 import { cmdSetup } from "../setup.mjs";
@@ -144,6 +144,13 @@ export function copyScenario(ctx) {
 	console.log("\n8. a manual copy can adopt itself in place");
 	shared.junkDir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-kit-copy-"));
 	fs.cpSync(SCRIPT_ROOT, shared.junkDir, { recursive: true });
+	// A self-copy of an issue-id repo cannot switch to local ids while a task is open, and this
+	// scenario is about provenance: start the copy with no in-flight task.
+	const copyActive = abs(shared.junkDir, `${TASKS}/active`);
+	fs.rmSync(copyActive, { recursive: true, force: true });
+	fs.mkdirSync(copyActive, { recursive: true });
+	// This scenario is about provenance, not issue ids: local mode keeps it offline and sync,
+	// so the assertion is on an exit code rather than an unresolved setup promise.
 	assert(
 		quiet(() =>
 			cmdSetup({
@@ -151,6 +158,7 @@ export function copyScenario(ctx) {
 				sourceRoot: shared.junkDir,
 				sourceSpec: shared.junkDir,
 				noRtk: true,
+				ids: "local",
 			}),
 		) === 0,
 		"setup exits 0 on a self-copy",

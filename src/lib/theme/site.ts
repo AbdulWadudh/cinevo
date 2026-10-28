@@ -1,6 +1,18 @@
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import {
+  DEFAULT_CARD_DISTANCE,
+  DEFAULT_CARD_EFFECT_ID,
+  DEFAULT_DECAY_RING,
+  DEFAULT_HERO_EFFECT_ID,
+  isCardDistance,
+  isCardEffectId,
+  isDecayRing,
+  isHeroEffectId,
+  type CardEffectId,
+  type HeroEffectId,
+} from "./card-effects";
+import {
   DEFAULT_DETAIL_LAYOUT_ID,
   isDetailLayoutId,
   type DetailLayoutId,
@@ -18,6 +30,10 @@ export interface SiteThemeState {
   delta?: SiteThemeDelta;
   experience: string;
   detailLayout: DetailLayoutId;
+  cardEffect: CardEffectId;
+  heroEffect: HeroEffectId;
+  decayRing: number;
+  cardDistance: number;
 }
 
 const PRESET_IDS = new Set(themePresets.map((preset) => preset.id));
@@ -31,11 +47,15 @@ const CUSTOMIZABLE_KEYS = new Set<string>(CUSTOMIZABLE_THEME_KEYS);
 export function normalizeSiteTheme(input: unknown): SiteThemeState | null {
   if (!input || typeof input !== "object") return null;
 
-  const { themeId, delta, experience, detailLayout } = input as {
+  const { themeId, delta, experience, detailLayout, cardEffect, heroEffect, decayRing, cardDistance } = input as {
     themeId?: unknown;
     delta?: unknown;
     experience?: unknown;
     detailLayout?: unknown;
+    cardEffect?: unknown;
+    heroEffect?: unknown;
+    decayRing?: unknown;
+    cardDistance?: unknown;
   };
   if (typeof themeId !== "string" || !PRESET_IDS.has(themeId)) return null;
 
@@ -59,6 +79,10 @@ export function normalizeSiteTheme(input: unknown): SiteThemeState | null {
     detailLayout: isDetailLayoutId(detailLayout)
       ? detailLayout
       : DEFAULT_DETAIL_LAYOUT_ID,
+    cardEffect: isCardEffectId(cardEffect) ? cardEffect : DEFAULT_CARD_EFFECT_ID,
+    heroEffect: isHeroEffectId(heroEffect) ? heroEffect : DEFAULT_HERO_EFFECT_ID,
+    decayRing: isDecayRing(decayRing) ? decayRing : DEFAULT_DECAY_RING,
+    cardDistance: isCardDistance(cardDistance) ? cardDistance : DEFAULT_CARD_DISTANCE,
     ...(Object.keys(normalized).length > 0 ? { delta: normalized } : {}),
   };
 }
@@ -84,6 +108,10 @@ export async function getSiteTheme(): Promise<SiteThemeState | null> {
           delta: row.delta,
           experience: row.experience,
           detailLayout: row.detailLayout,
+          cardEffect: row.cardEffect,
+          heroEffect: row.heroEffect,
+          decayRing: row.decayRing,
+          cardDistance: row.cardDistance,
         })
       : null;
     return lastKnownTheme;

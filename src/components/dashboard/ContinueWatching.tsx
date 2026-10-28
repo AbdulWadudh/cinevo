@@ -7,6 +7,7 @@ import { useTransition } from "react";
 import { deleteWatchEntries } from "@/app/actions/progress";
 import TitleHoverCard from "@/components/hover/TitleHoverCard";
 import WishlistHeart from "@/components/wishlist/WishlistHeart";
+import DecayBorder from "@/components/media/DecayBorder";
 import type { TMDBMedia } from "@/lib/tmdb";
 import {
 	entryKey,
@@ -115,6 +116,7 @@ export default function ContinueWatching() {
 											sizes="(max-width: 640px) 170px, 210px"
 											className="object-cover brightness-[0.7] group-hover:brightness-[0.45] transition-all duration-500 scale-100 group-hover:scale-105"
 										/>
+										<DecayBorder />
 
 										{/* Progress Fill Bar (only when there's real progress) */}
 										{percent > 0 && (

@@ -30,6 +30,10 @@ export function parseThemeCookie<T extends BaseTokens = BaseTokens>(
       def: typeof parsed.def === "string" ? parsed.def : undefined,
       x: typeof parsed.x === "string" ? parsed.x : undefined,
       l: typeof parsed.l === "string" ? parsed.l : undefined,
+      ce: typeof parsed.ce === "string" ? parsed.ce : undefined,
+      he: typeof parsed.he === "string" ? parsed.he : undefined,
+      cr: typeof parsed.cr === "number" ? parsed.cr : undefined,
+      cd: typeof parsed.cd === "number" ? parsed.cd : undefined,
     };
   } catch {
     return { id: fallbackThemeId };

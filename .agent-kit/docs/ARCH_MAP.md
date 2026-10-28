@@ -15,6 +15,9 @@ One row per directory that exists. An invented layer is worse than a missing one
 | `src/lib/supabase/` | Supabase client factories for browser, server and the session refresher | side-effect (I/O) | imported by auth and the proxy |
 | `src/lib/theme/` | theme, experience and detail-layout resolution: presets, cookie codec, tokens, provider | mixed; `active.ts` is the server entry | imported by the root layout and pages |
 | `src/lib/theme/studio/` | Theme Studio: cookie parse/validate, token → CSS vars, provider, server style tag | mixed | re-exported through `src/lib/theme/studio/index.ts` |
+| `src/components/reactbits/card-swap/` | the ReactBits CardSwap deck: slot layout, spring/bounce, drag, parallax, hover spread, autoplay | client | takes custom children; CSS vars from the theme |
+| `src/lib/theme/card-effects.ts` | the two independent card-effect axes (`cardEffect`, `heroEffect`) and the decay-ring bounds | shared | imported by the theme, Studio and home cards |
+| `src/components/media/DecayBorder.tsx` | the reusable decay border: accent ring + SVG-noise mask, 10fps drift, pointer shift | client | render inside a relative rounded media container; per-surface list in [CARD_SURFACES.md](CARD_SURFACES.md) |
 | `src/components/watch/detail/` | the three Cinevo details layouts plus the one props/format contract they share | client components | imports `src/components/watch/`, `src/components/reactbits/`, `src/lib/tmdb.ts` types |
 | `src/lib/radio/` | the radio category taxonomy distilled from the upstream index | pure | imported by radio actions and UI |
 | `src/lib/stores/` | tiny cross-component stores (persistence options) | mixed | imported by components |

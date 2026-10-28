@@ -12,11 +12,13 @@ the one task it names; not the folders.
    five newest closes, what is in flight, the gate, the last evidence, and one next action —
    reading it replaces guessing where the session stopped.
 2. **Check Active** below. If a task is in progress, open it and resume from its last recorded
-   step. Do not start a second one. A `BLOCKED` task does not hold the slot: its question waits
-   in the file until `agent-kit task resume` (the owner has answered), and only then is it the
-   session's work again.
-3. **Otherwise open a task:** `agent-kit task new <slug> --lane quick|planned`. A task too
-   large for one sitting splits: add `--parent TASK-N` and it opens `TASK-N.M` (see Subtasks).
+   step. Do not start a second task: a request that arrives now is its subtask (see Subtasks).
+   A `BLOCKED` task does not hold the slot: its question waits in the file until
+   `agent-kit task resume` (the owner has answered), and only then is it the session's work
+   again.
+3. **Otherwise open a task:** `agent-kit task new <slug> --lane quick|planned`. A request that
+   arrives while a task is open, or work too large for one sitting, becomes a subtask: add
+   `--parent TASK-N` and it opens `TASK-N.M` (see Subtasks).
 4. **Looking for what is next?** Read `BACKLOG.md` — parked candidates, not tasks. A row
    becomes work only when the owner picks it, and then it is deleted.
 5. **Never work from memory.** The task file is the state; if a fact is not in it, it did not
@@ -31,32 +33,50 @@ The id source is one row in `.agent-kit/project.md` (`| ids | local |`), written
   and the change cards), floor `TASK-100`. Fully offline. Two branches that took the same
   number collide at merge; `task renumber TASK-N --next` moves the one that lost and rewrites
   its file name, its children and every `depends_on`.
-- **`issue`** — the id is the GitHub issue number: `task new` mints the issue, `--from <n>`
-  imports one a teammate opened, `task publish` sends the approved plan at G1, and
-  `task close --sync` closes the issue with the final record. No other path touches the network.
+- **`issue`** — the id is the GitHub issue number: `task new` mints the issue, `--summary` is its
+  title and `--intent` its body, `--from <n>` imports one a teammate opened, `task publish` sends
+  the approved plan at G1, and `task close --sync` closes the issue with the final record. No
+  other path touches the network. A mint that lands on a number an archived task already carries
+  refuses and names both.
+- **Backfill** — `task migrate` opens one closed issue per archived task, titled `TASK-N — summary`
+  and carrying the card's paragraph, so a repo that ran on local ids first shows its history on
+  GitHub. Titles starting with an id are the match: a second run adds nothing.
 
 `doctor`'s `task ids` and `task ids unique` rows check the mode, and one id per file and card.
 
 ## Subtasks
 
-A subtask is the same task file with a dotted id and a `parent:` line. The main task is QUEUED
-while one of its subtasks is in progress; only one subtask runs at a time. A subtask closes on
-the quick suite and stays DONE in `active/`; closing the last one puts the main task back in
-progress.
+A request that arrives while a task is open becomes its subtask, not a new task; only a separate
+delivery — another domain, its own dependency or contract, or more than one sitting — earns a
+new task. A subtask is the same task file with a dotted id and a `parent:` line. The main task is
+QUEUED while one of its subtasks is in progress; only one subtask runs at a time. A subtask
+closes on the quick suite and stays DONE in `active/`; closing the last one puts the main task
+back in progress.
 
 The main close is the milestone: it refuses while a subtask is open, runs the full suite —
 build included — and errors found there are fixed at that moment, not deferred. Green,
-the family archives together under the main id: one change file, one commit message, and the
-write set is the main task's files plus every subtask's.
+the family archives together under the main id: one change file, and the write set is the main
+task's files plus every subtask's.
+
+### Queue
+
+A later request lands in the task's `## Queue` as `queued`: it does not open a new task. Work it
+as a subtask (`task new --parent TASK-N`), set the row `in progress` with that `TASK-N.M` id,
+and `done` when the subtask closes. A row that will not be worked is `dropped`, or moved to
+`BACKLOG.md`; `task close` refuses while a row is `queued` or `in progress`.
+
+Only a separate delivery — another domain, its own dependency or contract, or more than one
+sitting — may be a new task. Put that choice to the owner with both options and a
+recommendation; the default is the subtask.
 
 ## Lanes
 
 | | QUICK | PLANNED |
 |---|---|---|
-| **Eligible when** | three files or fewer, one domain, reversible with `git revert`, no contract change | everything else |
+| **Eligible when** | reversible with `git revert`, one domain, no contract change | everything else |
 | **G1 — plan** | record intent in the task and proceed | **halt** for approval before the first edit |
 | **G2 — result** | `task close` runs the full suite and closes (a subtask closes on the quick suite, lint included; its main task runs build) | **halt** for approval after the suite, before close |
-| **Typical** | typo, doc fix, one-file bug, a test | feature, refactor, schema, interface change |
+| **Typical** | typo, doc fix, a small bug fix, a test | feature, refactor, schema, interface change |
 
 ## Gates
 

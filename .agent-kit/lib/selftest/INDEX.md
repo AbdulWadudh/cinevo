@@ -14,7 +14,7 @@ owns the area, not at a 1,700-line script. Scenarios share one throwaway repo, s
 | `tasks.mjs` | 6–7, 11: scope guard, close, archive, card, red evidence | the close contract is wrong |
 | `rules.mjs` | 9–10, 17, 20–21: rules, `--fix`, learnings, router, backlog | a repo invariant drifts |
 | `loop.mjs` | 22–24: loop guard, command tiers, stale evidence | `verify` misbehaves |
-| `state.mjs` | 14, 25, 29: inventory, blocked slot, collisions | task state or the write set is wrong |
+| `state.mjs` | 14, 25, 29, 40: inventory, blocked slot, collisions, queue | task state or the write set is wrong |
 | `family.mjs` | 26–27: subtask close, family delivery | a parent/subtask flow breaks |
 | `surface.mjs` | 15–16, 18–19, 30–32: pointers, identity, harnesses, commit message, hooks, budget | a harness-facing file or hook is wrong |
 | `release.mjs` | 13, 28, 33–34: change log, release note, tag pin | a release or tag is wrong |

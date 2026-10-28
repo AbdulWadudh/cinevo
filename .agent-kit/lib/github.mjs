@@ -89,6 +89,21 @@ export async function api(root, path, { method = "GET", body } = {}) {
 }
 
 export const repoInfo = (root) => api(root, "");
+
+/** Every issue, open or closed: `migrate` reads it as the record of which tasks already have one. */
+export async function listIssues(root) {
+	const all = [];
+	for (let page = 1; ; page++) {
+		const rows = await api(
+			root,
+			`/issues?state=all&per_page=100&page=${page}`,
+		);
+		if (!Array.isArray(rows) || rows.length === 0) return all;
+		all.push(...rows);
+		if (rows.length < 100) return all;
+	}
+}
+
 export const mintIssue = (root, body) =>
 	api(root, "/issues", { method: "POST", body });
 export const fetchIssue = (root, n) => api(root, `/issues/${n}`);

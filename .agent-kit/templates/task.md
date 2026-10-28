@@ -26,6 +26,14 @@ summary: ""
 rests on (`path:line`, a command's result, or the owner's words). No explanation.
 - <!-- FILL:decision -->
 
+## Queue — requests that arrive while this task is open
+
+Append each request here instead of opening a new task. A row is `queued`, becomes `in progress`
+with its `TASK-N.M` id when work starts, and ends `done` or `dropped`.
+
+| # | Request | Status | Subtask |
+|---|---|---|---|
+
 ## Plan
 
 1. <!-- FILL:step -->
@@ -48,7 +56,7 @@ rests on (`path:line`, a command's result, or the owner's words). No explanation
 
 ## Close-out
 
-**Summary** — <!-- FILL:summary — one short paragraph: what the task did and why. Reused in the change card and the commit body. -->
+**Summary** — <!-- FILL:summary — one short paragraph: what the task did and why. The detail lives here; the front-matter summary is only the 140-character title. Reused in the closing commit's body. -->
 
 **Docs updated** — <!-- FILL:docs-updated — or "none needed: <reason>" -->
 

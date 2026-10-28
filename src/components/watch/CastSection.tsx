@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import PersonHoverCard from "@/components/hover/PersonHoverCard";
+import DecayBorder from "@/components/media/DecayBorder";
 import type { TMDBCast } from "@/lib/tmdb";
 
 interface CastSectionProps {
@@ -54,6 +55,7 @@ export default function CastSection({ cast }: CastSectionProps) {
 												sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 220px"
 												className="object-cover object-top transition duration-500 group-hover:scale-105"
 											/>
+											<DecayBorder />
 										</div>
 
 										{/* Name */}

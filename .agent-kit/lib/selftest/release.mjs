@@ -37,10 +37,30 @@ export function changeLogScenario(ctx) {
 export function releaseScenarios(ctx) {
 	const { tmp, assert, quiet, doctorRow } = ctx;
 	console.log("\n28. a release collects the change files no release claims");
-	assert(
-		quiet(() => cmdRelease({ root: tmp, version: "v0.1.0" })) === 0,
-		"release writes the version file",
+	const card = expand(tmp, LOG_DIR).find(
+		(rel) => rel.includes("TASK-101") && rel.endsWith(".md"),
 	);
+	write(abs(tmp, card), `${read(abs(tmp, card))}\n`);
+	git(tmp, ["add", "-A", LOG_DIR]);
+	git(tmp, [
+		"-c",
+		"user.email=t@t",
+		"-c",
+		"user.name=t",
+		"commit",
+		"-m",
+		"close TASK-101",
+	]);
+	const sha = (git(tmp, ["rev-parse", "--short", "HEAD"]) || "").trim();
+	assert(!!card && sha.length >= 7, "the card is committed before the note is cut");
+	const priorRepo = process.env.GITHUB_REPOSITORY;
+	process.env.GITHUB_REPOSITORY = "example/fixture";
+	const releaseCode = quiet(() =>
+		cmdRelease({ root: tmp, version: "v0.1.0" }),
+	);
+	if (priorRepo === undefined) delete process.env.GITHUB_REPOSITORY;
+	else process.env.GITHUB_REPOSITORY = priorRepo;
+	assert(releaseCode === 0, "release writes the version file");
 	const releaseRel = ".agent-kit/releases/v0.1.0.md";
 	assert(
 		exists(abs(tmp, releaseRel)),
@@ -53,9 +73,22 @@ export function releaseScenarios(ctx) {
 	);
 	assert(
 		releaseText.includes("### Changed") &&
-			releaseText.includes("- fixture change (TASK-101)") &&
+			new RegExp(
+				`\\*\\*fixture change\\*\\* \\(\\[TASK-101\\]\\(https://github\\.com/example/fixture/blob/v0\\.1\\.0/\\.agent-kit/tasks/archive/[^)]+\\) · ${sha}\\)`,
+			).test(releaseText) &&
+			releaseText.includes(
+				"The fixture changed one file, and the change file says so.",
+			) &&
+			!releaseText.includes("- fixture change (TASK-101)") &&
 			!releaseText.includes("Touched Modules"),
-		"the release lists each task under its category, with no file inventory",
+		"the note quotes the card's paragraph under a bold title that links its task and names its commit",
+	);
+	assert(
+		new RegExp(
+			`^- \\[TASK-101\\]\\(https://github\\.com/example/fixture/blob/v0\\.1\\.0/\\.agent-kit/tasks/archive/[^)]+\\)$`,
+			"m",
+		).test(releaseText),
+		"the released block links the task to its archived file",
 	);
 	assert(
 		/<!-- RELEASED:START -->[\s\S]*TASK-101[\s\S]*<!-- RELEASED:END -->/.test(

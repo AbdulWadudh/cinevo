@@ -17,10 +17,9 @@ export const COMMIT_TYPES =
 	"feat|fix|docs|refactor|test|chore|perf|build|ci|style|revert";
 
 /**
- * Message gate, run by `.agent-kit/githooks/commit-msg`. The subject names the type and the task; the
- * body is the change file's `## What changed` paragraph. A repo with no task yet (the setup
- * fill commit) has no
- * ID to name, so the gate stays out of the way until the first task exists.
+ * Message gate, run by `.agent-kit/githooks/commit-msg`. The subject names the type and the task;
+ * the body states what that commit changed and why. A repo with no task yet (the setup fill
+ * commit) has no ID to name, so the gate stays out of the way until the first task exists.
  *
  * Advisory by design: a shared checkout must never block a human's `git commit`. A wrong
  * message prints the expected shape and exits 0; the rule itself stays binding on the agent.
@@ -58,7 +57,7 @@ export function guardCommitMessage(base, file) {
 		console.error("  want:  <type> (TASK-ID): <summary>");
 		console.error(`  types: ${COMMIT_TYPES.replaceAll("|", ", ")}`);
 		console.error(
-			"  body:  a blank line, then the change file's What-changed paragraph",
+			"  body:  a blank line, then what this commit changed and why",
 		);
 		console.error(
 			"  The commit proceeds; rewrite it with `git commit --amend`.\n",

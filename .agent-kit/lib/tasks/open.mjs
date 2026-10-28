@@ -25,11 +25,13 @@ export function cmdTaskNew({
 	noBaseline,
 	parent,
 	from,
+	summary,
+	intent,
 }) {
 	const base = path.resolve(root || process.cwd());
 	if (!slug && !from)
 		die(
-			"usage: task new <slug> [--lane quick|planned] [--parent TASK-N] [--from <issue>]",
+			'usage: task new <slug> [--lane quick|planned] [--summary "<one clause>"] [--intent "<paragraph>"] [--parent TASK-N] [--from <issue>]',
 		);
 	const tasks = activeTasks(base);
 
@@ -61,13 +63,15 @@ export function cmdTaskNew({
 			lane,
 			parent,
 			noBaseline,
+			summary,
+			intent,
 		});
 	}
 
 	const inProgress = tasks.filter((t) => t.fm.status === "IN_PROGRESS");
 	if (inProgress.length && !force)
 		die(
-			`a task is already in progress (${inProgress[0].file}). Close it, block it, or pass --force.`,
+			`a task is already in progress (${inProgress[0].file}). Fold this request in as its subtask (\`task new <slug> --parent ${inProgress[0].fm.id}\`), close it, block it, or pass --force.`,
 		);
 
 	// The repo's one id source. Both remote branches are async; the local one stays synchronous
@@ -85,19 +89,37 @@ export function cmdTaskNew({
 					slug: slug || issue.title,
 					lane,
 					noBaseline,
-					intent: issue.intent,
+					summary: summary || issue.title,
+					intent: intent || issue.intent,
 				}),
 			)
 			.catch(fail);
-	if ((idsMode(base) || "local") === "issue")
-		return mintTask(base, slug)
-			.then((id) => openTask(base, { id, slug, lane, noBaseline }))
+	if ((idsMode(base) || "local") === "issue") {
+		// An issue title is read by people who never open the task file, so the slug is not enough.
+		if (!summary) {
+			console.error(
+				'agent-kit: ids: issue mints an issue people read — pass --summary "<one clause>" for its title\n',
+			);
+			return 1;
+		}
+		return mintTask(base, { summary, intent })
+			.then((id) =>
+				openTask(base, { id, slug, lane, noBaseline, summary, intent }),
+			)
 			.catch(fail);
-	return openTask(base, { id: `TASK-${nextId(base)}`, slug, lane, noBaseline });
+	}
+	return openTask(base, {
+		id: `TASK-${nextId(base)}`,
+		slug,
+		lane,
+		noBaseline,
+		summary,
+		intent,
+	});
 }
 
 /** Write the task file from the template, refresh the index, and record the baseline. */
-function openTask(base, { id, slug, lane, parent, noBaseline, intent }) {
+function openTask(base, { id, slug, lane, parent, noBaseline, intent, summary }) {
 	if (!exists(abs(base, TASK_TEMPLATE))) die(`missing ${TASK_TEMPLATE}`);
 	const today = new Date().toISOString().slice(0, 10);
 	const file = `${today}-${id}-${slugify(slug)}.md`;
@@ -106,10 +128,12 @@ function openTask(base, { id, slug, lane, parent, noBaseline, intent }) {
 		.replaceAll("{{ID}}", id)
 		.replaceAll("{{DATE}}", today)
 		.replaceAll("{{LANE}}", (lane || "planned").toUpperCase())
-		.replaceAll("{{TITLE}}", slug.replace(/-/g, " "))
+		.replaceAll("{{TITLE}}", () => summary || String(slug).replace(/-/g, " "))
 		.replaceAll("{{BASELINE}}", baseline);
+	if (summary)
+		body = body.replace(/^summary:.*$/m, () => `summary: ${JSON.stringify(summary)}`);
 	if (intent)
-		body = body.replace(/<!--\s*FILL:intent[\s\S]*?-->/, intent);
+		body = body.replace(/<!--\s*FILL:intent[\s\S]*?-->/, () => intent);
 	if (parent)
 		body = /^parent:.*$/m.test(body)
 			? body.replace(/^parent:.*$/m, `parent: ${parent}`)

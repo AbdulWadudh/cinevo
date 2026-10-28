@@ -150,3 +150,25 @@ body {
 .hero-zoom {
   animation: heroZoom 25s ease-in-out infinite alternate;
 }
+
+/* Mobile: clip off-canvas rails and the stacked deck so the page never scrolls
+   sideways and leaves a dead strip beside the content. */
+html,
+body {
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+
+@media (pointer: coarse), (max-width: 1024px) {
+  html {
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}

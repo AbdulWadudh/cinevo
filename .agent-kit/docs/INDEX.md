@@ -21,12 +21,13 @@ know where a boundary sits. Open one page, not all three.
 | [ARCH_MAP.md](ARCH_MAP.md) | directory boundaries, responsibilities, pure vs side-effect, import rules |
 | [API_SKELETON.md](API_SKELETON.md) | exported types and function signatures |
 | [ENTRY_POINTS.md](ENTRY_POINTS.md) | boot sequence and request or event flow |
+| [CARD_SURFACES.md](CARD_SURFACES.md) | every media card, its owner and whether it carries the decay border |
 
-No extra pages yet. This repo has three domains that would earn one when they next change:
-the theme/experience resolver (`src/lib/theme/`), the radio hydration pipeline
-(`src/app/actions/radio.ts` + `src/lib/radio/`), and the local-first watch sync
-(`src/lib/watchStore.ts` + `src/lib/watchSyncClient.ts`). Each is documented in
-`ARCH_MAP.md` and `ENTRY_POINTS.md` until a page is worth its own file.
+Three domains would earn a page when they next change: the theme/experience resolver
+(`src/lib/theme/`), the radio hydration pipeline (`src/app/actions/radio.ts` +
+`src/lib/radio/`), and the local-first watch sync (`src/lib/watchStore.ts` +
+`src/lib/watchSyncClient.ts`). Each is documented in `ARCH_MAP.md` and `ENTRY_POINTS.md`
+until a page is worth its own file.
 
 ## Keeping this true
 

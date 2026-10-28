@@ -140,6 +140,10 @@ model SiteTheme {
   themeId      String
   experience   String   @default("cinevo")
   detailLayout String   @default("stage")
+  cardEffect   String   @default("none")
+  heroEffect   String   @default("none")
+  decayRing Int @default(2)
+  cardDistance Int @default(50)
   delta        Json?
   updatedAt    DateTime @updatedAt
 }

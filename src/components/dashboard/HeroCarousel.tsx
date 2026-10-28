@@ -2,9 +2,12 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, useReducedMotion } from "motion/react";
 import { Star, Play, ChevronLeft, ChevronRight, Clapperboard, Info } from "lucide-react";
+import CardSwap from "@/components/reactbits/card-swap";
+import SwapCard from "@/components/dashboard/SwapCard";
 import { TMDBMedia } from "@/lib/tmdb";
 import { useTrailer } from "@/components/TrailerProvider";
 import { FocusSection, FocusableLink, FocusableButton } from "@/components/tv/Focusable";
@@ -23,10 +26,15 @@ const ENGAGEMENT_EVENTS = ["pointermove", "pointerdown", "touchstart", "keydown"
 
 export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps) {
   const { openTrailer } = useTrailer();
-  const { experience } = useTheme();
+  const router = useRouter();
+  const { experience, heroEffect, cardDistance } = useTheme();
   const activeExperience = getExperience(experience);
+  const swapHero = heroEffect === "swap" && activeExperience.id === "cinevo";
   const reduceMotion = useReducedMotion();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [frontIndex, setFrontIndex] = useState(0);
+  const [deck, setDeck] = useState({ width: 0, height: 0 });
+  const deckRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const hoveredRef = useRef(false);
 
@@ -70,11 +78,31 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
   }, [activeExperience.hero.interval, carouselItems.length, stopAutoPlay]);
 
   useEffect(() => {
-    if (carouselItems.length > 0) {
+    if (carouselItems.length > 0 && !swapHero) {
       startAutoPlay();
     }
     return () => stopAutoPlay();
-  }, [carouselItems.length, startAutoPlay, stopAutoPlay]);
+  }, [carouselItems.length, startAutoPlay, stopAutoPlay, swapHero]);
+
+  useEffect(() => {
+    if (!swapHero) return;
+    const element = deckRef.current;
+    if (!element) return;
+    const section = element.closest("section");
+    const measure = () => {
+      const width = Math.round(element.clientWidth * 0.94);
+      const height = Math.round(width * 0.62);
+      setDeck((previous) =>
+        previous.width === width && previous.height === height
+          ? previous
+          : { width, height },
+      );
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    if (section) observer.observe(section);
+    return () => observer.disconnect();
+  }, [swapHero]);
 
   const handlePrev = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -95,10 +123,66 @@ export default function HeroCarousel({ items, trailers = {} }: HeroCarouselProps
 
   if (carouselItems.length === 0) return null;
 
+  if (swapHero) {
+    return (
+      <section
+        data-xp-hero=""
+        className="relative mb-8 flex min-h-[100dvh] w-full flex-col items-center justify-center overflow-hidden py-8"
+      >
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(var(--accent-rgb),0.16),transparent_60%)]" />
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-6">
+          <div ref={deckRef} className="w-full">
+          {deck.width > 0 && (
+            <CardSwap
+              width={deck.width}
+              height={deck.height}
+              cardDistance={cardDistance}
+              verticalDistance={70}
+              depth={90}
+              skewAmount={0}
+              visibleCards={4}
+              delay={4000}
+              autoplay
+              pauseOnHover
+              draggable
+              speed={1}
+              bounce={0.35}
+              parallax={0.5}
+              hoverSpread={0.12}
+              dim={0.5}
+              cardRadius={18}
+              intro
+              onChange={(index) => setFrontIndex(index)}
+              onCardClick={(index) => {
+                if (index !== frontIndex) return;
+                const item = carouselItems[index];
+                if (item) {
+                  router.push(`/watch/${item.media_type || "movie"}/${item.id}`);
+                }
+              }}
+            >
+              {carouselItems.map((item, index) => (
+                <SwapCard
+                  key={item.id}
+                  item={item}
+                  mediaType={item.media_type === "tv" ? "tv" : "movie"}
+                  trailers={trailers}
+                  engaged={engaged}
+                  isFront={index === frontIndex}
+                />
+              ))}
+            </CardSwap>
+          )}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section 
       data-xp-hero=""
-      className="relative w-full h-[85vh] min-h-[500px] max-h-[850px] overflow-hidden mb-8 group/hero"
+      className="relative w-full h-[100dvh] min-h-[500px] overflow-hidden mb-8 group/hero"
       onMouseEnter={() => { hoveredRef.current = true; }}
       onMouseLeave={() => { hoveredRef.current = false; }}
     >

@@ -178,6 +178,27 @@ export function currentTask(root, id) {
 	return hit[0].file;
 }
 
+/** The `## Queue` table as cells: number, request, status, subtask. Shape only; doctor judges. */
+export function queueRows(text) {
+	const m = (text || "").match(/\n## Queue[^\n]*\n([\s\S]*?)(?=\n## |$)/);
+	if (!m) return [];
+	return m[1]
+		.split(/\r?\n/)
+		.filter((l) => l.trim().startsWith("|"))
+		.map((l) =>
+			l
+				.split("|")
+				.slice(1, -1)
+				.map((c) => c.replace(/`/g, "").trim()),
+		)
+		.filter(
+			(c) =>
+				c.length &&
+				c[0].toLowerCase() !== "#" &&
+				!c.every((cell) => /^:?-+:?$/.test(cell)),
+		);
+}
+
 /** A `**Field** — …` block in a task's prose, up to the next field, comment or heading. */
 export function closeOutField(text, name) {
 	const m = (text || "").match(

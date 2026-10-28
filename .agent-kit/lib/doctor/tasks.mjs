@@ -20,6 +20,7 @@ import {
 	ID_MODES,
 	idsMode,
 	parentId,
+	queueRows,
 } from "../taskfile.mjs";
 import { blockedState } from "../verify/evidence.mjs";
 
@@ -189,6 +190,45 @@ export function taskChecks({ base, add }) {
 		subtaskProblems.length ? "FAIL" : "PASS",
 		"subtasks",
 		subtaskProblems.join(", "),
+	);
+
+	// 5d. the queue captures requests; it is not a second backlog. Statuses are fixed, and a
+	// started row names this task's own subtask, so a row cannot point at someone else's work.
+	const queueProblems = [];
+	for (const task of activeTasks(base)) {
+		if (CHILD_ID.test(task.fm.id || "")) continue;
+		const allowed = new Set(["queued", "in progress", "done", "dropped"]);
+		const seen = new Set();
+		for (const cells of queueRows(task.text)) {
+			const [n, request, status, sub] = cells;
+			if (cells.length !== 4) {
+				queueProblems.push(`${task.file}: a row needs 4 cells`);
+				continue;
+			}
+			if (!/^\d+$/.test(n))
+				queueProblems.push(`${task.file}: row "${n || "(no #)"}" is not a number`);
+			else if (seen.has(n))
+				queueProblems.push(`${task.file}: row ${n} duplicate`);
+			else seen.add(n);
+			if (!request)
+				queueProblems.push(`${task.file}: row ${n} has no request`);
+			if (!allowed.has(status))
+				queueProblems.push(`${task.file}: row ${n} status "${status}"`);
+			else if (status === "queued" || status === "dropped") {
+				if (sub)
+					queueProblems.push(`${task.file}: row ${n} is ${status} but names ${sub}`);
+			} else if (!sub)
+				queueProblems.push(`${task.file}: row ${n} is ${status} with no subtask`);
+			else if (!sub.startsWith(`${task.fm.id}.`))
+				queueProblems.push(`${task.file}: row ${n} subtask ${sub} is not under ${task.fm.id}`);
+			else if (!byId.has(sub))
+				queueProblems.push(`${task.file}: row ${n} subtask ${sub} is not active`);
+		}
+	}
+	add(
+		queueProblems.length ? "FAIL" : "PASS",
+		"task queue",
+		queueProblems.slice(0, 4).join(", "),
 	);
 
 	// 5b. parked work is a candidate, not a second task list: the vocabulary and identity are
