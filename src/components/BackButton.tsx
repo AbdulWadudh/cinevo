@@ -4,7 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
-/** Goes back in browser history; falls back to a route when opened directly. */
+/** Goes to the fallback route (home by default) instead of the previous entry. */
 export default function BackButton({
   fallback = "/",
   label = "Back",
@@ -16,18 +16,10 @@ export default function BackButton({
 }) {
   const router = useRouter();
 
-  const goBack = () => {
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      router.back();
-    } else {
-      router.push(fallback);
-    }
-  };
-
   return (
     <button
       type="button"
-      onClick={goBack}
+      onClick={() => router.push(fallback)}
       className={
         className ??
         "inline-flex items-center gap-1.5 text-xs text-fg-secondary bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] hover:text-fg px-3.5 py-2 rounded-lg transition-all cursor-pointer"
