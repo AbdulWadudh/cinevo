@@ -2,341 +2,156 @@
 
 **A cinema that fits in a browser tab.**
 
-Cinevo is a streaming front-end that behaves like a premium app rather than a
-catalogue with links. Trailers play inline on the hero. Cards lift under the
-cursor. Rows stagger in as you scroll. Your history follows you between devices,
-your remote's D-pad works on the TV in the lounge, and when you run out of things
-to watch there's a wall of live radio from ninety-odd countries.
+Cinevo is a streaming front-end for movies, TV and live radio — not a catalogue with links.
+Trailers play inline on the hero, cards preview under the cursor, watch history follows you
+between devices, the TV D-pad works, and a live-radio wing carries its own player. Two Studio
+axes repaint the site: four clone experiences (Cinevo, Netflix, Disney+ Hotstar, Apple TV+) and
+a theme/typography/radius panel.
 
-Built with **Next.js 16**, **React 19**, **Prisma** and **TMDB**.
+## 🧱 Stack
 
----
-
-## ✨ What's inside
-
-### 🍿 Browse & discover
-
-- 🎞️ **Cinematic hero** with inline trailer previews and instant **Play** / **Trailer** actions.
-- 🔥 **Dynamic rows** — Trending, New Releases, Popular TV, Top Rated, studio collections (Marvel, DC) and regional cinema (Bollywood, Tollywood), each with **See All** and **Load More**.
-- 🖱️ **Hover previews** — rest on a poster and a preview panel springs out of the card with the backdrop, score, synopsis, certificate, genres and cast portraits, plus **Play**, **Trailer**, **wishlist** and **More info**; rest on a cast portrait for the actor's biography, birthday, birthplace and known-for titles. It re-centres itself against the viewport and closes on scroll. Pointer-only (fine pointer, 900px and up), so phones and TV remotes keep their own gestures and their card controls.
-- 🧭 **Browse** with filters for type, genre, year, rating and sort order.
-- 🔎 **Search** across titles *and* people.
-- 💡 **"Because you watched…"** — picks that follow your history.
-- 🏠 **Your Cinevo** — a personal hub for Continue Watching, wishlist episode alerts and tailored suggestions.
-- 🎁 **Daily Five** — five fresh picks each day, revealed one card at a time.
-- 👤 **Person pages** with bio, age and known-for filmography.
-- 🌐 **3D Dome Gallery** — spin through popular titles on an interactive sphere.
-- 🎴 **Mystery Pack** — reveal random picks with filters, shuffle and selectable foil effects.
-
-### ▶️ Watch
-
-- 📺 **Multi-provider player** that remembers your preferred source per title.
-- 🎚️ Season / episode pickers, **prev / next episode**, and a one-tap **report broken provider**.
-- ⌨️ **Hotkeys** — `F` fullscreen, `T` trailer, `P` cycle provider, `S` cycle sandbox mode, `Shift + ← / →` for episodes.
-- 🎭 **Cast** and **More Like This** alongside the player.
-- 🗂️ **Four details layouts** — **Classic** (the original page: full-width player, then title, actions and rows — the shipped default), **Stage** (full-bleed cinema), **Dossier** (a pinned poster you flip for the file, beside a long-form spec sheet) and **Console** (a TV-first control room with a tabbed deck). Pick one under Theme Studio → Details page; it saves per browser and admins can publish it as the site default. All four surface the richer TMDB file — certificate, director and writers, budget and box office, networks, keywords, stills and IMDb link — and share the same player, wishlist, providers and episode browser.
-
-### 📻 Live Radio
-
-The newest wing of the building, and the one with the most machinery behind it.
-
-- 🌍 **1,284 browsable categories**, distilled from a 4,684-entry upstream index and sorted into **Genres · Decades · Countries · Languages · Moods**.
-- 🎛️ **Three-band equaliser** — bass, mid and treble with six presets, running on real Web Audio biquad filters.
-- ⭐ **Recommended** — an admin-curated rail of hand-picked stations.
-- ❤️ **Favourites** that sync to your account across devices, work signed out, and get their own tinted treatment in the grid.
-- 🎧 **Keeps playing as you browse** — a mini player follows you across the app, with volume and transport on hover.
-- 🔀 **Surprise me** — a random station from whatever list you're looking at.
-- 💀 **Dead-stream handling** — flag a station as broken, and a stream that fails to open steps automatically to the next one.
-- ⌨️ `Space` to play/pause, `← / →` to change station.
-- 🛠️ **Admin moderation** — add, rename, repoint, disable or delete any station from your profile, filing it under an existing category or one you create on the spot.
-
-### ❤️ Personal
-
-- 🕒 **Watch history** — local-first, offline-friendly, synced across devices.
-- ⏯️ **Continue Watching**, one card per series.
-- ⭐ **Ratings** (1–10) and **Mark as watched** on every title.
-- 🔖 **Wishlist** with instant toggles.
-- 🔔 **Notification bell** for new and upcoming episodes of shows you follow.
-
-### 📱 Platform
-
-- 🎬 **Switch to Experience** — one click between Cinevo, Netflix, Disney+ Hotstar and Apple TV+. Each is a structural clone, not a recolour: its own home layout and row order, navigation labels, dedicated billboard (Cinevo's carousel, dots and arrows appear in no clone), card geometry, typography, motion timing and footer layout — while the logo, links and copyright stay Cinevo's own. Netflix adds a ranked Top 10 row with outlined numerals tucked behind portrait posters, paged arrows on a pointer and finger swipe on touch, plus delayed hover-expand previews on a `#141414` canvas, and its nav merges TV Shows and Movies into one **Browse** entry beside **Radio** (all pointing at Cinevo's own pages); Disney+ Hotstar adds its brand hub and portrait rows; Apple TV+ uses its centred frosted hero and originals rails. Title and watch pages follow the same rule: each clone gets a backdrop-led title treatment with its own action wording, episode browser, More Like This layout and About block, while Cinevo keeps its detail page — Netflix puts the live player in the band above the copy instead of a static backdrop. Reachable from Profile → Appearance and the Theme Studio; studio colour, type, radius and elevation edits still layer on top, and admins can publish the active experience as the site default.
-- 🎨 **Theme Studio** — a live panel for twenty dark cinematic palettes, eleven colour tokens, heading and body fonts (including a searchable 2,000-family Fontsource catalogue), corner radius, elevation and the details-page layout. Admins open it from the palette shortcut in the top nav; everyone can reach it from Profile → Appearance. Everything is saved to a cookie and restored by a blocking head script before first paint, and admins can publish any preset and its overrides as the site-wide default — visitors with no saved theme get the published one, while an explicit studio choice still wins. When a newly published default no longer matches a visitor's saved theme, a banner offers **Switch** to the published look or **Skip** for that revision; publishing anything different brings the notice back. Two independent card options sit there too: **Card effect** (Standard or Decay, with a 1–12px eaten accent border that follows the pointer) and **Hero carousel** (Standard or the full-slide CardSwap deck with the trailer and details inside each card); both save per browser and publish as the site default.
-- 📲 **PWA** — installable, with app icon and splash screen.
-- 🌐 **Web Push** — alerts that arrive with the app closed.
-- 📺 **TV & remote** — spatial navigation via arrow keys / D-pad, Enter and Back.
-- 🍞 Themed toasts, branded loaders and skeletons.
-- 🔗 Per-title **share cards** (OpenGraph / Twitter).
-- ♿ Non-essential motion respects `prefers-reduced-motion` throughout.
-
-### 🛠️ Admin
-
-- 📊 **Overview dashboard** — users, providers, reports, ratings, devices.
-- 🗂️ **Provider management** — add, edit, enable, reorder.
-- 🚩 **Report triage** for user-reported broken providers.
-- 📻 **Radio catalogue** — search, filter and moderate the whole station list, and add new stations and categories by hand.
-
----
-
-## 🏗️ A few things worth knowing
-
-Some of the more opinionated decisions, and why they went that way.
-
-**Radio hydrates itself.** The upstream index lists 4,684 playlists holding
-roughly **1.1 million** station entries between them — far too many to import.
-Only the featured categories are seeded. Open any other one and its playlist is
-fetched from upstream on the spot, deduplicated by stream URL, capped at 400
-stations and written to Postgres. Every category is playable; the database only
-grows into the parts people actually use.
-
-**The upstream index is not a menu.** Alongside real categories it carries
-scraper artefacts (`re`, `na`, `aac`), internal tag namespaces (`lang_en`,
-`loca_us`) and catch-alls. A classifier buckets every slug and filters the noise,
-which is how 4,684 raw entries become 1,284 worth showing.
-
-**The equaliser is opt-in for a reason.** Routing an audio element through an
-`AudioContext` requires a CORS-readable stream, and most icecast servers send no
-CORS headers at all — requesting it would stop those stations loading. So
-playback runs without `crossOrigin`, and switching the EQ on reconnects the
-stream in CORS mode, reverting cleanly if the station refuses. Switching it off
-rebuilds the element, because `createMediaElementSource` cannot be undone.
-
-**The playlist resolver is a guarded hop.** Many stations point at a `.pls` or
-`.m3u` wrapper that browsers can't follow and that is served without CORS, so
-`/api/radio/resolve` unwraps it server-side. Because the URL comes from the
-client, it refuses non-HTTP(S) schemes and loopback, private, link-local and
-CGNAT hosts, then re-validates whatever it extracts. `.m3u8` is passed through
-untouched — that's HLS, and unwrapping it would hand the player a single segment.
-
-**History is local-first.** Progress is written to the browser immediately and
-flushed to the database on a schedule, on unmount and on tab hide, so a dropped
-connection never costs you your place.
-
----
-
-## 🧱 Tech stack
-
-| Area        | Tech                                                                |
-| ----------- | ------------------------------------------------------------------- |
-| Framework   | Next.js 16 (App Router, Server Actions)                             |
-| UI          | React 19, Tailwind CSS v4, motion, lucide-react                     |
-| Data source | The Movie Database (TMDB)                                           |
-| Radio       | [`m3u-rest-api`](https://junguler.github.io/m3u-rest-api/api) index |
-| Database    | PostgreSQL via Prisma 7                                             |
-| Auth & host | Supabase                                                            |
-| Language    | TypeScript                                                          |
-
----
+| Area | Tech |
+|---|---|
+| Framework | Next.js 16.2 (App Router, Server Actions, Turbopack build), React 19 |
+| Styling | Tailwind CSS v4, `motion`, lucide-react |
+| Data | PostgreSQL via Prisma 7 (`prisma-client-js`, `@prisma/adapter-pg`) |
+| Auth & host | Supabase Auth (`@supabase/ssr`) |
+| Catalogue | The Movie Database (TMDB) |
+| Radio | [`m3u-rest-api`](https://junguler.github.io/m3u-rest-api/api) index |
+| Language | TypeScript (strict) |
 
 ## 🚀 Getting started
 
-### Prerequisites
-
-- **Node.js 20+** to run the app.
-  The radio maintenance scripts use Node's native TypeScript stripping and need **22.6+**.
-- A **TMDB** account with API credentials.
-- A **PostgreSQL** database (a Supabase project works well).
-
-### 1. Install
+Prerequisites: **Node.js 20+** (the radio scripts need **22.6+** for TypeScript stripping), a
+TMDB account, and a PostgreSQL database — a Supabase project works well.
 
 ```bash
 npm install
-```
-
-### 2. Configure environment
-
-Copy [`.env.example`](./.env.example) to `.env` and fill in your database URL,
-Supabase keys, TMDB credentials and Web Push (VAPID) keys.
-
-```bash
-cp .env.example .env
-```
-
-> ⚠️ VAPID keys must stay stable across deploys — regenerating them invalidates
-> every existing push subscription.
-
-### 3. Set up the database
-
-```bash
+cp .env.example .env        # fill in the values below
 npx prisma generate
 npx prisma migrate deploy
+npm run radio:seed          # optional: seed the featured radio categories
+npm run dev                 # http://localhost:3000
 ```
 
-### 4. Fill the radio catalogue *(optional)*
+`/radio` stays empty until `radio:seed` runs; any other category hydrates from upstream the first
+time it is opened. Set one user's `Profile.role` to `admin` by hand to unlock the admin panels in
+`/profile` — the Users panel promotes everyone after that.
 
-Imports every playlist from the upstream index and pre-warms the featured
-categories. Skip it and `/radio` stays empty until you run it.
+## 🔑 Environment
+
+| Variable | Use |
+|---|---|
+| `DATABASE_URL` | pooled Postgres URL (Supabase transaction pooler, port 6543) |
+| `DIRECT_URL` | session pooler; migrations only, run outside the app |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase auth; inlined into the client bundle |
+| `TMDB_API_KEY`, `TMDB_ACCESS_TOKEN` | TMDB reads; required at build too (`/gallery` and `/reveal` prerender against TMDB) |
+| `VAPID_PUBLIC_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Web Push; generate with `npx web-push generate-vapid-keys` |
+| `PUSH_CRON_SECRET` | bearer token the scheduled push job sends to `/api/push/run` |
+| `SITE_URL` | public origin for OAuth and email redirects; falls back to forwarded headers when unset |
+
+Two rules: **`NEXT_PUBLIC_*` values are baked in at build time**, so they must exist when the
+image is built; **VAPID keys must stay stable**, because regenerating them invalidates every
+existing push subscription. `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and `NEXT_PUBLIC_TMDB_API_KEY`
+sit in `.env.example` but are not read by the app.
+
+## 📜 Scripts
+
+| Command | Description |
+|---|---|
+| `npm run dev` | development server on :3000 |
+| `npm run build` | `prisma generate` then a production build |
+| `npm run start` | serve the built output |
+| `npm run lint` | ESLint 9 (flat config, `eslint-config-next`) |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run radio:seed` | import the radio index and pre-warm the featured categories |
+| `npm run radio:backfill` | re-derive every category's group from the seeded index |
+
+## 🗺️ Routes
+
+| Route | What it serves |
+|---|---|
+| `/` | home: hero, rows, Continue Watching, Daily Five, Your Cinevo |
+| `/browse` | filter by type, genre, year, rating and sort |
+| `/search` | titles and people |
+| `/watch/[type]/[id]` | the player, cast, More Like This and the episode browser |
+| `/person/[id]` | biography and known-for filmography |
+| `/wishlist`, `/history` | saved titles and local-first watch history |
+| `/gallery`, `/reveal` | 3D dome gallery and the Mystery Pack |
+| `/radio` | the live-radio wing and its mini player |
+| `/profile` | Your Cinevo hub, appearance, and the admin panels |
+| `/login`, `/terms`, `/privacy` | auth and legal pages |
+| `/api/health`, `/api/push/run`, `/api/radio/resolve` | route handlers |
+| `/auth/callback` | Supabase OAuth callback |
+
+## ✨ Features
+
+**Browse** — cinematic hero with inline trailers and Play / Trailer; rows for Trending, New
+Releases, Popular TV, Top Rated, studio collections and regional cinema, each with See All and
+Load More; hover previews with backdrop, score, cast and wishlist actions, plus a second-level
+cast preview; search, filters, "Because you watched…", Daily Five and a personal hub.
+
+**Watch** — multi-provider player that remembers your source per title, season/episode pickers,
+prev/next episode, broken-provider reports, hotkeys (`F` fullscreen, `T` trailer, `P` provider,
+`S` sandbox, `Shift + ←/→` episodes), and four details layouts: Classic, Stage, Dossier and
+Console.
+
+**Radio** — 1,284 browsable categories across Genres, Decades, Countries, Languages and Moods;
+optional three-band equaliser on real Web Audio biquads; favourites that sync to your account;
+a mini player that follows you across the app; dead-stream skip and admin moderation.
+
+**Personal** — local-first watch history that syncs across devices, Continue Watching, ratings,
+Mark as watched, wishlist, and an episode-notification bell.
+
+**Platform** — Switch to Experience (four structural clones, not recolours); Theme Studio with
+palettes, colour tokens, fonts, radius, elevation, detail layout, card effect (a decayed accent
+edge at rest) and hero carousel (standard or a CardSwap deck); PWA, Web Push, TV D-pad spatial
+navigation, themed toasts and loaders, per-title share cards, and `prefers-reduced-motion` support.
+
+**Admin** — overview dashboard, provider management, report triage, and radio catalogue
+moderation.
+
+## 🐳 Deploy
+
+The [`Dockerfile`](./Dockerfile) builds a two-stage image on `output: "standalone"` and runs as
+the unprivileged `node` user. Debian rather than Alpine, because Next's SWC binary,
+`lightningcss` and `@tailwindcss/oxide` each ship a separate musl build.
 
 ```bash
-npm run radio:seed
+docker compose up --build      # reads .env for build args and runtime env
+curl localhost:3000/api/health
 ```
 
-### 5. Run
+The image declares its own `HEALTHCHECK` against `/api/health`, so a Coolify Compose resource
+needs no separate check. Give the build every variable marked *build* above: `ARG` lines receive
+them from `docker build --build-arg`. Migrations are **not** applied on boot — the image has no
+Prisma CLI, and concurrent containers racing `migrate deploy` is its own outage. Run
+`npx prisma migrate deploy` against `DIRECT_URL` before deploying a schema change. Add your
+domain as the Supabase Site URL and `https://your-domain/auth/callback` as a redirect URL, or
+OAuth fails silently. Replace the `vercel.json` cron with a scheduled task running
+`curl -fsS -H "Authorization: Bearer $PUSH_CRON_SECRET" http://localhost:3000/api/push/run`.
 
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000).
-
-> 🔑 Set a user's `Profile.role` to `admin` to unlock the admin sections in `/profile`. Only the first one needs doing by hand — from there, the **Users** panel promotes and demotes everyone else.
-
----
-
-## 🐳 Deploy with Docker / Coolify
-
-The [`Dockerfile`](./Dockerfile) builds a two-stage image on Next.js
-`output: "standalone"` — a pruned server plus only the dependencies it traced,
-running as the unprivileged `node` user on Node 26 (Debian slim).
-
-Debian rather than Alpine is deliberate: Next's SWC binary, `lightningcss` and
-`@tailwindcss/oxide` each ship a separate musl build, and that's a class of
-install failure not worth carrying to save ~40MB.
-
-### Build-time vs run-time variables
-
-This is the one thing worth getting right. `next build` **inlines every
-`NEXT_PUBLIC_*` value into the browser bundle**, so those have to be present
-while the image builds — setting them only at run time means the browser never
-sees them and Supabase auth fails with an empty URL. Everything else is read by
-the server at run time and can change without a rebuild.
-
-| Variable                              | Needed at   | Why                                                  |
-| ------------------------------------- | ----------- | ---------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`            | build + run | inlined into the client; also read by the auth proxy |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY`       | build + run | same                                                 |
-| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`        | build + run | inlined for the push subscribe call                  |
-| `TMDB_API_KEY` / `TMDB_ACCESS_TOKEN`  | build + run | `/gallery` and `/reveal` prerender against TMDB      |
-| `DATABASE_URL`                        | run         | Prisma; no prerendered route touches the database    |
-| `DIRECT_URL`                          | —           | migrations only, which run outside the container     |
-| `SITE_URL`                            | run         | OAuth / email redirect origin                        |
-| `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | run         | signs Web Push payloads                              |
-| `PUSH_CRON_SECRET`                    | run         | bearer token the scheduled task sends                |
-
-`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and `NEXT_PUBLIC_TMDB_API_KEY` sit in
-`.env.example` but aren't read anywhere in the app, so the Dockerfile doesn't
-declare them.
-
-On Coolify the *Build Variable?* ticking is mostly academic — it injects its own
-`ARG`/`ENV` pair for every variable you define. The `ARG`s in the Dockerfile are
-what keep a plain `docker build` (and `docker compose`) behaving identically.
-
-Prefer `SITE_URL` over `NEXT_PUBLIC_SITE_URL` when self-hosting — it's a plain
-server variable, so the public origin can change without a rebuild. Left unset,
-[`getSiteURL`](./src/lib/site-url.ts) falls back to the proxy's forwarded host
-headers, which Coolify sets correctly on its own.
-
-### Try it locally first
-
-```bash
-docker compose up --build      # reads .env for both build args and runtime env
-```
-
-Then check <http://localhost:3000> and `curl localhost:3000/api/health`.
-
-### Coolify
-
-1. **New resource → Application → Public/Private Repository**, pointing at this
-   repo and branch.
-2. Set **Build Pack** to `Dockerfile`. Leave the Dockerfile location at
-   `/Dockerfile` and the base directory at `/`.
-3. Under **Environment Variables**, add every variable from the table above.
-   Tick **Build Variable?** on each one marked *build* — Coolify passes those to
-   `docker build --build-arg`, and the `ARG` lines in the Dockerfile receive them.
-4. In **Configuration → Network**, set the port to `3000` and add your domain
-   (e.g. `https://cinevo.example.com`). Coolify's Traefik/Caddy proxy terminates
-   TLS and issues the certificate.
-5. **Health check** — nothing to configure. The image declares its own
-   `HEALTHCHECK` against `/api/health`, which is what the **Docker Compose build
-   pack** requires: it reads the check from the Dockerfile (or a compose
-   `healthcheck:` block) and ignores the panel settings, and an unhealthy
-   resource keeps receiving traffic if no check is defined. Compose inherits the
-   image's, so it isn't declared twice. That route is excluded from the auth
-   proxy, so probes cost no Supabase round-trip.
-6. **Deploy.** The first build is the slow one; later deploys reuse the layer
-   cache as long as `package-lock.json` is unchanged.
-7. Add the redirect origin in **Supabase → Authentication → URL Configuration**:
-   your new domain as Site URL, plus `https://your-domain/auth/callback` under
-   redirect URLs. OAuth sign-in fails silently until this is done.
-8. Replace the Vercel cron with a **Scheduled Task** on the application —
-   command `curl -fsS -H "Authorization: Bearer $PUSH_CRON_SECRET"
-   http://localhost:3000/api/push/run`, frequency `0 13 * * *`. That's the
-   `crons` entry in [`vercel.json`](./vercel.json), which Coolify doesn't read.
-
-### ⚠️ The lockfile, `npm ci`, and Windows
-
-The image installs with `npm install`, not `npm ci`. That's deliberate, and worth
-understanding before anyone "fixes" it back.
-
-npm generating this lockfile **on Windows cannot produce a tree that satisfies
-`npm ci` on Linux**. The wasm32 fallbacks of `@tailwindcss/oxide` and `sharp`
-require a hoisted `@emnapi/core` and `@emnapi/runtime`; npm won't write either
-from a Windows host — not even with `--package-lock-only --os=linux --cpu=x64` —
-and `npm ci` then refuses the whole install:
-
-```text
-npm error code EUSAGE
-npm error Missing: @emnapi/runtime@1.11.3 from lock file
-```
-
-`npm install` honours every version the lockfile *does* pin and resolves only
-those gaps. It's also what Vercel runs by default, which is why the gap never
-surfaced there. To go back to `npm ci`, regenerate the lockfile on Linux (CI, a
-container, or WSL) and commit that.
-
-Separately: a Windows `npm install` can strip **every** non-Windows platform
-binary from the lockfile — 78 packages, in the incident this note came from.
-Local dev never notices. Check before committing a regenerated lockfile:
+**The image installs with `npm install`, not `npm ci`, on purpose.** A lockfile generated on
+Windows cannot satisfy `npm ci` on Linux: the wasm32 fallbacks of `@tailwindcss/oxide` and
+`sharp` need a hoisted `@emnapi/core` and `@emnapi/runtime` that npm will not write from a
+Windows host. To return to `npm ci`, regenerate the lockfile on Linux and commit that. Before
+committing any regenerated lockfile, check the platform binaries survived:
 
 ```bash
 node -e "const k=Object.keys(require('./package-lock.json').packages);console.log('linux:',k.filter(x=>/linux/.test(x)).length)"
 ```
 
-Expect ~42, never 0. If it reads 0, restore the previous lockfile
-(`git checkout HEAD~1 -- package-lock.json`) rather than regenerating, so no
-resolved version moves.
-
-### Database migrations
-
-The image doesn't ship the Prisma CLI, so migrations aren't applied on boot —
-deliberately, since concurrent containers racing `migrate deploy` on startup is
-its own class of outage. Run them against `DIRECT_URL` from your machine or CI
-before deploying a schema change:
-
-```bash
-npx prisma migrate deploy
-```
-
-> ℹ️ `@vercel/analytics` stays in the bundle and simply collects nothing off
-> Vercel — its script 404s harmlessly. Remove `<Analytics />` from
-> [`src/app/layout.tsx`](./src/app/layout.tsx) if you'd rather not ship the request.
-
----
-
-## 📜 Scripts
-
-| Command                  | Description                                              |
-| ------------------------ | -------------------------------------------------------- |
-| `npm run dev`            | Start the development server                             |
-| `npm run build`          | Production build                                         |
-| `npm run start`          | Run the production build                                 |
-| `npm run lint`           | Lint with ESLint                                         |
-| `npm run typecheck`      | Type-check without emitting                              |
-| `npm run radio:seed`     | Import the radio index and pre-warm featured categories  |
-| `npm run radio:backfill` | Apply the radio SQL and re-derive every category's group |
-
----
+Expect ~42, never 0. At 0, restore the previous lockfile rather than regenerating, so no resolved
+version moves.
 
 ## ⚠️ Notes
 
-- The embed player streams from third-party providers for demonstration
-  purposes. A browser ad-blocker (e.g. uBlock Origin) is recommended.
-- Radio stations are public internet streams. They go down, move and come back
-  without warning — hence the report button and the automatic skip.
-- Watch history is local-first: it lives in your browser and syncs to the
-  database on a schedule.
-
----
+- The embed player streams from third-party providers for demonstration purposes. A browser
+  ad-blocker is recommended.
+- Radio stations are public internet streams: they go down and come back without warning, hence
+  the report button and the automatic skip.
+- Watch history is local-first — it lives in your browser and syncs to the database in the
+  background, so it works signed out.
 
 ## 📄 License
 
