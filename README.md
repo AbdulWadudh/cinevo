@@ -47,7 +47,7 @@ time it is opened. Set one user's `Profile.role` to `admin` by hand to unlock th
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase auth; inlined into the client bundle |
 | `TMDB_API_KEY`, `TMDB_ACCESS_TOKEN` | TMDB reads; required at build too (`/gallery` and `/reveal` prerender against TMDB) |
 | `VAPID_PUBLIC_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Web Push; generate with `npx web-push generate-vapid-keys` |
-| `PUSH_CRON_SECRET` | bearer token the scheduled push job sends to `/api/push/run` |
+| `PUSH_CRON_SECRET`, `CRON_SECRET` | bearer token the scheduled push job sends to `/api/push/run`; Vercel's `CRON_SECRET` is accepted too |
 | `SITE_URL` | public origin for OAuth and email redirects; falls back to forwarded headers when unset |
 
 Two rules: **`NEXT_PUBLIC_*` values are baked in at build time**, so they must exist when the

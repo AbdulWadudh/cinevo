@@ -32,6 +32,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# the documented surface is committed; only real env files are ignored
+!.env.example
 
 # vercel
 .vercel
